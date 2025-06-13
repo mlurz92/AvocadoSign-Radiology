@@ -1,6 +1,6 @@
 const methodsGenerator = (() => {
 
-    function _generateStudyDesignHTML(stats, commonData) {
+    function generateStudyDesignHTML(stats, commonData) {
         const { nOverall, nNeoadjuvantTherapy, nSurgeryAlone } = commonData;
         const helpers = publicationHelpers;
 
@@ -11,7 +11,7 @@ const methodsGenerator = (() => {
         `;
     }
 
-    function _generateMriProtocolAndImageAnalysisHTML(stats, commonData) {
+    function generateMriProtocolAndImageAnalysisHTML(stats, commonData) {
         const helpers = publicationHelpers;
         return `
             <h4 id="methoden_mrt_protokoll_akquisition">MRI Protocol and Image Analysis</h4>
@@ -22,7 +22,7 @@ const methodsGenerator = (() => {
         `;
     }
 
-    function _generateComparativeCriteriaHTML(stats, commonData) {
+    function generateComparativeCriteriaHTML(stats, commonData) {
         const { bruteForceMetricForPublication } = commonData;
         const helpers = publicationHelpers;
 
@@ -34,14 +34,14 @@ const methodsGenerator = (() => {
         `;
     }
 
-    function _generateReferenceStandardHTML(stats, commonData) {
+    function generateReferenceStandardHTML(stats, commonData) {
         return `
             <h4 id="methoden_referenzstandard_histopathologie">Reference Standard</h4>
             <p>The definitive reference standard for N-status was the histopathological examination of the total mesorectal excision specimens performed by experienced gastrointestinal pathologists. All identified lymph nodes were meticulously dissected and analyzed for the presence of metastatic tumor cells. A patient was classified as N-positive if metastases were found in at least one lymph node.</p>
         `;
     }
 
-    function _generateStatisticalAnalysisHTML(stats, commonData) {
+    function generateStatisticalAnalysisHTML(stats, commonData) {
         const helpers = publicationHelpers;
         return `
             <h4 id="methoden_statistische_analyse_methoden">Statistical Analysis</h4>
@@ -50,18 +50,12 @@ const methodsGenerator = (() => {
         `;
     }
 
-
-    function generateMethodsHTML(stats, commonData) {
-        let html = _generateStudyDesignHTML(stats, commonData);
-        html += _generateMriProtocolAndImageAnalysisHTML(stats, commonData);
-        html += _generateComparativeCriteriaHTML(stats, commonData);
-        html += _generateReferenceStandardHTML(stats, commonData);
-        html += _generateStatisticalAnalysisHTML(stats, commonData);
-        return html;
-    }
-
     return Object.freeze({
-        generateMethodsHTML
+        generateStudyDesignHTML,
+        generateMriProtocolAndImageAnalysisHTML,
+        generateComparativeCriteriaHTML,
+        generateReferenceStandardHTML,
+        generateStatisticalAnalysisHTML
     });
 
 })();
