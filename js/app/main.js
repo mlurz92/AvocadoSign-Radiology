@@ -3,8 +3,8 @@ class App {
         this.rawData = typeof patientDataRaw !== 'undefined' ? patientDataRaw : [];
         this.processedData = [];
         this.currentCohortData = [];
-        this.presentationDataForExport = null;
         this.allPublicationStats = null;
+        this.presentationDataForExport = null;
     }
 
     init() {
@@ -21,6 +21,7 @@ class App {
                 uiManager.showToast("Warning: No valid patient data loaded.", "warning");
             }
             
+            this.recalculateAllStats();
             this.filterAndPrepareData();
             this.updateUI();
             this.renderCurrentTab();
@@ -48,7 +49,7 @@ class App {
             resultsGenerator, discussionGenerator, referencesGenerator, publicationService,
             uiManager, uiComponents, tableRenderer, chartRenderer, 
             dataTab, analysisTab, statisticsTab, presentationTab, publicationTab, exportTab,
-            eventManager, APP_CONFIG,
+            eventManager, APP_CONFIG, PUBLICATION_CONFIG
         };
         for (const dep in dependencies) {
             if (typeof dependencies[dep] === 'undefined' || dependencies[dep] === null) {
@@ -70,7 +71,8 @@ class App {
                     uiManager.updateElementHTML('brute-force-modal-body', uiComponents.createBruteForceModalContent(payload));
                     uiManager.initializeTooltips(document.getElementById('brute-force-modal-body'));
                     uiManager.showToast('Optimization finished.', 'success');
-                    if (state.getActiveTabId() === 'publication' || state.getActiveTabId() === 'statistics') this.refreshCurrentTab();
+                    this.recalculateAllStats();
+                    this.refreshCurrentTab();
                 } else {
                     uiManager.showToast('Optimization finished with no valid results.', 'warning');
                 }
@@ -110,6 +112,76 @@ class App {
             console.error("Data preparation error:", error);
         }
     }
+    
+    recalculateAllStats() {
+        const criteria = t2CriteriaManager.getAppliedCriteria();
+        const logic = t2CriteriaManager.getAppliedLogic();
+        const bruteForceResults = bruteForceManager.getAllResults();
+        this.allPublicationStats = statisticsService.calculateAllPublicationStats(this.processedData, criteria, logic, bruteForceResults);
+    }
+    
+    _preparePresentationData() {
+        const cohortForPresentation = state.getCurrentCohort(); 
+        const selectedStudyId = state.getPresentationStudyId();
+        
+        const statsCurrentCohort = this.allPublicationStats[cohortForPresentation];
+        const statsOverall = this.allPublicationStats[APP_CONFIG.COHORTS.OVERALL.id];
+        const statsSurgeryAlone = this.allPublicationStats[APP_CONFIG.COHORTS.SURGERY_ALONE.id];
+        const statsNeoadjuvantTherapy = this.allPublicationStats[APP_CONFIG.COHORTS.NEOADJUVANT.id];
+        const filteredDataForPresentation = dataProcessor.filterDataByCohort(this.processedData, cohortForPresentation);
+        
+        let performanceT2 = null;
+        let comparisonCriteriaSet = null;
+        let t2ShortName = null;
+        let comparisonASvsT2 = null;
+
+        if (selectedStudyId === APP_CONFIG.SPECIAL_IDS.APPLIED_CRITERIA_STUDY_ID) {
+            performanceT2 = statsCurrentCohort?.performanceT2Applied;
+            const appliedCriteria = t2CriteriaManager.getAppliedCriteria();
+            const appliedLogic = t2CriteriaManager.getAppliedLogic();
+            comparisonCriteriaSet = {
+                id: APP_CONFIG.SPECIAL_IDS.APPLIED_CRITERIA_STUDY_ID,
+                name: APP_CONFIG.SPECIAL_IDS.APPLIED_CRITERIA_DISPLAY_NAME,
+                displayShortName: APP_CONFIG.SPECIAL_IDS.APPLIED_CRITERIA_DISPLAY_NAME,
+                criteria: appliedCriteria,
+                logic: appliedLogic,
+                studyInfo: {
+                    reference: 'User-defined criteria',
+                    patientCohort: `Current: ${getCohortDisplayName(cohortForPresentation)} (N=${filteredDataForPresentation.length})`,
+                    keyCriteriaSummary: studyT2CriteriaManager.formatCriteriaForDisplay(appliedCriteria, appliedLogic, false)
+                }
+            };
+            t2ShortName = APP_CONFIG.SPECIAL_IDS.APPLIED_CRITERIA_DISPLAY_NAME;
+            comparisonASvsT2 = statsCurrentCohort?.comparisonASvsT2Applied;
+        } else if (selectedStudyId) {
+            const studySet = studyT2CriteriaManager.getStudyCriteriaSetById(selectedStudyId);
+            if (studySet) {
+                const cohortForStudySet = studySet.applicableCohort || APP_CONFIG.COHORTS.OVERALL.id;
+                const statsForStudyCohort = this.allPublicationStats[cohortForStudySet];
+                
+                performanceT2 = statsForStudyCohort?.performanceT2Literature?.[selectedStudyId];
+                comparisonCriteriaSet = studySet;
+                t2ShortName = studySet.displayShortName || studySet.name;
+                comparisonASvsT2 = statsForStudyCohort?.[`comparisonASvsT2_literature_${selectedStudyId}`];
+            }
+        }
+
+        return {
+            cohort: cohortForPresentation,
+            patientCount: filteredDataForPresentation.length,
+            statsCurrentCohort: statsCurrentCohort,
+            statsGesamt: statsOverall,
+            statsSurgeryAlone: statsSurgeryAlone,
+            statsNeoadjuvantTherapy: statsNeoadjuvantTherapy,
+            performanceAS: statsCurrentCohort?.performanceAS,
+            performanceT2: performanceT2,
+            comparison: comparisonASvsT2,
+            comparisonCriteriaSet: comparisonCriteriaSet,
+            cohortForComparison: selectedStudyId ? (comparisonCriteriaSet?.applicableCohort || cohortForPresentation) : cohortForPresentation,
+            patientCountForComparison: selectedStudyId ? (dataProcessor.filterDataByCohort(this.processedData, comparisonCriteriaSet?.applicableCohort || cohortForPresentation).length) : filteredDataForPresentation.length,
+            t2ShortName: t2ShortName
+        };
+    }
 
     updateUI() {
         const currentCohort = state.getCurrentCohort();
@@ -143,8 +215,6 @@ class App {
         const logic = t2CriteriaManager.getAppliedLogic();
         const bruteForceResults = bruteForceManager.getAllResults();
         
-        this.allPublicationStats = statisticsService.calculateAllPublicationStats(this.processedData, criteria, logic, bruteForceResults);
-
         const publicationData = {
             rawData: this.rawData,
             allCohortStats: this.allPublicationStats,
@@ -154,68 +224,7 @@ class App {
 
         let currentPresentationData = null;
         if (tabId === 'presentation') {
-            const currentPresentationView = state.getPresentationView();
-            const selectedStudyId = state.getPresentationStudyId();
-            const cohortForPresentation = state.getCurrentCohort(); 
-            const filteredDataForPresentation = dataProcessor.filterDataByCohort(this.processedData, cohortForPresentation);
-            
-            const statsCurrentCohort = this.allPublicationStats[cohortForPresentation];
-            const statsOverall = this.allPublicationStats[APP_CONFIG.COHORTS.OVERALL.id];
-            const statsSurgeryAlone = this.allPublicationStats[APP_CONFIG.COHORTS.SURGERY_ALONE.id];
-            const statsNeoadjuvantTherapy = this.allPublicationStats[APP_CONFIG.COHORTS.NEOADJUVANT.id];
-
-            let performanceT2 = null;
-            let comparisonCriteriaSet = null;
-            let t2ShortName = null;
-            let comparisonASvsT2 = null;
-
-            if (selectedStudyId === APP_CONFIG.SPECIAL_IDS.APPLIED_CRITERIA_STUDY_ID) {
-                performanceT2 = statsCurrentCohort?.performanceT2Applied;
-                comparisonCriteriaSet = {
-                    id: APP_CONFIG.SPECIAL_IDS.APPLIED_CRITERIA_STUDY_ID,
-                    name: APP_CONFIG.SPECIAL_IDS.APPLIED_CRITERIA_DISPLAY_NAME,
-                    displayShortName: APP_CONFIG.SPECIAL_IDS.APPLIED_CRITERIA_DISPLAY_NAME,
-                    criteria: criteria,
-                    logic: logic,
-                    studyInfo: {
-                        reference: 'User-defined criteria',
-                        patientCohort: `Current: ${getCohortDisplayName(cohortForPresentation)} (N=${filteredDataForPresentation.length})`,
-                        investigationType: 'Interactive analysis',
-                        focus: 'Custom T2 criteria',
-                        keyCriteriaSummary: studyT2CriteriaManager.formatCriteriaForDisplay(criteria, logic, false)
-                    }
-                };
-                t2ShortName = APP_CONFIG.SPECIAL_IDS.APPLIED_CRITERIA_DISPLAY_NAME;
-                comparisonASvsT2 = statsCurrentCohort?.comparisonASvsT2Applied;
-            } else if (selectedStudyId) {
-                const studySet = studyT2CriteriaManager.getStudyCriteriaSetById(selectedStudyId);
-                if (studySet) {
-                    const cohortForStudySet = studySet.applicableCohort || APP_CONFIG.COHORTS.OVERALL.id;
-                    const statsForStudyCohort = this.allPublicationStats[cohortForStudySet];
-                    
-                    performanceT2 = statsForStudyCohort?.performanceT2Literature?.[selectedStudyId];
-                    comparisonCriteriaSet = studySet;
-                    t2ShortName = studySet.displayShortName || studySet.name;
-                    comparisonASvsT2 = statsForStudyCohort?.[`comparisonASvsT2_literature_${selectedStudyId}`];
-                }
-            }
-
-            currentPresentationData = {
-                view: currentPresentationView,
-                cohort: cohortForPresentation,
-                patientCount: filteredDataForPresentation.length,
-                statsCurrentCohort: statsCurrentCohort,
-                statsGesamt: statsOverall,
-                statsSurgeryAlone: statsSurgeryAlone,
-                statsNeoadjuvantTherapy: statsNeoadjuvantTherapy,
-                performanceAS: statsCurrentCohort?.performanceAS,
-                performanceT2: performanceT2,
-                comparison: comparisonASvsT2,
-                comparisonCriteriaSet: comparisonCriteriaSet,
-                cohortForComparison: selectedStudyId ? (comparisonCriteriaSet?.applicableCohort || cohortForPresentation) : cohortForPresentation,
-                patientCountForComparison: selectedStudyId ? (dataProcessor.filterDataByCohort(this.processedData, comparisonCriteriaSet?.applicableCohort || cohortForPresentation).length) : filteredDataForPresentation.length,
-                t2ShortName: t2ShortName
-            };
+            currentPresentationData = this._preparePresentationData();
             this.presentationDataForExport = currentPresentationData;
         }
 
@@ -249,6 +258,7 @@ class App {
     
     applyAndRefreshAll() {
         t2CriteriaManager.applyCriteria();
+        this.recalculateAllStats();
         this.refreshCurrentTab();
         uiManager.markCriteriaSavedIndicator(false);
         uiManager.showToast('T2 criteria applied & saved.', 'success');
