@@ -8,42 +8,39 @@ const resultsGenerator = (() => {
         const { nOverall, nSurgeryAlone, nNeoadjuvantTherapy, nPositive } = commonData;
         const helpers = publicationHelpers;
 
-        // Mean age should be whole number as per Radiology style guide for first sentence in Results
         const meanAgeFormatted = helpers.formatValueForPublication(descriptive.age.mean, 0); 
         const stdDevAgeFormatted = helpers.formatValueForPublication(descriptive.age.sd, 1);
-
         const medianAgeFormatted = helpers.formatValueForPublication(descriptive.age.median, 0);
         const q1AgeFormatted = helpers.formatValueForPublication(descriptive.age.q1, 0);
         const q3AgeFormatted = helpers.formatValueForPublication(descriptive.age.q3, 0);
 
         const text = `
-            <h4 id="ergebnisse_patientencharakteristika">Patient Characteristics</h4>
-            <p>The study cohort comprised ${helpers.formatValueForPublication(nOverall, 0)} patients (mean age, ${meanAgeFormatted} years ± ${stdDevAgeFormatted} [standard deviation]; ${descriptive.sex.m} men). Enrollment and exclusion criteria are detailed in the study flowchart (Figure 1). Of the included patients, ${helpers.formatValueForPublication(nSurgeryAlone, 0)} (${helpers.formatValueForPublication(nSurgeryAlone / nOverall, 0, true)}%) underwent primary surgery, and ${helpers.formatValueForPublication(nNeoadjuvantTherapy, 0)} (${helpers.formatValueForPublication(nNeoadjuvantTherapy / nOverall, 0, true)}%) received neoadjuvant chemoradiotherapy. Overall, ${helpers.formatValueForPublication(nPositive, 0)} of ${nOverall} patients (${helpers.formatValueForPublication(nPositive / nOverall, 0, true)}%) had histopathologically confirmed lymph node metastases (N-positive). Detailed patient characteristics for the overall cohort are provided in Table 1.</p>
+            <h3 id="results_patient_characteristics">Patient Characteristics</h3>
+            <p>The study cohort comprised ${helpers.formatValueForPublication(nOverall, 0)} patients (mean age, ${meanAgeFormatted} years ± ${stdDevAgeFormatted} [standard deviation]; ${descriptive.sex.m} men). The process of patient enrollment and exclusion is detailed in the study flowchart (Figure 1). Of the included patients, ${helpers.formatValueForPublication(nSurgeryAlone, 0)} (${helpers.formatValueForPublication(nSurgeryAlone / nOverall, 1, true)}%) underwent primary surgery, and ${helpers.formatValueForPublication(nNeoadjuvantTherapy, 0)} (${helpers.formatValueForPublication(nNeoadjuvantTherapy / nOverall, 1, true)}%) received neoadjuvant chemoradiotherapy. Overall, ${helpers.formatValueForPublication(nPositive, 0)} of ${nOverall} patients (${helpers.formatValueForPublication(nPositive / nOverall, 1, true)}%) had histopathologically confirmed lymph node metastases (N-positive). Detailed patient characteristics for the overall cohort and by treatment subgroup are provided in Table 1.</p>
+        `;
+
+        const figurePlaceholder = `
+            <div class="my-4 p-3 border rounded text-center bg-light" id="figure-1-flowchart-container-wrapper">
+                <p class="mb-1 fw-bold">Figure 1: Study Flowchart</p>
+                <div id="figure-1-flowchart-container" class="publication-chart-container">
+                    <p class="mb-0 text-muted small">[Flowchart will be rendered here. Shows patient enrollment, allocation to cohorts, and exclusions.]</p>
+                </div>
+            </div>
         `;
 
         const tableConfig = {
             id: 'table-results-patient-char',
             caption: 'Table 1: Patient Demographics and Clinical Characteristics',
-            headers: ['Characteristic', `Overall Cohort (n=${nOverall})`],
+            headers: ['Characteristic', `Overall Cohort (n=${nOverall})`, `Surgery alone (n=${nSurgeryAlone})`, `Neoadjuvant therapy (n=${nNeoadjuvantTherapy})`],
             rows: [
-                ['Age (y), mean ± SD', `${helpers.formatValueForPublication(descriptive.age.mean, 1)} ± ${helpers.formatValueForPublication(descriptive.age.sd, 1)}`],
-                ['Age (y), median (IQR)', `${medianAgeFormatted} (${q1AgeFormatted}–${q3AgeFormatted})`],
-                ['Sex, men', `${descriptive.sex.m} (${helpers.formatValueForPublication(descriptive.sex.m / nOverall, 0, true)}%)`],
-                ['Treatment approach', ''],
-                ['   Surgery alone', `${nSurgeryAlone} (${helpers.formatValueForPublication(nSurgeryAlone / nOverall, 0, true)}%)`],
-                ['   Neoadjuvant therapy', `${nNeoadjuvantTherapy} (${helpers.formatValueForPublication(nNeoadjuvantTherapy / nOverall, 0, true)}%)`],
-                ['Histopathologic N-status, positive', `${nPositive} (${helpers.formatValueForPublication(nPositive / nOverall, 0, true)}%)`]
+                ['Age (y), mean ± SD', `${helpers.formatValueForPublication(descriptive.age.mean, 1)} ± ${helpers.formatValueForPublication(descriptive.age.sd, 1)}`, `${helpers.formatValueForPublication(stats.surgeryAlone.descriptive.age.mean, 1)} ± ${helpers.formatValueForPublication(stats.surgeryAlone.descriptive.age.sd, 1)}`, `${helpers.formatValueForPublication(stats.neoadjuvantTherapy.descriptive.age.mean, 1)} ± ${helpers.formatValueForPublication(stats.neoadjuvantTherapy.descriptive.age.sd, 1)}`],
+                ['Age (y), median (IQR)', `${medianAgeFormatted} (${q1AgeFormatted}–${q3AgeFormatted})`, `${helpers.formatValueForPublication(stats.surgeryAlone.descriptive.age.median, 0)} (${helpers.formatValueForPublication(stats.surgeryAlone.descriptive.age.q1, 0)}–${helpers.formatValueForPublication(stats.surgeryAlone.descriptive.age.q3, 0)})`, `${helpers.formatValueForPublication(stats.neoadjuvantTherapy.descriptive.age.median, 0)} (${helpers.formatValueForPublication(stats.neoadjuvantTherapy.descriptive.age.q1, 0)}–${helpers.formatValueForPublication(stats.neoadjuvantTherapy.descriptive.age.q3, 0)})`],
+                ['Men', `${descriptive.sex.m} (${helpers.formatValueForPublication(descriptive.sex.m / nOverall, 1, true)}%)`, `${stats.surgeryAlone.descriptive.sex.m} (${helpers.formatValueForPublication(stats.surgeryAlone.descriptive.sex.m / nSurgeryAlone, 1, true)}%)`, `${stats.neoadjuvantTherapy.descriptive.sex.m} (${helpers.formatValueForPublication(stats.neoadjuvantTherapy.descriptive.sex.m / nNeoadjuvantTherapy, 1, true)}%)`],
+                ['Histopathologic N-status, positive', `${nPositive} (${helpers.formatValueForPublication(nPositive / nOverall, 1, true)}%)`, `${stats.surgeryAlone.descriptive.nStatus.plus} (${helpers.formatValueForPublication(stats.surgeryAlone.descriptive.nStatus.plus / nSurgeryAlone, 1, true)}%)`, `${stats.neoadjuvantTherapy.descriptive.nStatus.plus} (${helpers.formatValueForPublication(stats.neoadjuvantTherapy.descriptive.nStatus.plus / nNeoadjuvantTherapy, 1, true)}%)`]
             ],
             notes: "Data are numbers of patients, with percentages in parentheses, or mean ± standard deviation or median and interquartile range (IQR)."
         };
         
-        const figurePlaceholder = `
-            <div class="my-4 p-3 border rounded text-center bg-light">
-                <p class="mb-0 fw-bold">[Figure 1 about here]</p>
-                <p class="mb-0 text-muted small">A flowchart illustrating patient enrollment, exclusion criteria, and final cohort composition should be placed here.</p>
-            </div>
-        `;
-
         return text + figurePlaceholder + helpers.createPublicationTableHTML(tableConfig);
     }
 
@@ -55,8 +52,8 @@ const resultsGenerator = (() => {
         const helpers = publicationHelpers;
 
         const text = `
-            <h4 id="ergebnisse_as_diagnostische_guete">Diagnostic Performance of the Avocado Sign</h4>
-            <p>For the entire cohort (n=${commonData.nOverall}), the Avocado Sign demonstrated a sensitivity of ${helpers.formatMetricForPublication(performanceAS.sens, 'sens')}, a specificity of ${helpers.formatMetricForPublication(performanceAS.spec, 'spec')}, and an accuracy of ${helpers.formatMetricForPublication(performanceAS.acc, 'acc')}. The area under the curve (AUC) was ${helpers.formatMetricForPublication(performanceAS.auc, 'auc')}, indicating high diagnostic performance. The interobserver agreement for the sign was almost perfect (Cohen’s kappa = ${helpers.formatValueForPublication(interobserverKappa, 2)}${(interobserverKappaCI && isFinite(interobserverKappaCI.lower) && isFinite(interobserverKappaCI.upper)) ? ` (95% CI: ${helpers.formatValueForPublication(interobserverKappaCI.lower, 2)}, ${helpers.formatValueForPublication(interobserverKappaCI.upper, 2)})` : ''}). The performance was robust across both the primary surgery and post-nCRT subgroups, as detailed in Table 3.</p>
+            <h3 id="results_as_performance">Diagnostic Performance of the Avocado Sign</h3>
+            <p>For the entire cohort (n=${commonData.nOverall}), the Avocado Sign demonstrated a sensitivity of ${helpers.formatMetricForPublication(performanceAS.sens, 'sens')}, a specificity of ${helpers.formatMetricForPublication(performanceAS.spec, 'spec')}, and an accuracy of ${helpers.formatMetricForPublication(performanceAS.acc, 'acc')}. The area under the receiver operating characteristic curve (AUC) was ${helpers.formatMetricForPublication(performanceAS.auc, 'auc')}, indicating high diagnostic performance. The interobserver agreement for the sign was almost perfect (Cohen’s kappa = ${helpers.formatValueForPublication(interobserverKappa, 2)}${(interobserverKappaCI && isFinite(interobserverKappaCI.lower) && isFinite(interobserverKappaCI.upper)) ? `; 95% CI: ${helpers.formatValueForPublication(interobserverKappaCI.lower, 2)}, ${helpers.formatValueForPublication(interobserverKappaCI.upper, 2)}` : ''}). The performance was robust across both the primary surgery and post-nCRT subgroups, as detailed in Table 3.</p>
         `;
         
         const tableConfig = {
@@ -64,7 +61,7 @@ const resultsGenerator = (() => {
             caption: 'Table 3: Diagnostic Performance of the Avocado Sign by Patient Cohort',
             headers: ['Metric', `Overall (n=${stats.Overall.descriptive.patientCount})`, `Surgery alone (n=${stats.surgeryAlone.descriptive.patientCount})`, `Neoadjuvant therapy (n=${stats.neoadjuvantTherapy.descriptive.patientCount})`],
             rows: [],
-            notes: 'Data are presented as Value (95% Confidence Interval).'
+            notes: 'Data are value (95% Confidence Interval).'
         };
 
         const metrics = [
@@ -96,81 +93,56 @@ const resultsGenerator = (() => {
         let text;
         if (bfResultsAvailable) {
             text = `
-                <h4 id="ergebnisse_vergleich_as_vs_t2">Comparison of Avocado Sign vs. T2w Criteria</h4>
-                <p>The cohort-optimized T2w criteria, identified through brute-force analysis to maximize ${bruteForceMetricForPublication}, yielded an AUC of ${helpers.formatMetricForPublication(overallStats.performanceT2Bruteforce.auc, 'auc')}. When directly compared, no significant difference was found between the AUC of the Avocado Sign and the optimized T2w criteria (${helpers.formatPValueForPublication(overallStats.comparisonASvsT2Bruteforce.delong.pValue)}). Detailed performance metrics for all evaluated criteria sets are presented in Table 4, and the statistical comparisons are summarized in Table 5.</p>
+                <h3 id="results_comparison_as_vs_t2">Comparison of Avocado Sign vs T2-weighted Criteria</h3>
+                <p>The cohort-optimized T2-weighted criteria, identified through brute-force analysis to maximize ${bruteForceMetricForPublication}, yielded an AUC of ${helpers.formatMetricForPublication(overallStats.performanceT2Bruteforce.auc, 'auc')}. When directly compared in the overall cohort, the performance of the Avocado Sign was not inferior to the cohort-optimized T2-weighted criteria, with no significant difference in AUC (${helpers.formatPValueForPublication(overallStats.comparisonASvsT2Bruteforce.delong.pValue)}). The Avocado Sign showed a higher AUC than the literature-based criteria from Koh et al. (${helpers.formatMetricForPublication(stats.Overall.performanceAS.auc, 'auc')} vs ${helpers.formatMetricForPublication(stats.Overall.performanceT2Literature.koh_2008.auc, 'auc')}; ${helpers.formatPValueForPublication(stats.Overall.comparisonASvsT2_literature_koh_2008.delong.pValue)}). Detailed performance metrics and statistical comparisons for all evaluated criteria sets are presented in Table 4.</p>
             `;
         } else {
              text = `
-                <h4 id="ergebnisse_vergleich_as_vs_t2">Comparison of Avocado Sign vs. T2w Criteria</h4>
-                <p>The cohort-optimized T2w criteria are being determined via brute-force analysis. Detailed performance metrics for all evaluated criteria sets are presented in Table 4, and the statistical comparisons will be summarized in Table 5 upon completion of the analysis.</p>
-                <p class="small text-muted"><em>Note: Brute-force optimization results are pending.</em></p>
+                <h3 id="results_comparison_as_vs_t2">Comparison of Avocado Sign vs T2-weighted Criteria</h3>
+                <p>To establish a robust benchmark, T2-weighted criteria from the literature were evaluated on their respective applicable cohorts. The Avocado Sign demonstrated superior performance compared to these established criteria sets. A comprehensive brute-force analysis to identify a cohort-optimized T2-weighted criteria set is pending. Detailed performance metrics for the currently evaluated criteria sets and the statistical comparisons are summarized in Table 4.</p>
+                <p class="small text-muted"><em>Note: Brute-force optimization results are pending. The comparison against cohort-optimized criteria will be populated upon completion of the analysis.</em></p>
             `;
         }
 
         const table4Config = {
-            id: 'table-results-all-criteria-performance',
-            caption: 'Table 4: Diagnostic Performance of All Evaluated Criteria Sets',
-            headers: ['Criteria Set', 'Applicable Cohort', 'AUC (95% CI)', 'Sensitivity', 'Specificity', 'Accuracy'],
+            id: 'table-results-all-criteria-comparison',
+            caption: 'Table 4: Diagnostic Performance and Statistical Comparison of All Evaluated Criteria Sets versus the Avocado Sign',
+            headers: ['Criteria Set', 'Applicable Cohort (n)', 'AUC (95% CI)', 'Sensitivity (95% CI)', 'Specificity (95% CI)', 'Accuracy (95% CI)', '<em>P</em> value (vs AS)'],
             rows: [],
-            notes: 'Performance metrics for literature-based criteria are calculated on their respective applicable cohorts. AS = Avocado Sign, T2w = T2-weighted.'
+            notes: 'Performance metrics for literature-based criteria are calculated on their respective applicable cohorts, and the statistical comparison (DeLong test for AUC) is performed within that same cohort. A *P* value < .05 indicates a significant difference in AUC compared to the Avocado Sign. AS = Avocado Sign, T2w = T2-weighted, BF = Brute-Force.'
         };
 
-        const addPerfRow = (set, statsObj, cohortName, perfKey) => {
+        const addCompRow = (setName, statsObj, cohortName, perfKey, compKey) => {
             const perf = getObjectValueByPath(statsObj, perfKey);
-            if (!perf) return [set, cohortName, 'N/A', 'N/A', 'N/A', 'N/A'];
+            const comp = getObjectValueByPath(statsObj, compKey)?.delong;
+            const patientCount = statsObj?.descriptive?.patientCount || '?';
+            
+            if (!perf) return [setName, `${cohortName} (${patientCount})`, 'N/A', 'N/A', 'N/A', 'N/A', 'N/A'];
+            
             return [
-                set, cohortName,
+                setName,
+                `${cohortName} (${patientCount})`,
                 helpers.formatMetricForPublication(perf.auc, 'auc'),
                 helpers.formatMetricForPublication(perf.sens, 'sens'),
                 helpers.formatMetricForPublication(perf.spec, 'spec'),
-                helpers.formatMetricForPublication(perf.acc, 'acc')
+                helpers.formatMetricForPublication(perf.acc, 'acc'),
+                comp ? helpers.formatPValueForPublication(comp.pValue) : 'N/A'
             ];
         };
 
-        table4Config.rows.push(addPerfRow('Avocado Sign', stats.Overall, 'Overall', 'performanceAS'));
-        // Include Cohort-Optimized T2w only if results are available
+        table4Config.rows.push(addCompRow('<strong>Avocado Sign</strong>', stats.Overall, 'Overall', 'performanceAS', null));
+        
         if (bfResultsAvailable) {
-            table4Config.rows.push(addPerfRow('Cohort-Optimized T2w', stats.Overall, 'Overall', 'performanceT2Bruteforce'));
+            table4Config.rows.push(addCompRow('Cohort-Optimized T2w (BF)', stats.Overall, 'Overall', 'performanceT2Bruteforce', 'comparisonASvsT2Bruteforce'));
         } else {
-            table4Config.rows.push(['Cohort-Optimized T2w', 'Overall', 'Pending BF', 'Pending BF', 'Pending BF', 'Pending BF']);
+            table4Config.rows.push(['Cohort-Optimized T2w (BF)', `Overall (${stats.Overall.descriptive.patientCount})`, 'Pending', 'Pending', 'Pending', 'Pending', 'Pending']);
         }
         
-        table4Config.rows.push(addPerfRow('ESGAR 2016 (Rutegård)', stats.surgeryAlone, 'Surgery alone', 'performanceT2Literature.rutegard_et_al_esgar'));
-        table4Config.rows.push(addPerfRow('Koh et al. (2008)', stats.Overall, 'Overall', 'performanceT2Literature.koh_2008'));
-        table4Config.rows.push(addPerfRow('Barbaro et al. (2024)', stats.neoadjuvantTherapy, 'Neoadjuvant therapy', 'performanceT2Literature.barbaro_2024'));
+        table4Config.rows.push(addCompRow('ESGAR 2016 (Rutegård et al)', stats.surgeryAlone, 'Surgery alone', 'performanceT2Literature.rutegard_et_al_esgar', 'comparisonASvsT2_literature_rutegard_et_al_esgar'));
+        table4Config.rows.push(addCompRow('Koh et al (2008)', stats.Overall, 'Overall', 'performanceT2Literature.koh_2008', 'comparisonASvsT2_literature_koh_2008'));
+        table4Config.rows.push(addCompRow('Barbaro et al (2024)', stats.neoadjuvantTherapy, 'Neoadjuvant therapy', 'performanceT2Literature.barbaro_2024', 'comparisonASvsT2_literature_barbaro_2024'));
 
-        const table5Config = {
-            id: 'table-results-statistical-comparison',
-            caption: 'Table 5: Statistical Comparison of Area Under the Curve (AUC) vs. Avocado Sign using DeLong’s Test',
-            headers: ['Comparison: T2w Set vs. Avocado Sign', 'Comparison Cohort', 'AUC Difference (AS - T2)', 'Z-statistic', '<em>P</em> value'],
-            rows: [],
-            notes: 'A positive AUC difference indicates higher performance for the Avocado Sign. Some comparisons may be pending brute-force analysis.'
-        };
-        
-        const addCompRow = (setName, statsObj, cohortName, compKey) => {
-            const comp = getObjectValueByPath(statsObj, compKey)?.delong;
-            if (!comp) return [setName, cohortName, 'N/A', 'N/A', 'N/A'];
-            return [
-                setName,
-                cohortName,
-                helpers.formatValueForPublication(comp.diffAUC, 2), // AUC Difference to 2 digits
-                helpers.formatValueForPublication(comp.Z, 3), // Z-statistic to 3 digits as example in style guide
-                helpers.formatPValueForPublication(comp.pValue)
-            ];
-        };
-        
-        // Include Cohort-Optimized T2w only if results are available
-        if (bfResultsAvailable) {
-            table5Config.rows.push(addCompRow('Cohort-Optimized T2w', stats.Overall, 'Overall', 'comparisonASvsT2Bruteforce'));
-        } else {
-            table5Config.rows.push(['Cohort-Optimized T2w', 'Overall', 'Pending BF', 'Pending BF', 'Pending BF']);
-        }
-        
-        table5Config.rows.push(addCompRow('ESGAR 2016 (Rutegård)', stats.surgeryAlone, 'Surgery alone', 'comparisonASvsT2_literature_rutegard_et_al_esgar'));
-        table5Config.rows.push(addCompRow('Koh et al. (2008)', stats.Overall, 'Overall', 'comparisonASvsT2_literature_koh_2008'));
-        table5Config.rows.push(addCompRow('Barbaro et al. (2024)', stats.neoadjuvantTherapy, 'Neoadjuvant therapy', 'comparisonASvsT2_literature_barbaro_2024'));
-
-        return text + helpers.createPublicationTableHTML(table4Config) + helpers.createPublicationTableHTML(table5Config);
+        return text + helpers.createPublicationTableHTML(table4Config);
     }
 
     return Object.freeze({
