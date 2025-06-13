@@ -11,7 +11,7 @@ const abstractGenerator = (() => {
         const { nOverall, nPositive, bruteForceMetricForPublication } = commonData;
         const helpers = publicationHelpers;
         
-        const bfResultsAvailable = performanceT2Bruteforce && comparisonASvsT2Bruteforce;
+        const bfResultsAvailable = !!(performanceT2Bruteforce && comparisonASvsT2Bruteforce);
 
         let keyResultsHTML;
         let resultsSectionHTML;
