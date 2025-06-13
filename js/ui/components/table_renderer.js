@@ -192,4 +192,5 @@ const tableRenderer = (() => {
         createDataTableRow,
         createAnalysisTableRow
     });
+
 })();
