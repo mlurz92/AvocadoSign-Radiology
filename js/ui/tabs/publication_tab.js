@@ -18,7 +18,7 @@ const publicationTab = (() => {
             references: APP_CONFIG.REFERENCES_FOR_PUBLICATION || {},
             bruteForceMetricForPublication: state.getPublicationBruteForceMetric(),
             currentLanguage: currentLanguage,
-            rawData: rawData // Raw data might be needed by some generators (e.g., for flowcharts, though not currently implemented)
+            rawData: rawData
         };
 
         const mainSection = PUBLICATION_CONFIG.sections.find(s => s.id === currentSectionId || s.subSections.some(sub => sub.id === currentSectionId));
@@ -29,7 +29,13 @@ const publicationTab = (() => {
         
         const mainSectionLabel = APP_CONFIG.UI_TEXTS.publicationTab.sectionLabels[mainSection.labelKey] || mainSection.labelKey;
         
-        let title = mainSectionLabel; // Title is dynamic based on selected section
+        let title;
+        if (mainSection.id === currentSectionId) {
+            title = mainSectionLabel;
+        } else {
+            const subSection = mainSection.subSections.find(sub => sub.id === currentSectionId);
+            title = subSection ? `${mainSectionLabel}: ${subSection.label}` : mainSectionLabel;
+        }
         
         const contentHTML = publicationService.generateSectionHTML(currentSectionId, allCohortStats, commonData);
 
@@ -55,14 +61,24 @@ const publicationTab = (() => {
                     </div>
                 </div>
             </div>`;
+        
+        setTimeout(() => {
+            const flowchartContainerId = 'figure-1-flowchart-container';
+            if (document.getElementById(flowchartContainerId)) {
+                if (typeof flowchartRenderer !== 'undefined' && allCohortStats) {
+                    flowchartRenderer.renderFlowchart(allCohortStats, flowchartContainerId);
+                }
+            }
+            if (typeof uiManager !== 'undefined') {
+                const contentArea = document.getElementById('publication-content-area');
+                if(contentArea) uiManager.initializeTooltips(contentArea);
+            }
+        }, 50);
             
         return finalHTML;
     }
     
     function getSectionContentForExport(sectionId, lang, statsData, commonData) {
-        // This function is called by the export service to get raw HTML content for a specific section.
-        // It passes the commonData and statsData needed by the generator functions.
-        // Ensure commonData contains necessary fields for generating text.
         const commonDataForExport = { 
             ...commonData, 
             currentLanguage: lang, 
