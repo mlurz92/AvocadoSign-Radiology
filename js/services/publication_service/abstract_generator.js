@@ -16,9 +16,9 @@ const abstractGenerator = (() => {
         let keyResultsHTML;
         let resultsSectionHTML;
         let conclusionText;
-        let summaryStatementText;
+        let summaryStatementHTML;
 
-        const ageFormatted = helpers.formatValueForPublication(descriptive.age.median, 0); // Median Age for Abstract is whole number
+        const ageFormatted = helpers.formatValueForPublication(descriptive.age.median, 0);
         const ageIQR = `${helpers.formatValueForPublication(descriptive.age.q1, 0)}–${helpers.formatValueForPublication(descriptive.age.q3, 0)}`;
 
         if (bfResultsAvailable) {
@@ -36,7 +36,7 @@ const abstractGenerator = (() => {
             conclusionText = `
                 <p>The Avocado Sign is a highly reproducible MRI marker for predicting lymph node status in rectal cancer, demonstrating diagnostic performance non-inferior to cohort-optimized T2w criteria and superior to several established literature-based criteria. Its application has the potential to simplify and improve the accuracy of preoperative nodal staging.</p>
             `;
-            summaryStatementText = `
+            summaryStatementHTML = `
                 <p><strong>In this retrospective analysis of ${nOverall} patients with rectal cancer, the Avocado Sign, a contrast-enhanced MRI marker, provided diagnostic performance for nodal staging that was non-inferior to cohort-optimized T2-weighted criteria.</strong></p>
             `;
         } else {
@@ -55,7 +55,7 @@ const abstractGenerator = (() => {
              conclusionText = `
                 <p>The Avocado Sign is a highly reproducible MRI marker for predicting lymph node status in rectal cancer, demonstrating strong diagnostic performance. Further comparison with optimized T2w criteria is warranted to fully establish its role in simplifying and improving the accuracy of preoperative nodal staging.</p>
             `;
-            summaryStatementText = `
+            summaryStatementHTML = `
                 <p class="small text-muted"><strong>Summary Statement:</strong> Brute-force optimization is pending. Final summary statement will be generated upon completion.</p>
             `;
         }
