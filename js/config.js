@@ -68,7 +68,9 @@ const APP_CONFIG = Object.freeze({
         ]),
         DEFAULT_CI_METHOD_PROPORTION: 'Wilson Score',
         DEFAULT_CI_METHOD_EFFECTSIZE: 'Bootstrap Percentile',
-        FISHER_EXACT_THRESHOLD: 5
+        FISHER_EXACT_THRESHOLD: 5,
+        INTEROBSERVER_KAPPA: 0.92,
+        INTEROBSERVER_KAPPA_CI: { lower: 0.85, upper: 0.99 }
     }),
     T2_CRITERIA_SETTINGS: Object.freeze({
         SIZE_RANGE: Object.freeze({ min: 0.1, max: 25.0, step: 0.1 }),
@@ -164,24 +166,12 @@ const APP_CONFIG = Object.freeze({
         STUDY_PERIOD_2020_2023: { id: 0, text: "January 2020 and November 2023", isInternal: true },
         REFERENCE_SIEGEL_2023: { id: 1, text: "Siegel RL, Miller KD, Wagle NS, Jemal A. Cancer statistics, 2023. CA Cancer J Clin. 2023;73:17–48. https://doi.org/10.3322/caac.21763" },
         REFERENCE_SAUER_2004: { id: 2, text: "Sauer R, Becker H, Hohenberger W, et al. Preoperative versus postoperative chemoradiotherapy for rectal cancer. N Engl J Med. 2004;351:1731–1740. https://doi.org/10.1056/NEJMoa040694" },
-        REFERENCE_BOSSET_2006: { id: 3, text: "Bosset JF, Collette L, Calais G, et al. Chemotherapy with preoperative radiotherapy in rectal cancer. N Engl J Med. 2006;355:1114–1123. https://doi.org/10.1056/NEJMoa060829" },
         REFERENCE_HABR_GAMA_2019: { id: 4, text: "Habr-Gama A, São Julião GP, Vailati BB, et al. Organ preservation in cT2N0 rectal cancer after neoadjuvant chemoradiation therapy: the impact of radiation therapy dose-escalation and consolidation chemotherapy. Ann Surg. 2019;269:102–107. https://doi.org/10.1097/SLA.0000000000002447" },
-        REFERENCE_SMITH_2015: { id: 5, text: "Smith JJ, Chow OS, Gollub MJ, et al. Organ preservation in rectal adenocarcinoma: a phase II randomized controlled trial evaluating 3-year disease-free survival in patients with locally advanced rectal cancer treated with chemoradiation plus induction or consolidation chemotherapy, and total mesorectal excision or nonoperative management. BMC Cancer. 2015;15:767. https://doi.org/10.1186/s12885-015-1632-z" },
         REFERENCE_BEETS_TAN_2018: { id: 6, text: "Beets-Tan RGH, Lambregts DMJ, Maas M, et al. Magnetic resonance imaging for clinical management of rectal cancer: updated recommendations from the 2016 European Society of Gastrointestinal and Abdominal Radiology (ESGAR) consensus meeting. Eur Radiol. 2018;28:1465–1475. https://doi.org/10.1007/s00330-017-5026-2" },
-        REFERENCE_ZHANG_2017: { id: 7, text: "Zhang H, Zhang C, Zheng Z, et al. Chemical shift effect predicting lymph node status in rectal cancer using high-resolution MR imaging with node-for-node matched histopathological validation. Eur Radiol. 2017;27:3845–3855. https://doi.org/10.1007/s00330-017-4738-7" },
         REFERENCE_AL_SUKHNI_2012: { id: 8, text: "Al-Sukhni E, Milot L, Fruitman M, et al. Diagnostic accuracy of MRI for assessment of T category, lymph node metastases, and circumferential resection margin involvement in patients with rectal cancer: a systematic review and meta-analysis. Ann Surg Oncol. 2012;19:2212–2223. https://doi.org/10.1245/s10434-011-2210-5" },
-        REFERENCE_BEWICK_2004: { id: 9, text: "Bewick V, Cheek L, Ball J. Statistics review 8: qualitative data—tests of association. Crit Care. 2004;8:46–53. https://doi.org/10.1186/cc2428" },
         REFERENCE_KOH_2008: { id: 10, text: "Koh DM, Chau I, Tait D, Wotherspoon A, Cunningham D, Brown G. Evaluating mesorectal lymph nodes in rectal cancer before and after neoadjuvant chemoradiation using thin-section T2-weighted magnetic resonance imaging. Int J Radiat Oncol Biol Phys. 2008;71:456–461. https://doi.org/10.1016/j.ijrobp.2007.10.016" },
-        REFERENCE_STELZNER_2022: { id: 11, text: "Stelzner S, Ruppert R, Kube R, et al. Selection of patients with rectal cancer for neoadjuvant therapy using pre-therapeutic MRI—results from OCUM trial. Eur J Radiol. 2022;147:110113. https://doi.org/10.1016/j.ejrad.2021.110113" },
-        REFERENCE_LAMBREGTS_2013: { id: 12, text: "Lambregts DMJ, Heijnen LA, Maas M, et al. Gadofosveset-enhanced MRI for the assessment of rectal cancer lymph nodes: predictive criteria. Abdom Imaging. 2013;38:720–727. https://doi.org/10.1007/s00261-012-9957-4" },
         REFERENCE_BARBARO_2024: { id: 13, text: "Barbaro B, Carafa MRP, Minordi LM, et al. Magnetic resonance imaging for assessment of rectal cancer nodes after chemoradiotherapy: a single center experience. Radiother Oncol. 2024;193:110124. https://doi.org/10.1016/j.radonc.2024.110124" },
-        REFERENCE_HORVAT_2023: { id: 14, text: "Horvat N, El Homsi M, Miranda J, Mazaheri Y, Gollub MJ, Paroder V. Rectal MRI interpretation after neoadjuvant therapy. J Magn Reson Imaging. 2023;57:353–369. https://doi.org/10.1002/jmri.28426" },
-        REFERENCE_KENNEDY_2019: { id: 15, text: "Kennedy ED, Simunovic M, Jhaveri K, et al. Safety and feasibility of using magnetic resonance imaging criteria to identify patients with “good prognosis” rectal cancer eligible for primary surgery: the phase 2 nonrandomized QuickSilver clinical trial. JAMA Oncol. 2019;5:961–966. https://doi.org/10.1001/jamaoncol.2019.0186" },
-        REFERENCE_HANNA_2021: { id: 16, text: "Hanna CR, O’Cathail SM, Graham JS, et al. Durvalumab (MEDI 4736) in combination with extended neoadjuvant regimens in rectal cancer: a study protocol of a randomised phase II trial (PRIME-RT). Radiat Oncol. 2021;16:163. https://doi.org/10.1186/s13014-021-01888-1" },
-        REFERENCE_SCHRAG_2023: { id: 17, text: "Schrag D, Shi Q, Weiser MR, et al. Preoperative treatment of locally advanced rectal cancer. N Engl J Med. 2023;389:322–334. https://doi.org/10.1056/NEJMoa2303269" },
-        REFERENCE_GARCIA_AGUILAR_2022: { id: 18, text: "Garcia-Aguilar J, Patil S, Gollub MJ, et al. Organ preservation in patients with rectal adenocarcinoma treated with total neoadjuvant therapy. J Clin Oncol. 2022;40:2546–2556. https://doi.org/10.1200/JCO.22.00032" },
         REFERENCE_HAO_2025: { id: 19, text: "Hao Y, Zheng J, Li W, et al. Ultra-high b-value DWI in rectal cancer: image quality assessment and regional lymph node prediction based on radiomics. Eur Radiol. 2025;35:49–60. https://doi.org/10.1007/s00330-024-10958-3" },
-        REFERENCE_ZHOU_2021: { id: 20, text: "Zhou H, Lei PJ, Padera TP. Progression of metastasis through lymphatic system. Cells. 2021;10:1–23. https://doi.org/10.3390/cells10030627" },
         REFERENCE_LURZ_SCHAEFER_2025: { id: 21, text: "Lurz M, Schäfer AO. The Avocado Sign: A novel imaging marker for nodal staging in rectal cancer. Eur Radiol. 2025. https://doi.org/10.1007/s00330-025-11462-y" },
         REFERENCE_RUTEGARD_2025: { id: 22, text: "Rutegård J, Hallberg L, Carlsson J, Olsson J, Jarnheimer A. Anatomically matched mesorectal nodal structures: evaluation of the 2016 ESGAR consensus criteria. Eur Radiol. 2025. https://doi.org/10.1007/s00330-024-11357-1" }
     }),
@@ -197,7 +187,7 @@ const APP_CONFIG = Object.freeze({
             'KOMBINIERT': 'COMBINED (ESGAR Logic)'
         },
         publicationTab: {
-            bfMetricSelectLabel: 'BF Optimization Metric for T2:',
+            bfMetricSelectLabel: 'BF Optimization Metric for Publication:',
             sectionLabels: {
                 abstract_main: 'Abstract',
                 introduction_main: 'Introduction',
@@ -485,10 +475,9 @@ const PUBLICATION_CONFIG = Object.freeze({
                 homogeneity: { active: true, value: 'heterogeneous' }
             },
             studyInfo: {
-                reference: 'Koh et al., Int J Radiat Oncol Biol Phys, 2008',
+                reference: 'Koh et al (10)',
                 patientCohort: 'Overall (n=25)',
                 investigationType: 'Prospective, Pre- and Post-nCRT',
-                focus: 'Morphological features on T2w-MRI',
                 keyCriteriaSummary: 'Irregular Border OR Heterogeneous Signal'
             }
         },
@@ -502,7 +491,7 @@ const PUBLICATION_CONFIG = Object.freeze({
                 size: { active: true, threshold: 2.2, condition: '>' }
             },
             studyInfo: {
-                reference: 'Barbaro et al., Radiother Oncol, 2024',
+                reference: 'Barbaro et al (13)',
                 patientCohort: 'Neoadjuvant Therapy (n=191)',
                 investigationType: 'Retrospective, Post-nCRT',
                 focus: 'Size criteria for predicting ypN0',
@@ -511,22 +500,22 @@ const PUBLICATION_CONFIG = Object.freeze({
         },
         {
             id: 'rutegard_et_al_esgar',
-            name: 'Rutegård et al. (ESGAR 2016)',
+            name: 'ESGAR 2016 (Rutegård et al.)',
             displayShortName: 'ESGAR 2016',
             logic: 'KOMBINIERT',
             applicableCohort: 'surgeryAlone',
             criteria: {
-                size: { active: true, threshold: 9.0, condition: '>=' }, // This is one part of the combined logic
+                size: { active: true, threshold: 9.0, condition: '>=' },
                 shape: { active: true, value: 'round' },
                 border: { active: true, value: 'irregular' },
                 homogeneity: { active: true, value: 'heterogeneous' }
             },
             studyInfo: {
-                reference: 'Rutegård et al., Eur Radiol, 2025 (evaluating ESGAR 2016 criteria)',
+                reference: 'Rutegård et al (22)',
                 patientCohort: 'Surgery Alone (n=46)',
                 investigationType: 'Prospective, Node-by-Node',
                 focus: 'Validation of combined ESGAR 2016 criteria',
-                keyCriteriaSummary: '≥9mm OR (5-8mm AND ≥2 features) OR (<5mm AND 3 features)'
+                keyCriteriaSummary: '≥9mm OR (5–8mm AND ≥2 features) OR (<5mm AND 3 features)'
             },
             description: 'ESGAR 2016 consensus criteria: A lymph node is considered malignant if it has a short-axis diameter of ≥9 mm, OR if it has a diameter of 5–8 mm and at least two suspicious morphological features (round shape, irregular border, or heterogeneous signal), OR if it has a diameter of <5 mm and all three suspicious features.'
         }
@@ -534,5 +523,5 @@ const PUBLICATION_CONFIG = Object.freeze({
 });
 
 function getDefaultT2Criteria() {
-    return DEFAULT_T2_CRITERIA;
+    return cloneDeep(DEFAULT_T2_CRITERIA);
 }
