@@ -450,6 +450,89 @@ const APP_CONFIG = Object.freeze({
     })
 });
 
+const PUBLICATION_CONFIG = Object.freeze({
+    sections: [
+        { id: 'abstract_main', labelKey: 'abstract_main', subSections: [{ id: 'abstract_main', label: 'Abstract' }] },
+        { id: 'introduction_main', labelKey: 'introduction_main', subSections: [{ id: 'introduction_main', label: 'Introduction' }] },
+        {
+            id: 'methoden_main', labelKey: 'methoden_main', subSections: [
+                { id: 'methoden_studienanlage_ethik', label: 'Study Design and Patients' },
+                { id: 'methoden_mrt_protokoll_akquisition', label: 'MRI Protocol and Image Analysis' },
+                { id: 'methoden_vergleichskriterien_t2', label: 'Comparative T2w Criteria Sets' },
+                { id: 'methoden_referenzstandard_histopathologie', label: 'Reference Standard' },
+                { id: 'methoden_statistische_analyse_methoden', label: 'Statistical Analysis' }
+            ]
+        },
+        {
+            id: 'ergebnisse_main', labelKey: 'ergebnisse_main', subSections: [
+                { id: 'ergebnisse_patientencharakteristika', label: 'Patient Characteristics' },
+                { id: 'ergebnisse_as_diagnostische_guete', label: 'Diagnostic Performance of the Avocado Sign' },
+                { id: 'ergebnisse_vergleich_as_vs_t2', label: 'Comparison of Avocado Sign vs. T2w Criteria' }
+            ]
+        },
+        { id: 'discussion_main', labelKey: 'discussion_main', subSections: [{ id: 'discussion_main', label: 'Discussion' }] },
+        { id: 'references_main', labelKey: 'references_main', subSections: [{ id: 'references_main', label: 'References' }] }
+    ],
+    literatureCriteriaSets: [
+        {
+            id: 'koh_2008',
+            name: 'Koh et al. (2008)',
+            displayShortName: 'Koh 2008',
+            logic: 'OR',
+            applicableCohort: 'Overall',
+            criteria: {
+                border: { active: true, value: 'irregular' },
+                homogeneity: { active: true, value: 'heterogeneous' }
+            },
+            studyInfo: {
+                reference: 'Koh et al., Int J Radiat Oncol Biol Phys, 2008',
+                patientCohort: 'Overall (n=25)',
+                investigationType: 'Prospective, Pre- and Post-nCRT',
+                focus: 'Morphological features on T2w-MRI',
+                keyCriteriaSummary: 'Irregular Border OR Heterogeneous Signal'
+            }
+        },
+        {
+            id: 'barbaro_2024',
+            name: 'Barbaro et al. (2024)',
+            displayShortName: 'Barbaro 2024',
+            logic: 'OR',
+            applicableCohort: 'neoadjuvantTherapy',
+            criteria: {
+                size: { active: true, threshold: 2.2, condition: '>' }
+            },
+            studyInfo: {
+                reference: 'Barbaro et al., Radiother Oncol, 2024',
+                patientCohort: 'Neoadjuvant Therapy (n=191)',
+                investigationType: 'Retrospective, Post-nCRT',
+                focus: 'Size criteria for predicting ypN0',
+                keyCriteriaSummary: 'Short-axis diameter > 2.2 mm'
+            }
+        },
+        {
+            id: 'rutegard_et_al_esgar',
+            name: 'Rutegård et al. (ESGAR 2016)',
+            displayShortName: 'ESGAR 2016',
+            logic: 'KOMBINIERT',
+            applicableCohort: 'surgeryAlone',
+            criteria: {
+                size: { active: true, threshold: 9.0, condition: '>=' }, // This is one part of the combined logic
+                shape: { active: true, value: 'round' },
+                border: { active: true, value: 'irregular' },
+                homogeneity: { active: true, value: 'heterogeneous' }
+            },
+            studyInfo: {
+                reference: 'Rutegård et al., Eur Radiol, 2025 (evaluating ESGAR 2016 criteria)',
+                patientCohort: 'Surgery Alone (n=46)',
+                investigationType: 'Prospective, Node-by-Node',
+                focus: 'Validation of combined ESGAR 2016 criteria',
+                keyCriteriaSummary: '≥9mm OR (5-8mm AND ≥2 features) OR (<5mm AND 3 features)'
+            },
+            description: 'ESGAR 2016 consensus criteria: A lymph node is considered malignant if it has a short-axis diameter of ≥9 mm, OR if it has a diameter of 5–8 mm and at least two suspicious morphological features (round shape, irregular border, or heterogeneous signal), OR if it has a diameter of <5 mm and all three suspicious features.'
+        }
+    ]
+});
+
 function getDefaultT2Criteria() {
     return DEFAULT_T2_CRITERIA;
 }
