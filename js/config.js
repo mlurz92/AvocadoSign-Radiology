@@ -42,14 +42,14 @@ const APP_CONFIG = Object.freeze({
         CURRENT_COHORT: 'currentCohort_v4.3_unified',
         PUBLICATION_SECTION: 'currentPublicationSection_v4.4_detailed',
         PUBLICATION_BRUTE_FORCE_METRIC: 'currentPublicationBfMetric_v4.4_detailed',
+        PUBLICATION_LANG: 'publicationLang_v4.4_detailed',
         STATS_LAYOUT: 'currentStatsLayout_v4.2_detailed',
         STATS_COHORT1: 'currentStatsCohort1_v4.3_unified',
         STATS_COHORT2: 'currentStatsCohort2_v4.3_unified',
         PRESENTATION_VIEW: 'currentPresentationView_v4.2_detailed',
         PRESENTATION_STUDY_ID: 'currentPresentationStudyId_v4.2_detailed',
         CHART_COLOR_SCHEME: 'chartColorScheme_v4.2_detailed',
-        FIRST_APP_START: 'appFirstStart_v3.0.1',
-        PUBLICATION_LANG: 'publicationLang_v4.4_detailed'
+        FIRST_APP_START: 'appFirstStart_v3.0.1'
     }),
     PATHS: Object.freeze({
         BRUTE_FORCE_WORKER: 'workers/brute_force_worker.js'
@@ -262,9 +262,9 @@ const APP_CONFIG = Object.freeze({
                 notAvailable: 'Data for this metric is not available or could not be calculated for the current selection.',
                 sens: 'A Sensitivity of <strong>{value}</strong> indicates that the test correctly identified <strong>{value}</strong> of all true positive cases (N+).<br>The 95% CI from <strong>{lower}</strong> to <strong>{upper}</strong> suggests the true sensitivity is likely within this range.',
                 spec: 'A Specificity of <strong>{value}</strong> indicates that the test correctly identified <strong>{value}</strong> of all true negative cases (N-).<br>The 95% CI from <strong>{lower}</strong> to <strong>{upper}</strong> suggests the true specificity is likely within this range.',
-                ppv: 'A Positive Predictive Value of <strong>{value}</strong> means that if a patient tests positive, there is a <strong>{value}</strong> probability they are truly N+.<br>The 95% CI is from <strong>{lower}</strong> to <strong>{upper}</strong>.',
-                npv: 'A Negative Predictive Value of <strong>{value}</strong> means that if a patient tests negative, there is a <strong>{value}</strong> probability they are truly N-.<br>The 95% CI is from <strong>{lower}</strong> to <strong>{upper}</strong>.',
-                acc: 'An Accuracy of <strong>{value}</strong> means the test provided the correct classification for <strong>{value}</strong> of all patients.<br>The 95% CI is from <strong>{lower}</strong> to <strong>{upper}</strong>.',
+                ppv: 'A Positive Predictive Value of <strong>{value}</strong> means that if a patient tests positive, there is a <strong>{value}</strong> probability they are truly N+.<br>The 95% CI from <strong>{lower}</strong> to <strong>{upper}</strong>.',
+                npv: 'A Negative Predictive Value of <strong>{value}</strong> means that if a patient tests negative, there is a <strong>{value}</strong> probability they are truly N-.<br>The 95% CI from <strong>{lower}</strong> to <strong>{upper}</strong>.',
+                acc: 'An Accuracy of <strong>{value}</strong> means the test provided the correct classification for <strong>{value}</strong> of all patients.<br>The 95% CI from <strong>{lower}</strong> to <strong>{upper}</strong>.',
                 balAcc: 'A Balanced Accuracy of <strong>{value}</strong> represents the averaged proportion of correctly classified positive and negative cases. An AUC of <strong>{value}</strong> indicates a <strong>{strength}</strong> discriminatory ability for this binary test.',
                 f1: 'An F1-Score of <strong>{value}</strong> indicates the harmonic mean of PPV and sensitivity. A score of 1.0 is perfect.',
                 auc: 'An AUC of <strong>{value}</strong> indicates a <strong>{strength}</strong> overall ability of the test to discriminate between N+ and N- patients.',
@@ -385,6 +385,51 @@ const APP_CONFIG = Object.freeze({
             }
         })
     }),
+    TABLE_COLUMN_DEFINITIONS: Object.freeze({
+        DATA_TABLE_COLUMNS: Object.freeze([
+            { key: 'id', label: 'ID', tooltipKey: 'nr', width: 'auto' },
+            { key: 'lastName', label: 'Last Name', tooltipKey: 'name', width: 'auto' },
+            { key: 'firstName', label: 'First Name', tooltipKey: 'firstName', width: 'auto' },
+            { key: 'sex', label: 'Sex', tooltipKey: 'sex', width: 'auto' },
+            { key: 'age', label: 'Age', tooltipKey: 'age', width: 'auto' },
+            { key: 'therapy', label: 'Therapy', tooltipKey: 'therapy', width: 'auto' },
+            { key: 'status', label: 'N/AS/T2', tooltipKey: 'n_as_t2', subKeys: [{key: 'nStatus', label: 'N'}, {key: 'asStatus', label: 'AS'}, {key: 't2Status', label: 'T2'}], width: 'auto' },
+            { key: 'notes', label: 'Notes', tooltipKey: 'notes', width: '150px' },
+            { key: 'details', label: '', width: '30px', tooltipKey: 'expandRow'}
+        ]),
+        ANALYSIS_TABLE_COLUMNS: Object.freeze([
+            { key: 'id', label: 'ID', tooltipKey: 'nr', width: 'auto' },
+            { key: 'lastName', label: 'Name', tooltipKey: 'name', width: 'auto' },
+            { key: 'therapy', label: 'Therapy', tooltipKey: 'therapy', width: 'auto' },
+            { key: 'status', label: 'N/AS/T2', tooltipKey: 'n_as_t2', subKeys: [{key: 'nStatus', label: 'N'}, {key: 'asStatus', label: 'AS'}, {key: 't2Status', label: 'T2'}], width: 'auto' },
+            { key: 'countPathologyNodes', label: 'N+/N total', tooltipKey: 'n_counts', textAlign: 'center', width: 'auto' },
+            { key: 'countASNodes', label: 'AS+/AS total', tooltipKey: 'as_counts', textAlign: 'center', width: 'auto' },
+            { key: 'countT2Nodes', label: 'T2+/T2 total', tooltipKey: 't2_counts', textAlign: 'center', width: 'auto' },
+            { key: 'details', label: '', width: '30px', tooltipKey: 'expandRow'}
+        ])
+    }),
+    REPORT_SETTINGS: Object.freeze({
+        REPORT_TITLE: 'Comprehensive Analysis Report',
+        REPORT_AUTHOR: 'Generated by AvocadoSign Analysis Tool',
+        INCLUDE_APP_VERSION: true,
+        INCLUDE_GENERATION_TIMESTAMP: true,
+        INCLUDE_KOLLEKTIV_INFO: true,
+        INCLUDE_T2_CRITERIA: true,
+        INCLUDE_DESCRIPTIVES_TABLE: true,
+        INCLUDE_DESCRIPTIVES_CHARTS: true,
+        INCLUDE_AS_PERFORMANCE_TABLE: true,
+        INCLUDE_T2_PERFORMANCE_TABLE: true,
+        INCLUDE_AS_VS_T2_COMPARISON_TABLE: true,
+        INCLUDE_AS_VS_T2_COMPARISON_CHART: true,
+        INCLUDE_ASSOCIATIONS_TABLE: true,
+        INCLUDE_BRUTEFORCE_BEST_RESULT: true
+    }),
+    SPECIAL_IDS: Object.freeze({
+        APPLIED_CRITERIA_STUDY_ID: 'applied_criteria',
+        APPLIED_CRITERIA_DISPLAY_NAME: 'Applied T2 Criteria',
+        AVOCADO_SIGN_ID: 'avocado_sign',
+        AVOCADO_SIGN_DISPLAY_NAME: 'Avocado Sign'
+    }),
     T2_ICON_SVGS: Object.freeze({
         SIZE_DEFAULT: (s, sw, iconColor, c, r, sq, sqPos) => `<path d="M${sw/2} ${c} H${s-sw/2} M${c} ${sw/2} V${s-sw/2}" stroke="${iconColor}" stroke-width="${sw/2}" stroke-linecap="round"/>`,
         SHAPE_ROUND: (s, sw, iconColor, c, r, sq, sqPos) => `<circle cx="${c}" cy="${c}" r="${r}" fill="none" stroke="${iconColor}" stroke-width="${sw}"/>`,
@@ -402,118 +447,6 @@ const APP_CONFIG = Object.freeze({
         SIGNAL_INTERMEDIATESIGNAL: (s, sw, iconColor, c, r, sq, sqPos) => `<circle cx="${c}" cy="${c}" r="${r}" fill="#aaaaaa" stroke="rgba(0,0,0,0.1)" stroke-width="${sw * 0.75}"/>`,
         SIGNAL_HIGHSIGNAL: (s, sw, iconColor, c, r, sq, sqPos) => `<circle cx="${c}" cy="${c}" r="${r}" fill="#f0f0f0" stroke="#333333" stroke-width="${sw * 0.75}"/>`,
         UNKNOWN: (s, sw, iconColor, c, r, sq, sqPos) => `<rect x="${sqPos}" y="${sqPos}" width="${sq}" height="${sq}" fill="none" stroke="${iconColor}" stroke-width="${sw/2}" stroke-dasharray="2 2" /><line x1="${sqPos}" y1="${sqPos}" x2="${sqPos+sq}" y2="${sqPos+sq}" stroke="${iconColor}" stroke-width="${sw/2}" stroke-linecap="round"/><line x1="${sqPos+sq}" y1="${sqPos}" x2="${sqPos}" y2="${sqPos+sq}" stroke="${iconColor}" stroke-width="${sw/2}" stroke-linecap="round"/>`
-    })
-});
-
-const PUBLICATION_CONFIG = Object.freeze({
-    sections: Object.freeze([
-        { id: 'abstract_main', labelKey: 'abstract_main', subSections: [{ id: 'abstract_main', label: 'Abstract' }] },
-        { id: 'introduction_main', labelKey: 'introduction_main', subSections: [{ id: 'introduction_main', label: 'Introduction' }] },
-        {
-            id: 'methoden_main', labelKey: 'methoden_main',
-            subSections: Object.freeze([
-                { id: 'methoden_studienanlage_ethik', label: 'Study Design and Patients' },
-                { id: 'methoden_mrt_protokoll_akquisition', label: 'MRI Protocol and Image Analysis' },
-                { id: 'methoden_vergleichskriterien_t2', label: 'Comparative T2w Criteria Sets'},
-                { id: 'methoden_referenzstandard_histopathologie', label: 'Reference Standard' },
-                { id: 'methoden_statistische_analyse_methoden', label: 'Statistical Analysis' }
-            ])
-        },
-        {
-            id: 'ergebnisse_main', labelKey: 'ergebnisse_main',
-            subSections: Object.freeze([
-                { id: 'ergebnisse_patientencharakteristika', label: 'Patient Characteristics' },
-                { id: 'ergebnisse_as_diagnostische_guete', label: 'Diagnostic Performance of the Avocado Sign' },
-                { id: 'ergebnisse_vergleich_as_vs_t2', label: 'Comparison of Avocado Sign vs. T2w Criteria' }
-            ])
-        },
-        { id: 'discussion_main', labelKey: 'discussion_main', subSections: [{ id: 'discussion_main', label: 'Discussion' }] },
-        { id: 'references_main', labelKey: 'references_main', subSections: [{ id: 'references_main', label: 'References' }] }
-    ]),
-    literatureCriteriaSets: Object.freeze([
-        {
-            id: 'koh_2008',
-            name: 'Koh et al. (2008)',
-            displayShortName: 'Koh 2008',
-            applicableCohort: 'Overall',
-            logic: 'OR',
-            criteria: Object.freeze({
-                size: { active: false, threshold: 5.0, condition: '>=' },
-                shape: { active: false, value: null },
-                border: { active: true, value: 'irregular' },
-                homogeneity: { active: true, value: 'heterogeneous' },
-                signal: { active: false, value: null }
-            }),
-            studyInfo: Object.freeze({
-                reference: 'Koh et al. (2008) [10]',
-                patientCohort: '25 patients (pre/post nCRT)',
-                keyCriteriaSummary: 'Irregular border OR heterogeneous signal.'
-            })
-        },
-        {
-            id: 'barbaro_2024',
-            name: 'Barbaro et al. (2024)',
-            displayShortName: 'Barbaro 2024',
-            applicableCohort: 'neoadjuvantTherapy',
-            logic: 'AND',
-            criteria: Object.freeze({
-                size: { active: true, threshold: 2.3, condition: '>=' },
-                shape: { active: false, value: null },
-                border: { active: false, value: null },
-                homogeneity: { active: false, value: null },
-                signal: { active: false, value: null }
-            }),
-            studyInfo: Object.freeze({
-                reference: 'Barbaro et al. (2024) [13]',
-                patientCohort: '191 LARC patients (post-nCRT)',
-                keyCriteriaSummary: 'Short axis diameter ≥2.3 mm (derived from optimal cut-off for ypN0).'
-            })
-        },
-        {
-            id: 'rutegard_et_al_esgar',
-            name: 'ESGAR 2016 (Rutegård et al. 2025)',
-            displayShortName: 'ESGAR 2016',
-            applicableCohort: 'surgeryAlone',
-            logic: 'KOMBINIERT',
-            criteria: Object.freeze({
-                size: { active: true, threshold: 9.0, condition: '>=' },
-                shape: { active: true, value: 'round' },
-                border: { active: true, value: 'irregular' },
-                homogeneity: { active: true, value: 'heterogeneous' },
-                signal: { active: false, value: null }
-            }),
-            studyInfo: Object.freeze({
-                reference: 'Rutegård et al. (2025) [22]',
-                patientCohort: '46 rectal cancer patients (anatomically matched)',
-                keyCriteriaSummary: 'Short axis ≥9mm; OR 5–8mm with ≥2 suspicious features (round, irregular, heterogeneous); OR <5mm with all 3 features.'
-            })
-        }
-    ]),
-    publicationElements: Object.freeze({
-        methods: {
-            literatureT2CriteriaTable: {
-                id: 'table-methods-t2-literature',
-                titleEn: 'Table 2. Literature-Based T2-Weighted MRI Criteria for Nodal Malignancy Used for Comparison'
-            }
-        },
-        results: {
-            patientCharacteristicsTable: {
-                id: 'table-results-patient-char',
-                titleEn: 'Table 1. Patient Demographics and Clinical Characteristics'
-            },
-            asPerformanceTable: {
-                id: 'table-results-as-performance',
-                titleEn: 'Table 3. Diagnostic Performance of the Avocado Sign in Predicting Nodal Status'
-            },
-            optimizedT2PerformanceTable: {
-                id: 'table-results-optimized-t2-performance',
-                titleEn: 'Table 4. Diagnostic Performance of Cohort-Optimized T2-Weighted Criteria by Target Metric ({BF_METRIC})'
-            },
-            comparisonAsVsT2Table: {
-                id: 'table-results-comparison-as-t2',
-                titleEn: 'Table 5. Statistical Comparison of Diagnostic Performance (Avocado Sign vs. Optimized T2 Criteria)'
-            }
-        }
     })
 });
 
