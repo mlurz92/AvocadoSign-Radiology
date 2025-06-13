@@ -26,7 +26,8 @@ const publicationTab = (() => {
         }
         
         const mainSectionLabel = APP_CONFIG.UI_TEXTS.publicationTab.sectionLabels[mainSection.labelKey] || mainSection.labelKey;
-        const subSectionLabel = mainSection.subSections.find(sub => sub.id === currentSectionId)?.label;
+        const subSection = mainSection.subSections.find(sub => sub.id === currentSectionId);
+        const subSectionLabel = subSection ? subSection.label : '';
 
         let title = mainSectionLabel;
         if (subSectionLabel && mainSection.subSections.length > 1) {
@@ -36,14 +37,16 @@ const publicationTab = (() => {
         const contentHTML = publicationService.generateSectionHTML(currentSectionId, allCohortStats, commonData);
 
         const finalHTML = `
-            <div class="row mb-3 sticky-top bg-light py-2 shadow-sm" style="top: var(--sticky-header-offset, 111px); z-index: 1015;">
+            <div class="row mb-3">
                 <div class="col-md-3">
-                    ${uiComponents.createPublicationNav(currentSectionId)}
-                    <div class="mt-3">
-                        <label for="publication-bf-metric-select" class="form-label small text-muted">${APP_CONFIG.UI_TEXTS.publicationTab.bfMetricSelectLabel}</label>
-                        <select class="form-select form-select-sm" id="publication-bf-metric-select">
-                            ${APP_CONFIG.AVAILABLE_BRUTE_FORCE_METRICS.map(m => `<option value="${m.value}" ${m.value === commonData.bruteForceMetricForPublication ? 'selected' : ''}>${m.label}</option>`).join('')}
-                        </select>
+                    <div class="sticky-top" style="top: calc(var(--sticky-header-offset, 111px) + 1rem);">
+                        ${uiComponents.createPublicationNav(currentSectionId)}
+                        <div class="mt-3">
+                            <label for="publication-bf-metric-select" class="form-label small text-muted">${APP_CONFIG.UI_TEXTS.publicationTab.bfMetricSelectLabel}</label>
+                            <select class="form-select form-select-sm" id="publication-bf-metric-select">
+                                ${APP_CONFIG.AVAILABLE_BRUTE_FORCE_METRICS.map(m => `<option value="${m.value}" ${m.value === commonData.bruteForceMetricForPublication ? 'selected' : ''}>${m.label}</option>`).join('')}
+                            </select>
+                        </div>
                     </div>
                 </div>
                 <div class="col-md-9">
@@ -58,8 +61,14 @@ const publicationTab = (() => {
             
         return finalHTML;
     }
+    
+    function getSectionContentForExport(sectionId, lang, statsData, commonData) {
+        return publicationService.generateSectionHTML(sectionId, statsData, commonData);
+    }
 
-    return {
-        render
-    };
+    return Object.freeze({
+        render,
+        getSectionContentForExport
+    });
+
 })();
