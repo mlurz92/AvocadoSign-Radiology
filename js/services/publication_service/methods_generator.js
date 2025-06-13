@@ -15,10 +15,25 @@ const methodsGenerator = (() => {
         const helpers = publicationHelpers;
         return `
             <h4 id="methoden_mrt_protokoll_akquisition">MRI Protocol and Image Analysis</h4>
-            <p>All MRI examinations were performed on a 3.0-T system (MAGNETOM Prisma Fit; Siemens Healthineers) with a phased-array body coil. To minimize bowel peristalsis, butylscopolamine was administered intravenously at the beginning of the examination. The standardized protocol included high-resolution, multiplanar T2-weighted turbo spin-echo sequences and an axial diffusion-weighted sequence. Following the intravenous administration of a weight-based dose (0.2 mL/kg) of a macrocyclic gadolinium-based contrast agent (Gadoteridol; ProHance; Bracco), a fat-suppressed, T1-weighted volumetric interpolated breath-hold examination (VIBE) sequence was acquired. Key imaging parameters are detailed in Table 1. The imaging protocol was identical for both primary staging and post-nCRT restaging examinations.</p>
-            <p>Two board-certified radiologists (M.L. and A.O.S., with 7 and 29 years of experience in abdominal MRI, respectively), who were blinded to the histopathological outcomes and each other's findings, independently reviewed all MRI studies. Any discrepancies in assessment were resolved by consensus.</p>
-            <p><strong>Avocado Sign (AS) Assessment:</strong> On the contrast-enhanced T1-weighted VIBE images, all visible mesorectal lymph nodes were assessed for the presence of the Avocado Sign, defined as a distinct hypointense core within an otherwise homogeneously hyperintense lymph node, irrespective of node size or shape ${helpers.getReference('REFERENCE_LURZ_SCHAEFER_2025')}. A patient was classified as AS-positive if at least one such node was identified.</p>
+            <p>All MRI examinations were performed on a 3.0-T system (MAGNETOM Prisma Fit; Siemens Healthineers) with a phased-array body coil. To minimize bowel peristalsis, butylscopolamine was administered intravenously at the beginning of the examination. The standardized protocol included high-resolution, multiplanar T2-weighted turbo spin-echo sequences and an axial diffusion-weighted sequence. Following the intravenous administration of a weight-based dose (0.2 mL/kg) of a macrocyclic gadolinium-based contrast agent (Gadoteridol; ProHance; Bracco), a fat-suppressed, T1-weighted volumetric interpolated breath-hold examination (VIBE) sequence was acquired. Key imaging parameters are detailed in Table 2. The imaging protocol was identical for both primary staging and post-nCRT restaging examinations.</p>
+            ${helpers.createPublicationTableHTML({
+                id: 'table-methods-mri-parameters',
+                caption: 'Table 2: MRI Sequence Parameters',
+                headers: ['Sequence', 'Sagittal T2-TSE', 'Axial T2-TSE', 'Coronal T2-TSE', 'DWI (b100/500/1000)', 'Dixon-VIBE (post-contrast)'],
+                rows: [
+                    ['Repetition time (ms)', '4170', '4400', '4400', '3700', '5.8'],
+                    ['Echo time (ms)', '72', '81', '81', '59', '2.5/3.7'],
+                    ['Field of view (mm)', '220', '220', '220', '220', '270'],
+                    ['Slice thickness (mm)', '3', '2', '2', '2', '1.5'],
+                    ['Matrix', '394 × 448', '380 × 432', '380 × 432', '140 × 140', '326 × 384'],
+                    ['Acquisition time (min)', '4:37', '4:50', '4:50', '3:57', '4:10']
+                ],
+                notes: 'Detailed parameters of the MRI sequences used in the study, including repetition time, echo time, field of view, matrix, and slice thickness. Sequences include T2-weighted TSE in sagittal, axial, and coronal planes; axial DWI; and post-contrast axial VIBE with Dixon fat suppression.'
+            })}
+            <p>Two board-certified radiologists (M.L. and A.O.S., with 7 and 29 years of experience in abdominal MRI, respectively), who were blinded to the histopathological outcomes and each other's findings, independently reviewed all MRI studies. Any discrepancies in assessment were resolved by consensus with a third radiologist who had 19 years of experience in abdominal MRI.</p>
+            <p><strong>Avocado Sign (AS) Assessment:</strong> On the contrast-enhanced T1-weighted VIBE images, all visible mesorectal lymph nodes were assessed for the presence of the Avocado Sign, defined as a distinct hypointense core within an otherwise homogeneously hyperintense lymph node, irrespective of node size or shape ${helpers.getReference('REFERENCE_LURZ_SCHAEFER_2025')}. No minimum size threshold was applied for lymph node evaluation to avoid overlooking small metastatic nodes and to comprehensively assess the sign’s performance across the full spectrum of lymph node sizes encountered in clinical practice. The Avocado Sign was assessed exclusively in mesorectal lymph nodes; extramesorectal nodes and tumor deposits were not assessed. A patient was classified as AS-positive if at least one such node was identified.</p>
             <p><strong>T2-weighted (T2w) Criteria Assessment:</strong> The same radiologists evaluated the T2w images for five standard morphological features: size (short-axis diameter), shape (round vs. oval), border (sharp vs. irregular), internal homogeneity (homogeneous vs. heterogeneous), and signal intensity (low, intermediate, or high relative to muscle). This feature set was used for subsequent comparative analyses.</p>
+            <p>Before commencing the study, the radiologists underwent a joint training session to standardize the assessment of the Avocado Sign. They were provided with a written definition of the imaging marker, along with a set of example images demonstrating positive and negative cases (see Supplementary Material). The training ensured consistent interpretation among the raters. During the study, the radiologists independently assessed the MRI images, blinded to each other’s evaluations and the histopathological results. The Avocado Sign was initially identified during routine clinical practice. For this study, we retrospectively applied the predefined imaging criteria to a separate cohort of patients who were not part of the initial observations or the rater training examples, thus minimizing in-sample bias and enhancing the generalizability of our findings.</p>
         `;
     }
 
@@ -26,10 +41,29 @@ const methodsGenerator = (() => {
         const { bruteForceMetricForPublication } = commonData;
         const helpers = publicationHelpers;
 
+        const table2Config = {
+            id: 'table-methods-t2-literature',
+            caption: 'Table 3: Literature-Based T2-Weighted MRI Criteria for Nodal Malignancy Used for Comparison',
+            headers: ['Criteria Set', 'Study Info', 'Applicable Cohort', 'Key Criteria Summary', 'Logic'],
+            rows: []
+        };
+
+        const literatureSets = PUBLICATION_CONFIG.literatureCriteriaSets;
+        literatureSets.forEach(set => {
+            table2Config.rows.push([
+                set.name,
+                `${set.studyInfo.reference}`,
+                set.studyInfo.patientCohort,
+                set.studyInfo.keyCriteriaSummary,
+                set.logic === 'KOMBINIERT' ? 'Combined' : set.logic
+            ]);
+        });
+
         return `
             <h4 id="methoden_vergleichskriterien_t2">Comparative T2w Criteria Sets</h4>
             <p>To provide a robust comparison for the Avocado Sign, we evaluated three distinct types of T2w criteria sets:</p>
-            <p><strong>1. Literature-Based Criteria:</strong> We applied three criteria sets from previously published, influential studies to their respective target populations within our cohort (Table 2). These included the complex, size-dependent criteria from the ESGAR consensus group for the surgery-alone cohort, criteria based on morphological features by Koh et al for the overall cohort, and a size-only criterion for post-nCRT restaging by Barbaro et al ${helpers.getReference('REFERENCE_RUTEGARD_2025')}, ${helpers.getReference('REFERENCE_KOH_2008')}, ${helpers.getReference('REFERENCE_BARBARO_2024')}.</p>
+            <p><strong>1. Literature-Based Criteria:</strong> We applied three criteria sets from previously published, influential studies to their respective target populations within our cohort (Table 3). These included the complex, size-dependent criteria from the ESGAR consensus group for the surgery-alone cohort, criteria based on morphological features by Koh et al for the overall cohort, and a size-only criterion for post-nCRT restaging by Barbaro et al ${helpers.getReference('REFERENCE_RUTEGARD_2025')}, ${helpers.getReference('REFERENCE_KOH_2008')}, ${helpers.getReference('REFERENCE_BARBARO_2024')}.</p>
+            ${helpers.createPublicationTableHTML(table2Config)}
             <p><strong>2. Cohort-Optimized Criteria (Brute-Force):</strong> To establish a "best-case" benchmark for T2w morphology within our specific dataset, we performed a systematic brute-force optimization. A computational algorithm exhaustively tested all possible combinations of the five T2w features and logical operators (AND/OR) to identify the set that maximized a pre-selected diagnostic metric (${bruteForceMetricForPublication}) for each patient cohort (Overall, Surgery alone, Neoadjuvant therapy). The best-performing criteria set for the overall cohort was used for the primary comparison against the Avocado Sign.</p>
         `;
     }
@@ -43,10 +77,12 @@ const methodsGenerator = (() => {
 
     function generateStatisticalAnalysisHTML(stats, commonData) {
         const helpers = publicationHelpers;
+        const statisticalSignificanceLevel = APP_CONFIG.STATISTICAL_CONSTANTS.SIGNIFICANCE_LEVEL; // 0.05
+
         return `
             <h4 id="methoden_statistische_analyse_methoden">Statistical Analysis</h4>
             <p>Descriptive statistics were used to summarize patient characteristics. Diagnostic performance metrics—including sensitivity, specificity, positive predictive value (PPV), negative predictive value (NPV), accuracy, and the area under the receiver operating characteristic curve (AUC)—were calculated for each diagnostic method. Wilson score method was used for 95% confidence intervals (CIs) of proportions, and the bootstrap percentile method (${APP_CONFIG.STATISTICAL_CONSTANTS.BOOTSTRAP_CI_REPLICATIONS} replications) was used for CIs of AUC and F1-score.</p>
-            <p>The primary comparison between the AUC of the Avocado Sign and the cohort-optimized T2w criteria was performed using the method described by DeLong et al. for paired ROC curves. McNemar’s test was used to compare accuracies. For associations between individual categorical features and N-status, Fisher's exact test was used. All statistical analyses were performed using custom scripts in JavaScript, leveraging standard statistical formulas. A two-sided ${helpers.formatPValueForPublication(0.049)} was considered to indicate statistical significance.</p>
+            <p>The primary comparison between the AUC of the Avocado Sign and the cohort-optimized T2w criteria was performed using the method described by DeLong et al. for paired ROC curves. McNemar’s test was used to compare accuracies. For associations between individual categorical features and N-status, Fisher's exact test was used. All statistical analyses were performed using custom scripts in JavaScript, leveraging standard statistical formulas. A two-sided ${helpers.formatPValueForPublication(statisticalSignificanceLevel - 0.001)} was considered to indicate statistical significance.</p>
         `;
     }
 
