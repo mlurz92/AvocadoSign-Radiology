@@ -66,9 +66,13 @@ const resultsGenerator = (() => {
         
         metrics.forEach(metric => {
             const row = [metric.name];
-            row.push(helpers.formatMetricForPublication(stats.Overall.performanceAS[metric.key], metric.key));
-            row.push(helpers.formatMetricForPublication(stats.surgeryAlone.performanceAS[metric.key], metric.key));
-            row.push(helpers.formatMetricForPublication(stats.neoadjuvantTherapy.performanceAS[metric.key], metric.key));
+            const overallPerf = stats.Overall?.performanceAS?.[metric.key];
+            const surgeryPerf = stats.surgeryAlone?.performanceAS?.[metric.key];
+            const ncrPerf = stats.neoadjuvantTherapy?.performanceAS?.[metric.key];
+            
+            row.push(overallPerf ? helpers.formatMetricForPublication(overallPerf, metric.key) : 'N/A');
+            row.push(surgeryPerf ? helpers.formatMetricForPublication(surgeryPerf, metric.key) : 'N/A');
+            row.push(ncrPerf ? helpers.formatMetricForPublication(ncrPerf, metric.key) : 'N/A');
             tableConfig.rows.push(row);
         });
 
@@ -79,7 +83,7 @@ const resultsGenerator = (() => {
         const overallStats = stats?.[APP_CONFIG.COHORTS.OVERALL.id];
         const { bruteForceMetricForPublication } = commonData;
         const helpers = publicationHelpers;
-        const bfResultsAvailable = overallStats?.performanceT2Bruteforce && overallStats?.comparisonASvsT2Bruteforce;
+        const bfResultsAvailable = !!(overallStats?.performanceT2Bruteforce && overallStats?.comparisonASvsT2Bruteforce);
 
         let text;
         if (bfResultsAvailable) {
