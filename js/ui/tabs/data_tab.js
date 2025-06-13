@@ -1,22 +1,11 @@
 const dataTab = (() => {
 
-    const columns = [
-        { key: 'id', label: 'ID', tooltipKey: 'nr' },
-        { key: 'name', label: 'Last Name', tooltipKey: 'name' },
-        { key: 'firstName', label: 'First Name', tooltipKey: 'firstName' },
-        { key: 'sex', label: 'Sex', tooltipKey: 'sex' },
-        { key: 'age', label: 'Age', tooltipKey: 'age' },
-        { key: 'therapy', label: 'Therapy', tooltipKey: 'therapy' },
-        { key: 'status', label: 'N/AS/T2', tooltipKey: 'n_as_t2', subKeys: [{key: 'nStatus', label: 'N'}, {key: 'asStatus', label: 'AS'}, {key: 't2Status', label: 'T2'}] },
-        { key: 'notes', label: 'Notes', tooltipKey: 'notes' },
-        { key: 'details', label: '', width: '30px', tooltipKey: 'expandRow'}
-    ];
-
-    function createTableHeaderHTML(tableId, sortState) {
-        let headerHTML = `<thead class="small sticky-top bg-light" id="${tableId}-header"><tr>`;
+    function createTableHeaderHTML(columns, sortState) {
+        let headerHTML = `<thead class="small sticky-top bg-light" id="data-table-header"><tr>`;
         columns.forEach(col => {
             let sortIconHTML = '<i class="fas fa-sort text-muted opacity-50 ms-1"></i>';
             let thStyle = col.width ? `style="width: ${col.width};"` : '';
+            if (col.textAlign) thStyle += ` text-align: ${col.textAlign};`;
             let isMainKeyActiveSort = false;
             let activeSubKey = null;
 
@@ -54,8 +43,9 @@ const dataTab = (() => {
     function createDataTableHTML(data, sortState) {
         if (!Array.isArray(data)) return '<p class="text-danger">Error: Invalid data for table.</p>';
         const tableId = 'data-table';
+        const columns = APP_CONFIG.TABLE_COLUMN_DEFINITIONS.DATA_TABLE_COLUMNS; // Get columns from central config
         let tableHTML = `<table class="table table-sm table-hover table-striped data-table" id="${tableId}">`;
-        tableHTML += createTableHeaderHTML(tableId, sortState);
+        tableHTML += createTableHeaderHTML(columns, sortState); // Pass columns to header renderer
         tableHTML += `<tbody id="${tableId}-body">`;
         if (data.length === 0) {
             tableHTML += `<tr><td colspan="${columns.length}" class="text-center text-muted">No data found in the selected cohort.</td></tr>`;
