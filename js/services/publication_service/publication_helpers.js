@@ -8,9 +8,10 @@ const publicationHelpers = (() => {
         if (p < 0.001) return `${prefix} < .001`;
         if (p > 0.99) return `${prefix} > .99`;
         
-        if (p < 0.01) return `${prefix} = .${p.toFixed(3).substring(2)}`;
-        
-        if (p.toFixed(2) === '0.05' && p < 0.05) {
+        // Handle p-values < 0.01 with 3 digits, e.g., 0.005 -> .005
+        // Handle special case 0.05 and less than 0.05, e.g., 0.046 -> .046
+        // For other cases (p >= 0.01 and p < 0.05, or p > 0.05), use 2 digits, e.g., 0.12 -> .12, 0.07 -> .07
+        if (p < 0.01 || (p.toFixed(2) === '0.05' && p < 0.05)) {
              return `${prefix} = .${p.toFixed(3).substring(2)}`;
         }
         
@@ -31,22 +32,53 @@ const publicationHelpers = (() => {
             return 'N/A';
         }
 
-        const isPercent = !['auc', 'f1', 'or', 'phi', 'z', 'statistic'].includes(name.toLowerCase());
-        const digits = name.toLowerCase() === 'auc' ? 2 : 0;
+        let isPercent = true;
+        let digits = 0;
 
-        const valueStr = formatValueForPublication(metric.value, digits, isPercent);
-        const valueWithPercent = isPercent ? `${valueStr}%` : valueStr;
-
-        if (showValueOnly || !metric.ci || typeof metric.ci.lower !== 'number' || typeof metric.ci.upper !== 'number' || isNaN(metric.ci.lower) || isNaN(metric.ci.upper)) {
-            return valueWithPercent;
+        switch (name.toLowerCase()) {
+            case 'auc':
+                digits = 2;
+                isPercent = false;
+                break;
+            case 'f1':
+                digits = 3;
+                isPercent = false;
+                break;
+            case 'or':
+                digits = 2;
+                isPercent = false;
+                break;
+            case 'rd': // Risk Difference should be reported as an absolute value, not percentage, with 2 digits.
+                digits = 2;
+                isPercent = false; // RD is already scaled to -1 to 1 by the calculation
+                break;
+            case 'phi':
+            case 'z':
+            case 'statistic':
+                digits = 2; // For general statistics or test statistics, 2 digits
+                isPercent = false;
+                break;
+            default: // sens, spec, ppv, npv, acc, balAcc - these are typically percentages with 0 digits
+                digits = 0;
+                isPercent = true;
+                break;
         }
 
+
+        const valueStr = formatValueForPublication(metric.value, digits, isPercent);
+        const valueWithUnit = isPercent ? `${valueStr}%` : valueStr;
+
+        if (showValueOnly || !metric.ci || typeof metric.ci.lower !== 'number' || typeof metric.ci.upper !== 'number' || isNaN(metric.ci.lower) || isNaN(metric.ci.upper)) {
+            return valueWithUnit;
+        }
+
+        // CI values should also adhere to the same precision as the main value.
         const lowerStr = formatValueForPublication(metric.ci.lower, digits, isPercent);
         const upperStr = formatValueForPublication(metric.ci.upper, digits, isPercent);
         
         const ciStr = isPercent ? `${lowerStr}%, ${upperStr}%` : `${lowerStr}, ${upperStr}`;
 
-        return `${valueWithPercent} (95% CI: ${ciStr})`;
+        return `${valueWithUnit} (95% CI: ${ciStr})`;
     }
 
     function createPublicationTableHTML(config) {
@@ -84,6 +116,12 @@ const publicationHelpers = (() => {
 
     function getReference(id) {
         const ref = APP_CONFIG.REFERENCES_FOR_PUBLICATION[id];
+        // Ensure reference ID is correctly displayed as per Radiology style guide
+        // Radiology often uses bracketed numbers [X] for references.
+        // Example: "Sauer et al. [2–5]" or "[2–5]" if directly after text.
+        // For individual references, it's typically just [X].
+        // The current implementation is simple '[id]'. This should be fine for now,
+        // but if more complex ranges are needed, it would require logic in the generator functions.
         return ref ? `[${ref.id}]` : '[REF NOT FOUND]';
     }
 
