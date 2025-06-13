@@ -153,53 +153,20 @@ const uiComponents = (() => {
     }
 
     function createPublicationNav(currentSectionId) {
-        const accordionId = 'publicationNavAccordion';
-        const navItemsHTML = PUBLICATION_CONFIG.sections.map((mainSection, index) => {
+        const navItems = PUBLICATION_CONFIG.sections.map(mainSection => {
             const sectionLabel = APP_CONFIG.UI_TEXTS.publicationTab.sectionLabels[mainSection.labelKey] || mainSection.labelKey;
             
-            if (mainSection.subSections.length > 1) {
-                const isMainActive = mainSection.subSections.some(sub => sub.id === currentSectionId);
-                const collapseId = `collapse-${mainSection.id}`;
-
-                const subNavItems = mainSection.subSections.map(subSection => {
-                    const isActive = subSection.id === currentSectionId;
-                    return `
-                        <li class="nav-item w-100">
-                            <a class="nav-link w-100 text-start publication-section-link ${isActive ? 'active' : ''}" href="#" data-section-id="${subSection.id}">
-                                ${subSection.label}
-                            </a>
-                        </li>`;
-                }).join('');
-
-                return `
-                    <div class="accordion-item">
-                        <h2 class="accordion-header" id="heading-${mainSection.id}">
-                            <button class="accordion-button py-2 ${!isMainActive ? 'collapsed' : ''}" type="button" data-bs-toggle="collapse" data-bs-target="#${collapseId}" aria-expanded="${isMainActive}" aria-controls="${collapseId}">
-                                ${sectionLabel}
-                            </button>
-                        </h2>
-                        <div id="${collapseId}" class="accordion-collapse collapse ${isMainActive ? 'show' : ''}" aria-labelledby="heading-${mainSection.id}" data-bs-parent="#${accordionId}">
-                            <div class="accordion-body p-0">
-                                <ul class="nav flex-column nav-pills ps-2">${subNavItems}</ul>
-                            </div>
-                        </div>
-                    </div>`;
-
-            } else {
-                const subSection = mainSection.subSections[0];
-                const isActive = subSection.id === currentSectionId;
-                return `
-                    <div class="accordion-item">
-                         <h2 class="accordion-header">
-                            <a class="accordion-button-standalone publication-section-link nav-link w-100 text-start py-2 ${isActive ? 'active' : ''}" href="#" data-section-id="${subSection.id}">
-                                ${sectionLabel}
-                            </a>
-                        </h2>
-                    </div>`;
-            }
+            const isMainActive = mainSection.id === currentSectionId || mainSection.subSections.some(sub => sub.id === currentSectionId);
+            
+            return `
+                <li class="nav-item">
+                    <a class="nav-link py-2 publication-section-link ${isMainActive ? 'active' : ''}" href="#" data-section-id="${mainSection.id}" data-tippy-content="${sectionLabel}">
+                        ${sectionLabel}
+                    </a>
+                </li>`;
         }).join('');
 
-        return `<div class="accordion" id="${accordionId}">${navItemsHTML}</div>`;
+        return `<nav id="publication-sections-nav" class="nav flex-column nav-pills">${navItems}</nav>`;
     }
 
     function createBruteForceModalContent(resultsData) {
