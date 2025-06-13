@@ -2,16 +2,7 @@ const analysisTab = (() => {
 
     function createAnalysisTableCardHTML(data, sortState, appliedCriteria, appliedLogic) {
         const tableId = 'analysis-table';
-        const columns = [
-            { key: 'id', label: 'ID', tooltipKey: 'nr' },
-            { key: 'name', label: 'Name', tooltipKey: 'name' },
-            { key: 'therapy', label: 'Therapy', tooltipKey: 'therapy' },
-            { key: 'status', label: 'N/AS/T2', tooltipKey: 'n_as_t2', subKeys: [{key: 'nStatus', label: 'N'}, {key: 'asStatus', label: 'AS'}, {key: 't2Status', label: 'T2'}]},
-            { key: 'countPathologyNodes', label: 'N+/N total', tooltipKey: 'n_counts', textAlign: 'center' },
-            { key: 'countASNodes', label: 'AS+/AS total', tooltipKey: 'as_counts', textAlign: 'center' },
-            { key: 'countT2Nodes', label: 'T2+/T2 total', tooltipKey: 't2_counts', textAlign: 'center' },
-            { key: 'details', label: '', width: '30px', tooltipKey: 'expandRow'}
-        ];
+        const columns = APP_CONFIG.TABLE_COLUMN_DEFINITIONS.ANALYSIS_TABLE_COLUMNS; // Get columns from central config
 
         let headerHTML = `<thead class="small sticky-top bg-light" id="${tableId}-header"><tr>`;
         columns.forEach(col => {
