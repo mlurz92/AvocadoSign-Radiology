@@ -7,17 +7,18 @@ const publicationTab = (() => {
             return '<div class="alert alert-warning">Statistics not available. Cannot generate publication content.</div>';
         }
 
+        const overallDescriptive = allCohortStats?.[APP_CONFIG.COHORTS.OVERALL.id]?.descriptive;
         const commonData = {
             appName: APP_CONFIG.APP_NAME,
             appVersion: APP_CONFIG.APP_VERSION,
-            nOverall: allCohortStats?.Overall?.descriptive?.patientCount || 0,
-            nPositive: allCohortStats?.Overall?.descriptive?.nStatus?.plus || 0,
-            nSurgeryAlone: allCohortStats?.surgeryAlone?.descriptive?.patientCount || 0,
-            nNeoadjuvantTherapy: allCohortStats?.neoadjuvantTherapy?.descriptive?.patientCount || 0,
+            nOverall: overallDescriptive?.patientCount || 0,
+            nPositive: overallDescriptive?.nStatus?.plus || 0,
+            nSurgeryAlone: allCohortStats?.[APP_CONFIG.COHORTS.SURGERY_ALONE.id]?.descriptive?.patientCount || 0,
+            nNeoadjuvantTherapy: allCohortStats?.[APP_CONFIG.COHORTS.NEOADJUVANT.id]?.descriptive?.patientCount || 0,
             references: APP_CONFIG.REFERENCES_FOR_PUBLICATION || {},
             bruteForceMetricForPublication: state.getPublicationBruteForceMetric(),
             currentLanguage: currentLanguage,
-            rawData: rawData
+            rawData: rawData // Raw data might be needed by some generators (e.g., for flowcharts, though not currently implemented)
         };
 
         const mainSection = PUBLICATION_CONFIG.sections.find(s => s.id === currentSectionId || s.subSections.some(sub => sub.id === currentSectionId));
@@ -28,14 +29,14 @@ const publicationTab = (() => {
         
         const mainSectionLabel = APP_CONFIG.UI_TEXTS.publicationTab.sectionLabels[mainSection.labelKey] || mainSection.labelKey;
         
-        let title = mainSectionLabel;
+        let title = mainSectionLabel; // Title is dynamic based on selected section
         
         const contentHTML = publicationService.generateSectionHTML(currentSectionId, allCohortStats, commonData);
 
         const finalHTML = `
             <div class="row mb-3">
                 <div class="col-md-3">
-                    <div class="sticky-top" style="top: calc(var(--sticky-header-offset, 111px) + 1rem);">
+                    <div class="sticky-top" style="top: var(--sticky-header-offset);">
                         ${uiComponents.createPublicationNav(currentSectionId)}
                         <div class="mt-3">
                             <label for="publication-bf-metric-select" class="form-label small text-muted">${APP_CONFIG.UI_TEXTS.publicationTab.bfMetricSelectLabel}</label>
@@ -59,7 +60,18 @@ const publicationTab = (() => {
     }
     
     function getSectionContentForExport(sectionId, lang, statsData, commonData) {
-        return publicationService.generateSectionHTML(sectionId, statsData, commonData);
+        // This function is called by the export service to get raw HTML content for a specific section.
+        // It passes the commonData and statsData needed by the generator functions.
+        // Ensure commonData contains necessary fields for generating text.
+        const commonDataForExport = { 
+            ...commonData, 
+            currentLanguage: lang, 
+            nOverall: statsData?.[APP_CONFIG.COHORTS.OVERALL.id]?.descriptive?.patientCount || 0,
+            nPositive: statsData?.[APP_CONFIG.COHORTS.OVERALL.id]?.descriptive?.nStatus?.plus || 0,
+            nSurgeryAlone: statsData?.[APP_CONFIG.COHORTS.SURGERY_ALONE.id]?.descriptive?.patientCount || 0,
+            nNeoadjuvantTherapy: statsData?.[APP_CONFIG.COHORTS.NEOADJUVANT.id]?.descriptive?.patientCount || 0
+        };
+        return publicationService.generateSectionHTML(sectionId, statsData, commonDataForExport);
     }
 
     return Object.freeze({
