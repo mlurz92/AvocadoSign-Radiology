@@ -34,6 +34,7 @@ const publicationService = (() => {
         if (mainSection && mainSection.subSections.length > 1) {
             let combinedHTML = '';
             try {
+                // Ensure sub-sections are rendered in their defined order
                 mainSection.subSections.forEach(sub => {
                     const subGenerator = contentGenerators[sub.id];
                     if (typeof subGenerator === 'function') {
