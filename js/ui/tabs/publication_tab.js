@@ -20,19 +20,15 @@ const publicationTab = (() => {
             rawData: rawData
         };
 
-        const mainSection = PUBLICATION_CONFIG.sections.find(s => s.subSections.some(sub => sub.id === currentSectionId));
+        const mainSection = PUBLICATION_CONFIG.sections.find(s => s.id === currentSectionId || s.subSections.some(sub => sub.id === currentSectionId));
+        
         if (!mainSection) {
-            return `<p class="text-warning">No section defined for ID '${currentSectionId}'.</p>`;
+            return `<div class="alert alert-danger">No section configuration found for ID '${currentSectionId}'.</div>`;
         }
         
         const mainSectionLabel = APP_CONFIG.UI_TEXTS.publicationTab.sectionLabels[mainSection.labelKey] || mainSection.labelKey;
-        const subSection = mainSection.subSections.find(sub => sub.id === currentSectionId);
-        const subSectionLabel = subSection ? subSection.label : '';
-
+        
         let title = mainSectionLabel;
-        if (subSectionLabel && mainSection.subSections.length > 1) {
-            title += `: ${subSectionLabel}`;
-        }
         
         const contentHTML = publicationService.generateSectionHTML(currentSectionId, allCohortStats, commonData);
 
