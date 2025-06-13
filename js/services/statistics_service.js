@@ -575,10 +575,13 @@ const statisticsService = (() => {
 
         cohorts.forEach(cohortId => {
             const cohortData = dataProcessor.filterDataByCohort(data, cohortId);
-            if (cohortData.length === 0) { results[cohortId] = null; return; }
+            if (cohortData.length === 0) {
+                results[cohortId] = null;
+                return;
+            }
 
             const evaluatedDataApplied = t2CriteriaManager.evaluateDataset(cloneDeep(cohortData), appliedT2Criteria, appliedT2Logic);
-
+            
             results[cohortId] = {
                 descriptive: calculateDescriptiveStats(evaluatedDataApplied),
                 performanceAS: calculateDiagnosticPerformance(evaluatedDataApplied, 'asStatus', 'nStatus'),
@@ -601,21 +604,6 @@ const statisticsService = (() => {
                     }
                 }
             });
-            
-            const overallCohortData = dataProcessor.filterDataByCohort(data, APP_CONFIG.COHORTS.OVERALL.id);
-            if (cohortId === APP_CONFIG.COHORTS.OVERALL.id) {
-                PUBLICATION_CONFIG.literatureCriteriaSets.forEach(studySetConf => {
-                    if (studySetConf.applicableCohort === APP_CONFIG.COHORTS.OVERALL.id) {
-                         const studySet = studyT2CriteriaManager.getStudyCriteriaSetById(studySetConf.id);
-                         if(studySet) {
-                            const evaluatedDataStudy = studyT2CriteriaManager.evaluateDatasetWithStudyCriteria(cloneDeep(overallCohortData), studySet);
-                            results[cohortId].performanceT2Literature[studySetConf.id] = calculateDiagnosticPerformance(evaluatedDataStudy, 't2Status', 'nStatus');
-                            results[cohortId][`comparisonASvsT2_literature_${studySetConf.id}`] = compareDiagnosticMethods(evaluatedDataStudy, 'asStatus', 't2Status', 'nStatus');
-                         }
-                    }
-                });
-            }
-
 
             const bfResult = bruteForceResultsPerCohort?.[cohortId];
             if (bfResult && bfResult.bestResult?.criteria) {
@@ -633,6 +621,7 @@ const statisticsService = (() => {
 
         return results;
     }
+
 
     function calculateAssociations(data, t2Criteria) {
         if (!Array.isArray(data) || data.length === 0 || !t2Criteria) return {};
