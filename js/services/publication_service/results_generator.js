@@ -8,9 +8,17 @@ const resultsGenerator = (() => {
         const { nOverall, nSurgeryAlone, nNeoadjuvantTherapy, nPositive } = commonData;
         const helpers = publicationHelpers;
 
+        // Mean age should be whole number as per Radiology style guide for first sentence in Results
+        const meanAgeFormatted = helpers.formatValueForPublication(descriptive.age.mean, 0); 
+        const stdDevAgeFormatted = helpers.formatValueForPublication(descriptive.age.sd, 1);
+
+        const medianAgeFormatted = helpers.formatValueForPublication(descriptive.age.median, 0);
+        const q1AgeFormatted = helpers.formatValueForPublication(descriptive.age.q1, 0);
+        const q3AgeFormatted = helpers.formatValueForPublication(descriptive.age.q3, 0);
+
         const text = `
             <h4 id="ergebnisse_patientencharakteristika">Patient Characteristics</h4>
-            <p>The study cohort comprised ${helpers.formatValueForPublication(nOverall, 0)} patients (mean age, ${helpers.formatValueForPublication(descriptive.age.mean, 1)} years ± ${helpers.formatValueForPublication(descriptive.age.sd, 1)} [standard deviation]; ${descriptive.sex.m} men). Enrollment and exclusion criteria are detailed in the study flowchart (Figure 1). Of the included patients, ${helpers.formatValueForPublication(nSurgeryAlone, 0)} (${helpers.formatValueForPublication(nSurgeryAlone / nOverall, 0, true)}%) underwent primary surgery, and ${helpers.formatValueForPublication(nNeoadjuvantTherapy, 0)} (${helpers.formatValueForPublication(nNeoadjuvantTherapy / nOverall, 0, true)}%) received neoadjuvant chemoradiotherapy. Overall, ${helpers.formatValueForPublication(nPositive, 0)} of ${nOverall} patients (${helpers.formatValueForPublication(nPositive / nOverall, 0, true)}%) had histopathologically confirmed lymph node metastases (N-positive). Detailed patient characteristics for the overall cohort are provided in Table 1.</p>
+            <p>The study cohort comprised ${helpers.formatValueForPublication(nOverall, 0)} patients (mean age, ${meanAgeFormatted} years ± ${stdDevAgeFormatted} [standard deviation]; ${descriptive.sex.m} men). Enrollment and exclusion criteria are detailed in the study flowchart (Figure 1). Of the included patients, ${helpers.formatValueForPublication(nSurgeryAlone, 0)} (${helpers.formatValueForPublication(nSurgeryAlone / nOverall, 0, true)}%) underwent primary surgery, and ${helpers.formatValueForPublication(nNeoadjuvantTherapy, 0)} (${helpers.formatValueForPublication(nNeoadjuvantTherapy / nOverall, 0, true)}%) received neoadjuvant chemoradiotherapy. Overall, ${helpers.formatValueForPublication(nPositive, 0)} of ${nOverall} patients (${helpers.formatValueForPublication(nPositive / nOverall, 0, true)}%) had histopathologically confirmed lymph node metastases (N-positive). Detailed patient characteristics for the overall cohort are provided in Table 1.</p>
         `;
 
         const tableConfig = {
@@ -19,7 +27,7 @@ const resultsGenerator = (() => {
             headers: ['Characteristic', `Overall Cohort (n=${nOverall})`],
             rows: [
                 ['Age (y), mean ± SD', `${helpers.formatValueForPublication(descriptive.age.mean, 1)} ± ${helpers.formatValueForPublication(descriptive.age.sd, 1)}`],
-                ['Age (y), median (IQR)', `${helpers.formatValueForPublication(descriptive.age.median, 0)} (${helpers.formatValueForPublication(descriptive.age.q1, 0)}–${helpers.formatValueForPublication(descriptive.age.q3, 0)})`],
+                ['Age (y), median (IQR)', `${medianAgeFormatted} (${q1AgeFormatted}–${q3AgeFormatted})`],
                 ['Sex, men', `${descriptive.sex.m} (${helpers.formatValueForPublication(descriptive.sex.m / nOverall, 0, true)}%)`],
                 ['Treatment approach', ''],
                 ['   Surgery alone', `${nSurgeryAlone} (${helpers.formatValueForPublication(nSurgeryAlone / nOverall, 0, true)}%)`],
@@ -43,12 +51,12 @@ const resultsGenerator = (() => {
         const overallStats = stats?.[APP_CONFIG.COHORTS.OVERALL.id];
         if (!overallStats || !overallStats.performanceAS) return '<p class="text-warning">Avocado Sign performance data not available.</p>';
         
-        const { performanceAS, interobserverKappa } = overallStats;
+        const { performanceAS, interobserverKappa, interobserverKappaCI } = overallStats;
         const helpers = publicationHelpers;
 
         const text = `
             <h4 id="ergebnisse_as_diagnostische_guete">Diagnostic Performance of the Avocado Sign</h4>
-            <p>For the entire cohort (n=${commonData.nOverall}), the Avocado Sign demonstrated a sensitivity of ${helpers.formatMetricForPublication(performanceAS.sens, 'sens')}, a specificity of ${helpers.formatMetricForPublication(performanceAS.spec, 'spec')}, and an accuracy of ${helpers.formatMetricForPublication(performanceAS.acc, 'acc')}. The area under the curve (AUC) was ${helpers.formatMetricForPublication(performanceAS.auc, 'auc')}, indicating excellent diagnostic performance. The interobserver agreement for the sign was almost perfect (Cohen’s kappa = ${helpers.formatValueForPublication(interobserverKappa, 2)}). The performance was robust across both the primary surgery and post-nCRT subgroups, as detailed in Table 3.</p>
+            <p>For the entire cohort (n=${commonData.nOverall}), the Avocado Sign demonstrated a sensitivity of ${helpers.formatMetricForPublication(performanceAS.sens, 'sens')}, a specificity of ${helpers.formatMetricForPublication(performanceAS.spec, 'spec')}, and an accuracy of ${helpers.formatMetricForPublication(performanceAS.acc, 'acc')}. The area under the curve (AUC) was ${helpers.formatMetricForPublication(performanceAS.auc, 'auc')}, indicating high diagnostic performance. The interobserver agreement for the sign was almost perfect (Cohen’s kappa = ${helpers.formatValueForPublication(interobserverKappa, 2)}${(interobserverKappaCI && isFinite(interobserverKappaCI.lower) && isFinite(interobserverKappaCI.upper)) ? ` (95% CI: ${helpers.formatValueForPublication(interobserverKappaCI.lower, 2)}, ${helpers.formatValueForPublication(interobserverKappaCI.upper, 2)})` : ''}). The performance was robust across both the primary surgery and post-nCRT subgroups, as detailed in Table 3.</p>
         `;
         
         const tableConfig = {
@@ -120,7 +128,13 @@ const resultsGenerator = (() => {
         };
 
         table4Config.rows.push(addPerfRow('Avocado Sign', stats.Overall, 'Overall', 'performanceAS'));
-        table4Config.rows.push(addPerfRow('Cohort-Optimized T2w', stats.Overall, 'Overall', 'performanceT2Bruteforce'));
+        // Include Cohort-Optimized T2w only if results are available
+        if (bfResultsAvailable) {
+            table4Config.rows.push(addPerfRow('Cohort-Optimized T2w', stats.Overall, 'Overall', 'performanceT2Bruteforce'));
+        } else {
+            table4Config.rows.push(['Cohort-Optimized T2w', 'Overall', 'Pending BF', 'Pending BF', 'Pending BF', 'Pending BF']);
+        }
+        
         table4Config.rows.push(addPerfRow('ESGAR 2016 (Rutegård)', stats.surgeryAlone, 'Surgery alone', 'performanceT2Literature.rutegard_et_al_esgar'));
         table4Config.rows.push(addPerfRow('Koh et al. (2008)', stats.Overall, 'Overall', 'performanceT2Literature.koh_2008'));
         table4Config.rows.push(addPerfRow('Barbaro et al. (2024)', stats.neoadjuvantTherapy, 'Neoadjuvant therapy', 'performanceT2Literature.barbaro_2024'));
@@ -139,13 +153,19 @@ const resultsGenerator = (() => {
             return [
                 setName,
                 cohortName,
-                helpers.formatValueForPublication(comp.diffAUC, 2),
-                helpers.formatValueForPublication(comp.Z, 3),
+                helpers.formatValueForPublication(comp.diffAUC, 2), // AUC Difference to 2 digits
+                helpers.formatValueForPublication(comp.Z, 3), // Z-statistic to 3 digits as example in style guide
                 helpers.formatPValueForPublication(comp.pValue)
             ];
         };
         
-        table5Config.rows.push(addCompRow('Cohort-Optimized T2w', stats.Overall, 'Overall', 'comparisonASvsT2Bruteforce'));
+        // Include Cohort-Optimized T2w only if results are available
+        if (bfResultsAvailable) {
+            table5Config.rows.push(addCompRow('Cohort-Optimized T2w', stats.Overall, 'Overall', 'comparisonASvsT2Bruteforce'));
+        } else {
+            table5Config.rows.push(['Cohort-Optimized T2w', 'Overall', 'Pending BF', 'Pending BF', 'Pending BF']);
+        }
+        
         table5Config.rows.push(addCompRow('ESGAR 2016 (Rutegård)', stats.surgeryAlone, 'Surgery alone', 'comparisonASvsT2_literature_rutegard_et_al_esgar'));
         table5Config.rows.push(addCompRow('Koh et al. (2008)', stats.Overall, 'Overall', 'comparisonASvsT2_literature_koh_2008'));
         table5Config.rows.push(addCompRow('Barbaro et al. (2024)', stats.neoadjuvantTherapy, 'Neoadjuvant therapy', 'comparisonASvsT2_literature_barbaro_2024'));
