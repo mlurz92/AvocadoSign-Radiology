@@ -6,7 +6,6 @@ const referencesGenerator = (() => {
             return '<p class="text-warning">References could not be loaded from configuration.</p>';
         }
 
-        // Filter out internal references and sort by ID to ensure correct numbering
         const publicationReferences = Object.values(allReferences)
             .filter(ref => typeof ref === 'object' && ref.id && !ref.isInternal)
             .sort((a, b) => a.id - b.id);
@@ -15,9 +14,11 @@ const referencesGenerator = (() => {
             return '<p>No references to display.</p>';
         }
 
-        const listItems = publicationReferences.map(ref => `<li>${ref.text}</li>`).join('');
+        const listItems = publicationReferences.map(ref => {
+            return `<li>${ref.text.replace(/(\d{4};\d{1,3}:\d{1,4}–\d{1,4})/, '<strong>$1</strong>')}</li>`;
+        }).join('');
         
-        return `<h4 id="references_main">References</h4><ol>${listItems}</ol>`;
+        return `<h3 id="references_main">References</h3><ol>${listItems}</ol>`;
     }
 
     return Object.freeze({
