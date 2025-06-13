@@ -1,40 +1,39 @@
-const state = ((APP_CONFIG_PARAM, PUBLICATION_CONFIG_PARAM) => {
+const state = (() => {
     let currentState = {};
-
-    // Use parameters directly instead of relying on global scope implicitly
-    const APP_CONFIG_REF = APP_CONFIG_PARAM;
-    const PUBLICATION_CONFIG_REF = PUBLICATION_CONFIG_PARAM;
-
-    const defaultState = {
-        currentCohort: APP_CONFIG_REF.DEFAULT_SETTINGS.COHORT,
-        dataTableSort: cloneDeep(APP_CONFIG_REF.DEFAULT_SETTINGS.DATA_TABLE_SORT),
-        analysisTableSort: cloneDeep(APP_CONFIG_REF.DEFAULT_SETTINGS.ANALYSIS_TABLE_SORT),
-        publicationSection: APP_CONFIG_REF.DEFAULT_SETTINGS.PUBLICATION_SECTION,
-        publicationBruteForceMetric: APP_CONFIG_REF.DEFAULT_SETTINGS.PUBLICATION_BRUTE_FORCE_METRIC,
-        publicationLang: APP_CONFIG_REF.DEFAULT_SETTINGS.PUBLICATION_LANG,
-        statsLayout: APP_CONFIG_REF.DEFAULT_SETTINGS.STATS_LAYOUT,
-        statsCohort1: APP_CONFIG_REF.DEFAULT_SETTINGS.STATS_COHORT1,
-        statsCohort2: APP_CONFIG_REF.DEFAULT_SETTINGS.STATS_COHORT2,
-        presentationView: APP_CONFIG_REF.DEFAULT_SETTINGS.PRESENTATION_VIEW,
-        presentationStudyId: APP_CONFIG_REF.DEFAULT_SETTINGS.PRESENTATION_STUDY_ID,
-        activeTabId: 'publication'
-    };
+    let defaultState = {}; // Deklarieren, aber nicht vollständig initialisieren
 
     function init() {
-        // Initialize state, loading from localStorage or using defaults
-        const loadedSection = loadFromLocalStorage(APP_CONFIG_REF.STORAGE_KEYS.PUBLICATION_SECTION);
-        const isValidSection = PUBLICATION_CONFIG_REF.sections.some(s => s.id === loadedSection || s.subSections.some(sub => sub.id === loadedSection));
+        // Vollständige Initialisierung von defaultState innerhalb von init(),
+        // wo APP_CONFIG und PUBLICATION_CONFIG garantiert verfügbar sind.
+        defaultState = {
+            currentCohort: APP_CONFIG.DEFAULT_SETTINGS.COHORT,
+            dataTableSort: cloneDeep(APP_CONFIG.DEFAULT_SETTINGS.DATA_TABLE_SORT),
+            analysisTableSort: cloneDeep(APP_CONFIG.DEFAULT_SETTINGS.ANALYSIS_TABLE_SORT),
+            publicationSection: APP_CONFIG.DEFAULT_SETTINGS.PUBLICATION_SECTION,
+            publicationBruteForceMetric: APP_CONFIG.DEFAULT_SETTINGS.PUBLICATION_BRUTE_FORCE_METRIC,
+            publicationLang: APP_CONFIG.DEFAULT_SETTINGS.PUBLICATION_LANG,
+            statsLayout: APP_CONFIG.DEFAULT_SETTINGS.STATS_LAYOUT,
+            statsCohort1: APP_CONFIG.DEFAULT_SETTINGS.STATS_COHORT1,
+            statsCohort2: APP_CONFIG.DEFAULT_SETTINGS.STATS_COHORT2,
+            presentationView: APP_CONFIG.DEFAULT_SETTINGS.PRESENTATION_VIEW,
+            presentationStudyId: APP_CONFIG.DEFAULT_SETTINGS.PRESENTATION_STUDY_ID,
+            activeTabId: 'publication'
+        };
+
+        // Der Teil, der PUBLICATION_CONFIG benötigt, wird ebenfalls hier initialisiert
+        const loadedSection = loadFromLocalStorage(APP_CONFIG.STORAGE_KEYS.PUBLICATION_SECTION);
+        const isValidSection = PUBLICATION_CONFIG.sections.some(s => s.id === loadedSection || s.subSections.some(sub => sub.id === loadedSection));
 
         currentState = {
-            currentCohort: loadFromLocalStorage(APP_CONFIG_REF.STORAGE_KEYS.CURRENT_COHORT) ?? defaultState.currentCohort,
+            currentCohort: loadFromLocalStorage(APP_CONFIG.STORAGE_KEYS.CURRENT_COHORT) ?? defaultState.currentCohort,
             publicationSection: isValidSection ? loadedSection : defaultState.publicationSection,
-            publicationBruteForceMetric: loadFromLocalStorage(APP_CONFIG_REF.STORAGE_KEYS.PUBLICATION_BRUTE_FORCE_METRIC) ?? defaultState.publicationBruteForceMetric,
-            publicationLang: loadFromLocalStorage(APP_CONFIG_REF.STORAGE_KEYS.PUBLICATION_LANG) ?? defaultState.publicationLang,
-            statsLayout: loadFromLocalStorage(APP_CONFIG_REF.STORAGE_KEYS.STATS_LAYOUT) ?? defaultState.statsLayout,
-            statsCohort1: loadFromLocalStorage(APP_CONFIG_REF.STORAGE_KEYS.STATS_COHORT1) ?? defaultState.statsCohort1,
-            statsCohort2: loadFromLocalStorage(APP_CONFIG_REF.STORAGE_KEYS.STATS_COHORT2) ?? defaultState.statsCohort2,
-            presentationView: loadFromLocalStorage(APP_CONFIG_REF.STORAGE_KEYS.PRESENTATION_VIEW) ?? defaultState.presentationView,
-            presentationStudyId: loadFromLocalStorage(APP_CONFIG_REF.STORAGE_KEYS.PRESENTATION_STUDY_ID) ?? defaultState.presentationStudyId,
+            publicationBruteForceMetric: loadFromLocalStorage(APP_CONFIG.STORAGE_KEYS.PUBLICATION_BRUTE_FORCE_METRIC) ?? defaultState.publicationBruteForceMetric,
+            publicationLang: loadFromLocalStorage(APP_CONFIG.STORAGE_KEYS.PUBLICATION_LANG) ?? defaultState.publicationLang,
+            statsLayout: loadFromLocalStorage(APP_CONFIG.STORAGE_KEYS.STATS_LAYOUT) ?? defaultState.statsLayout,
+            statsCohort1: loadFromLocalStorage(APP_CONFIG.STORAGE_KEYS.STATS_COHORT1) ?? defaultState.statsCohort1,
+            statsCohort2: loadFromLocalStorage(APP_CONFIG.STORAGE_KEYS.STATS_COHORT2) ?? defaultState.statsCohort2,
+            presentationView: loadFromLocalStorage(APP_CONFIG.STORAGE_KEYS.PRESENTATION_VIEW) ?? defaultState.presentationView,
+            presentationStudyId: loadFromLocalStorage(APP_CONFIG.STORAGE_KEYS.PRESENTATION_STUDY_ID) ?? defaultState.presentationStudyId,
             dataTableSort: cloneDeep(defaultState.dataTableSort),
             analysisTableSort: cloneDeep(defaultState.analysisTableSort),
             activeTabId: defaultState.activeTabId
@@ -53,7 +52,7 @@ const state = ((APP_CONFIG_PARAM, PUBLICATION_CONFIG_PARAM) => {
     }
 
     function getCurrentCohort() { return currentState.currentCohort; }
-    function setCurrentCohort(newCohort) { return _setter('currentCohort', APP_CONFIG_REF.STORAGE_KEYS.CURRENT_COHORT, newCohort); }
+    function setCurrentCohort(newCohort) { return _setter('currentCohort', APP_CONFIG.STORAGE_KEYS.CURRENT_COHORT, newCohort); }
 
     function getDataTableSort() { return cloneDeep(currentState.dataTableSort); }
     function updateDataTableSort(key, subKey = null) {
@@ -77,20 +76,21 @@ const state = ((APP_CONFIG_PARAM, PUBLICATION_CONFIG_PARAM) => {
 
     function getPublicationSection() { return currentState.publicationSection; }
     function setPublicationSection(newSectionId) {
-        const isValid = PUBLICATION_CONFIG_REF.sections.some(s => s.id === newSectionId || s.subSections.some(sub => sub.id === newSectionId));
-        return isValid ? _setter('publicationSection', APP_CONFIG_REF.STORAGE_KEYS.PUBLICATION_SECTION, newSectionId) : false;
+        // PUBLICATION_CONFIG muss hier verfügbar sein, wenn diese Funktion aufgerufen wird
+        const isValid = PUBLICATION_CONFIG.sections.some(s => s.id === newSectionId || s.subSections.some(sub => sub.id === newSectionId));
+        return isValid ? _setter('publicationSection', APP_CONFIG.STORAGE_KEYS.PUBLICATION_SECTION, newSectionId) : false;
     }
 
     function getPublicationBruteForceMetric() { return currentState.publicationBruteForceMetric; }
     function setPublicationBruteForceMetric(newMetric) {
-        const isValid = APP_CONFIG_REF.AVAILABLE_BRUTE_FORCE_METRICS.some(m => m.value === newMetric);
-        return isValid ? _setter('publicationBruteForceMetric', APP_CONFIG_REF.STORAGE_KEYS.PUBLICATION_BRUTE_FORCE_METRIC, newMetric) : false;
+        const isValid = APP_CONFIG.AVAILABLE_BRUTE_FORCE_METRICS.some(m => m.value === newMetric);
+        return isValid ? _setter('publicationBruteForceMetric', APP_CONFIG.STORAGE_KEYS.PUBLICATION_BRUTE_FORCE_METRIC, newMetric) : false;
     }
 
     function getCurrentPublikationLang() { return currentState.publicationLang; }
     function setPublicationLang(newLang) {
         if (newLang === 'en' || newLang === 'de') {
-            return _setter('publicationLang', APP_CONFIG_REF.STORAGE_KEYS.PUBLICATION_LANG, newLang);
+            return _setter('publicationLang', APP_CONFIG.STORAGE_KEYS.PUBLICATION_LANG, newLang);
         }
         return false;
     }
@@ -98,16 +98,16 @@ const state = ((APP_CONFIG_PARAM, PUBLICATION_CONFIG_PARAM) => {
     function getStatsLayout() { return currentState.statsLayout; }
     function setStatsLayout(newLayout) {
         if (newLayout === 'einzel' || newLayout === 'vergleich') {
-            return _setter('statsLayout', APP_CONFIG_REF.STORAGE_KEYS.STATS_LAYOUT, newLayout);
+            return _setter('statsLayout', APP_CONFIG.STORAGE_KEYS.STATS_LAYOUT, newLayout);
         }
         return false;
     }
 
     function getStatsCohort1() { return currentState.statsCohort1; }
-    function setStatsCohort1(newCohort) { return _setter('statsCohort1', APP_CONFIG_REF.STORAGE_KEYS.STATS_COHORT1, newCohort); }
+    function setStatsCohort1(newCohort) { return _setter('statsCohort1', APP_CONFIG.STORAGE_KEYS.STATS_COHORT1, newCohort); }
 
     function getStatsCohort2() { return currentState.statsCohort2; }
-    function setStatsCohort2(newCohort) { return _setter('statsCohort2', APP_CONFIG_REF.STORAGE_KEYS.STATS_COHORT2, newCohort); }
+    function setStatsCohort2(newCohort) { return _setter('statsCohort2', APP_CONFIG.STORAGE_KEYS.STATS_COHORT2, newCohort); }
 
     function getPresentationView() { return currentState.presentationView; }
     function setPresentationView(newView) {
@@ -115,14 +115,14 @@ const state = ((APP_CONFIG_PARAM, PUBLICATION_CONFIG_PARAM) => {
             return false;
         }
         
-        const viewChanged = _setter('presentationView', APP_CONFIG_REF.STORAGE_KEYS.PRESENTATION_VIEW, newView);
+        const viewChanged = _setter('presentationView', APP_CONFIG.STORAGE_KEYS.PRESENTATION_VIEW, newView);
         let studyIdChanged = false;
 
         if (newView === 'as-pur') {
-            studyIdChanged = _setter('presentationStudyId', APP_CONFIG_REF.STORAGE_KEYS.PRESENTATION_STUDY_ID, null);
+            studyIdChanged = _setter('presentationStudyId', APP_CONFIG.STORAGE_KEYS.PRESENTATION_STUDY_ID, null);
         } else if (newView === 'as-vs-t2') {
             if (currentState.presentationStudyId === null) {
-                studyIdChanged = _setter('presentationStudyId', APP_CONFIG_REF.STORAGE_KEYS.PRESENTATION_STUDY_ID, APP_CONFIG_REF.DEFAULT_SETTINGS.PRESENTATION_STUDY_ID);
+                studyIdChanged = _setter('presentationStudyId', APP_CONFIG.STORAGE_KEYS.PRESENTATION_STUDY_ID, APP_CONFIG.DEFAULT_SETTINGS.PRESENTATION_STUDY_ID);
             }
         }
         
@@ -131,7 +131,7 @@ const state = ((APP_CONFIG_PARAM, PUBLICATION_CONFIG_PARAM) => {
 
     function getPresentationStudyId() { return currentState.presentationStudyId; }
     function setPresentationStudyId(newStudyId) {
-        return _setter('presentationStudyId', APP_CONFIG_REF.STORAGE_KEYS.PRESENTATION_STUDY_ID, newStudyId ?? null);
+        return _setter('presentationStudyId', APP_CONFIG.STORAGE_KEYS.PRESENTATION_STUDY_ID, newStudyId ?? null);
     }
 
     function getActiveTabId() { return currentState.activeTabId; }
@@ -170,4 +170,4 @@ const state = ((APP_CONFIG_PARAM, PUBLICATION_CONFIG_PARAM) => {
         getActiveTabId,
         setActiveTabId
     });
-})(APP_CONFIG, PUBLICATION_CONFIG);
+})();
