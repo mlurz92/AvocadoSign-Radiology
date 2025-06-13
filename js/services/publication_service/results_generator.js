@@ -1,6 +1,6 @@
 const resultsGenerator = (() => {
 
-    function _generatePatientCharacteristicsTextAndTable(stats, commonData) {
+    function generatePatientCharacteristicsHTML(stats, commonData) {
         const overallStats = stats?.[APP_CONFIG.COHORTS.OVERALL.id];
         if (!overallStats || !overallStats.descriptive) return '<p class="text-warning">Patient characteristics data not available.</p>';
         
@@ -39,7 +39,7 @@ const resultsGenerator = (() => {
         return text + figurePlaceholder + helpers.createPublicationTableHTML(tableConfig);
     }
 
-    function _generateASPerformanceTextAndTable(stats, commonData) {
+    function generateASPerformanceHTML(stats, commonData) {
         const overallStats = stats?.[APP_CONFIG.COHORTS.OVERALL.id];
         if (!overallStats || !overallStats.performanceAS) return '<p class="text-warning">Avocado Sign performance data not available.</p>';
         
@@ -79,7 +79,7 @@ const resultsGenerator = (() => {
         return text + helpers.createPublicationTableHTML(tableConfig);
     }
     
-    function _generateComparisonTextAndTables(stats, commonData) {
+    function generateComparisonHTML(stats, commonData) {
         const overallStats = stats?.[APP_CONFIG.COHORTS.OVERALL.id];
         const { bruteForceMetricForPublication } = commonData;
         const helpers = publicationHelpers;
@@ -153,17 +153,10 @@ const resultsGenerator = (() => {
         return text + helpers.createPublicationTableHTML(table4Config) + helpers.createPublicationTableHTML(table5Config);
     }
 
-
-    function generateResultsHTML(stats, commonData) {
-        let html = '';
-        html += _generatePatientCharacteristicsTextAndTable(stats, commonData);
-        html += _generateASPerformanceTextAndTable(stats, commonData);
-        html += _generateComparisonTextAndTables(stats, commonData);
-        return html;
-    }
-
     return Object.freeze({
-        generateResultsHTML
+        generatePatientCharacteristicsHTML,
+        generateASPerformanceHTML,
+        generateComparisonHTML
     });
 
 })();
