@@ -222,8 +222,8 @@ const studyT2CriteriaManager = (() => {
     return Object.freeze({
         getAllStudyCriteriaSets,
         getStudyCriteriaSetById,
-        applyStudyCriteriaToPatient: evaluatePatientWithStudyCriteria,
-        applyStudyCriteriaToDataset: evaluateDatasetWithStudyCriteria,
+        evaluatePatientWithStudyCriteria,
+        evaluateDatasetWithStudyCriteria,
         formatCriteriaForDisplay
     });
 })();
