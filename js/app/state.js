@@ -17,6 +17,10 @@ const state = (() => {
     };
 
     function init() {
+        // Initialize state, loading from localStorage or using defaults
+        // This part needs PUBLICATION_CONFIG to be defined globally.
+        // Moving the check for isValidSection here ensures PUBLICATION_CONFIG is available
+        // when this function is called from App.init().
         const loadedSection = loadFromLocalStorage(APP_CONFIG.STORAGE_KEYS.PUBLICATION_SECTION);
         const isValidSection = PUBLICATION_CONFIG.sections.some(s => s.id === loadedSection || s.subSections.some(sub => sub.id === loadedSection));
 
@@ -72,6 +76,9 @@ const state = (() => {
 
     function getPublicationSection() { return currentState.publicationSection; }
     function setPublicationSection(newSectionId) {
+        // This check also requires PUBLICATION_CONFIG to be available.
+        // It's good practice to ensure direct dependencies are met when the function is called.
+        // The App.init() sequence ensures config.js is loaded first.
         const isValid = PUBLICATION_CONFIG.sections.some(s => s.id === newSectionId || s.subSections.some(sub => sub.id === newSectionId));
         return isValid ? _setter('publicationSection', APP_CONFIG.STORAGE_KEYS.PUBLICATION_SECTION, newSectionId) : false;
     }
