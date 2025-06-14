@@ -9,7 +9,7 @@ const DEFAULT_T2_CRITERIA = Object.freeze({
 
 const APP_CONFIG = Object.freeze({
     APP_NAME: "Nodal Staging: Avocado Sign vs. T2 Criteria",
-    APP_VERSION: "3.0.1",
+    APP_VERSION: "3.1.0",
     COHORTS: Object.freeze({
         OVERALL: { id: 'Overall', therapyValue: null, displayName: 'Overall' },
         SURGERY_ALONE: { id: 'surgeryAlone', therapyValue: 'surgeryAlone', displayName: 'Surgery alone' },
@@ -49,7 +49,7 @@ const APP_CONFIG = Object.freeze({
         PRESENTATION_VIEW: 'currentPresentationView_v4.2_detailed',
         PRESENTATION_STUDY_ID: 'currentPresentationStudyId_v4.2_detailed',
         CHART_COLOR_SCHEME: 'chartColorScheme_v4.2_detailed',
-        FIRST_APP_START: 'appFirstStart_v3.0.1'
+        FIRST_APP_START: 'appFirstStart_v3.1.0'
     }),
     PATHS: Object.freeze({
         BRUTE_FORCE_WORKER: 'workers/brute_force_worker.js'
@@ -163,17 +163,19 @@ const APP_CONFIG = Object.freeze({
         AVOCADO_SIGN_DISPLAY_NAME: 'Avocado Sign'
     }),
     REFERENCES_FOR_PUBLICATION: Object.freeze({
+        // Internal/Contextual References
         STUDY_PERIOD_2020_2023: { id: 0, text: "January 2020 and November 2023", isInternal: true },
-        REFERENCE_SIEGEL_2023: { id: 1, text: "Siegel RL, Miller KD, Wagle NS, Jemal A. Cancer statistics, 2023. CA Cancer J Clin. 2023;73:17–48. https://doi.org/10.3322/caac.21763" },
-        REFERENCE_SAUER_2004: { id: 2, text: "Sauer R, Becker H, Hohenberger W, et al. Preoperative versus postoperative chemoradiotherapy for rectal cancer. N Engl J Med. 2004;351:1731–1740. https://doi.org/10.1056/NEJMoa040694" },
-        REFERENCE_HABR_GAMA_2019: { id: 4, text: "Habr-Gama A, São Julião GP, Vailati BB, et al. Organ preservation in cT2N0 rectal cancer after neoadjuvant chemoradiation therapy: the impact of radiation therapy dose-escalation and consolidation chemotherapy. Ann Surg. 2019;269:102–107. https://doi.org/10.1097/SLA.0000000000002447" },
-        REFERENCE_BEETS_TAN_2018: { id: 6, text: "Beets-Tan RGH, Lambregts DMJ, Maas M, et al. Magnetic resonance imaging for clinical management of rectal cancer: updated recommendations from the 2016 European Society of Gastrointestinal and Abdominal Radiology (ESGAR) consensus meeting. Eur Radiol. 2018;28:1465–1475. https://doi.org/10.1007/s00330-017-5026-2" },
-        REFERENCE_AL_SUKHNI_2012: { id: 8, text: "Al-Sukhni E, Milot L, Fruitman M, et al. Diagnostic accuracy of MRI for assessment of T category, lymph node metastases, and circumferential resection margin involvement in patients with rectal cancer: a systematic review and meta-analysis. Ann Surg Oncol. 2012;19:2212–2223. https://doi.org/10.1245/s10434-011-2210-5" },
-        REFERENCE_KOH_2008: { id: 10, text: "Koh DM, Chau I, Tait D, Wotherspoon A, Cunningham D, Brown G. Evaluating mesorectal lymph nodes in rectal cancer before and after neoadjuvant chemoradiation using thin-section T2-weighted magnetic resonance imaging. Int J Radiat Oncol Biol Phys. 2008;71:456–461. https://doi.org/10.1016/j.ijrobp.2007.10.016" },
-        REFERENCE_BARBARO_2024: { id: 13, text: "Barbaro B, Carafa MRP, Minordi LM, et al. Magnetic resonance imaging for assessment of rectal cancer nodes after chemoradiotherapy: a single center experience. Radiother Oncol. 2024;193:110124. https://doi.org/10.1016/j.radonc.2024.110124" },
-        REFERENCE_HAO_2025: { id: 19, text: "Hao Y, Zheng J, Li W, et al. Ultra-high b-value DWI in rectal cancer: image quality assessment and regional lymph node prediction based on radiomics. Eur Radiol. 2025;35:49–60. https://doi.org/10.1007/s00330-024-10958-3" },
-        REFERENCE_LURZ_SCHAEFER_2025: { id: 21, text: "Lurz M, Schäfer AO. The Avocado Sign: A novel imaging marker for nodal staging in rectal cancer. Eur Radiol. 2025. https://doi.org/10.1007/s00330-025-11462-y" },
-        REFERENCE_RUTEGARD_2025: { id: 22, text: "Rutegård J, Hallberg L, Carlsson J, Olsson J, Jarnheimer A. Anatomically matched mesorectal nodal structures: evaluation of the 2016 ESGAR consensus criteria. Eur Radiol. 2025. https://doi.org/10.1007/s00330-024-11357-1" }
+
+        // External Scientific References (ordered by potential citation sequence)
+        REFERENCE_SAUER_2004: { id: 1, text: "Sauer R, Becker H, Hohenberger W, et al. Preoperative versus postoperative chemoradiotherapy for rectal cancer. N Engl J Med 2004;351:1731–1740. doi: 10.1056/NEJMoa040694" },
+        REFERENCE_HABR_GAMA_2019: { id: 2, text: "Habr-Gama A, São Julião GP, Vailati BB, et al. Organ preservation in cT2N0 rectal cancer after neoadjuvant chemoradiation therapy: the impact of radiation therapy dose-escalation and consolidation chemotherapy. Ann Surg 2019;269:102–107. doi: 10.1097/SLA.0000000000002447" },
+        REFERENCE_BEETS_TAN_2018: { id: 3, text: "Beets-Tan RGH, Lambregts DMJ, Maas M, et al. Magnetic resonance imaging for clinical management of rectal cancer: updated recommendations from the 2016 European Society of Gastrointestinal and Abdominal Radiology (ESGAR) consensus meeting. Eur Radiol 2018;28:1465–1475. doi: 10.1007/s00330-017-5026-2" },
+        REFERENCE_AL_SUKHNI_2012: { id: 4, text: "Al-Sukhni E, Milot L, Fruitman M, et al. Diagnostic accuracy of MRI for assessment of T category, lymph node metastases, and circumferential resection margin involvement in patients with rectal cancer: a systematic review and meta-analysis. Ann Surg Oncol 2012;19:2212–2223. doi: 10.1245/s10434-011-2210-5" },
+        REFERENCE_RUTEGARD_2025: { id: 5, text: "Rutegård J, Hallberg L, Carlsson J, Olsson J, Jarnheimer A. Anatomically matched mesorectal nodal structures: evaluation of the 2016 ESGAR consensus criteria. Eur Radiol 2025. doi: 10.1007/s00330-024-11357-1" },
+        REFERENCE_HAO_2025: { id: 6, text: "Hao Y, Zheng J, Li W, et al. Ultra-high b-value DWI in rectal cancer: image quality assessment and regional lymph node prediction based on radiomics. Eur Radiol 2025;35:49–60. doi: 10.1007/s00330-024-10958-3" },
+        REFERENCE_LURZ_SCHAEFER_2025: { id: 7, text: "Lurz M, Schäfer AO. The Avocado Sign: A novel imaging marker for nodal staging in rectal cancer. Eur Radiol 2025. doi: 10.1007/s00330-025-11462-y" },
+        REFERENCE_KOH_2008: { id: 8, text: "Koh DM, Chau I, Tait D, Wotherspoon A, Cunningham D, Brown G. Evaluating mesorectal lymph nodes in rectal cancer before and after neoadjuvant chemoradiation using thin-section T2-weighted magnetic resonance imaging. Int J Radiat Oncol Biol Phys 2008;71:456–461. doi: 10.1016/j.ijrobp.2007.10.016" },
+        REFERENCE_BARBARO_2024: { id: 9, text: "Barbaro B, Carafa MRP, Minordi LM, et al. Magnetic resonance imaging for assessment of rectal cancer nodes after chemoradiotherapy: a single center experience. Radiother Oncol 2024;193:110124. doi: 10.1016/j.radonc.2024.110124" }
     }),
     UI_TEXTS: Object.freeze({
         cohortDisplayNames: {
@@ -471,11 +473,14 @@ const PUBLICATION_CONFIG = Object.freeze({
             logic: 'OR',
             applicableCohort: 'Overall',
             criteria: {
+                size: { active: false },
+                shape: { active: false },
                 border: { active: true, value: 'irregular' },
-                homogeneity: { active: true, value: 'heterogeneous' }
+                homogeneity: { active: true, value: 'heterogeneous' },
+                signal: { active: false }
             },
             studyInfo: {
-                reference: 'Koh et al (10)',
+                reference: 'Koh et al (8)',
                 patientCohort: 'Overall (n=25)',
                 investigationType: 'Prospective, Pre- and Post-nCRT',
                 keyCriteriaSummary: 'Irregular Border OR Heterogeneous Signal'
@@ -488,10 +493,14 @@ const PUBLICATION_CONFIG = Object.freeze({
             logic: 'OR',
             applicableCohort: 'neoadjuvantTherapy',
             criteria: {
-                size: { active: true, threshold: 2.2, condition: '>' }
+                size: { active: true, threshold: 2.2, condition: '>' },
+                shape: { active: false },
+                border: { active: false },
+                homogeneity: { active: false },
+                signal: { active: false }
             },
             studyInfo: {
-                reference: 'Barbaro et al (13)',
+                reference: 'Barbaro et al (9)',
                 patientCohort: 'Neoadjuvant Therapy (n=191)',
                 investigationType: 'Retrospective, Post-nCRT',
                 focus: 'Size criteria for predicting ypN0',
@@ -508,10 +517,11 @@ const PUBLICATION_CONFIG = Object.freeze({
                 size: { active: true, threshold: 9.0, condition: '>=' },
                 shape: { active: true, value: 'round' },
                 border: { active: true, value: 'irregular' },
-                homogeneity: { active: true, value: 'heterogeneous' }
+                homogeneity: { active: true, value: 'heterogeneous' },
+                signal: { active: false }
             },
             studyInfo: {
-                reference: 'Rutegård et al (22)',
+                reference: 'Rutegård et al (5)',
                 patientCohort: 'Surgery Alone (n=46)',
                 investigationType: 'Prospective, Node-by-Node',
                 focus: 'Validation of combined ESGAR 2016 criteria',
