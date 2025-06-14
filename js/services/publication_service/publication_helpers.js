@@ -128,7 +128,7 @@ const publicationHelpers = (() => {
 
     function getReference(id) {
         const ref = APP_CONFIG.REFERENCES_FOR_PUBLICATION[id];
-        return ref ? `(${ref.id})` : '[REF NOT FOUND]';
+        return ref ? `` : '[REF NOT FOUND]';
     }
 
     return Object.freeze({
