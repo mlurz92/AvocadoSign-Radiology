@@ -1,4 +1,4 @@
-const bruteForceManager = (() => {
+window.bruteForceManager = (() => {
     let worker = null;
     let isRunning = false;
     let currentCohortRunning = null;
@@ -20,7 +20,7 @@ const bruteForceManager = (() => {
             if (worker) {
                 worker.terminate();
             }
-            worker = new Worker(APP_CONFIG.PATHS.BRUTE_FORCE_WORKER);
+            worker = new Worker(window.APP_CONFIG.PATHS.BRUTE_FORCE_WORKER);
             worker.onmessage = handleWorkerMessage;
             worker.onerror = handleWorkerError;
             return true;
@@ -131,7 +131,7 @@ const bruteForceManager = (() => {
                 data: data,
                 metric: metric,
                 cohort: cohort,
-                t2SizeRange: APP_CONFIG.T2_CRITERIA_SETTINGS.SIZE_RANGE
+                t2SizeRange: window.APP_CONFIG.T2_CRITERIA_SETTINGS.SIZE_RANGE
             }
         });
         return true;
