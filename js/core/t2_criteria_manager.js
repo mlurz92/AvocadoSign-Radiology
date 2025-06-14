@@ -1,13 +1,13 @@
-const t2CriteriaManager = (() => {
+window.t2CriteriaManager = (() => {
     let currentCriteria = null;
     let appliedCriteria = null;
-    let currentLogic = APP_CONFIG.DEFAULT_SETTINGS.T2_LOGIC;
-    let appliedLogic = APP_CONFIG.DEFAULT_SETTINGS.T2_LOGIC;
+    let currentLogic = window.APP_CONFIG.DEFAULT_SETTINGS.T2_LOGIC;
+    let appliedLogic = window.APP_CONFIG.DEFAULT_SETTINGS.T2_LOGIC;
     let isUnsaved = false;
 
     function init() {
-        const savedCriteria = loadFromLocalStorage(APP_CONFIG.STORAGE_KEYS.APPLIED_CRITERIA);
-        const savedLogic = loadFromLocalStorage(APP_CONFIG.STORAGE_KEYS.APPLIED_LOGIC);
+        const savedCriteria = loadFromLocalStorage(window.APP_CONFIG.STORAGE_KEYS.APPLIED_CRITERIA);
+        const savedLogic = loadFromLocalStorage(window.APP_CONFIG.STORAGE_KEYS.APPLIED_LOGIC);
         const defaultCriteria = getDefaultT2Criteria();
 
         appliedCriteria = deepMerge(cloneDeep(defaultCriteria), savedCriteria || {});
@@ -42,7 +42,7 @@ const t2CriteriaManager = (() => {
         if (!currentCriteria || !currentCriteria[key]) return false;
         
         const allowedValuesKey = key.toUpperCase() + '_VALUES';
-        const allowedValues = APP_CONFIG.T2_CRITERIA_SETTINGS[allowedValuesKey];
+        const allowedValues = window.APP_CONFIG.T2_CRITERIA_SETTINGS[allowedValuesKey];
         
         if (allowedValues && !allowedValues.includes(value)) return false;
 
@@ -59,7 +59,7 @@ const t2CriteriaManager = (() => {
         if (!currentCriteria || !currentCriteria.size || isNaN(numValue) || !isFinite(numValue)) {
             return false;
         }
-        const clampedValue = clampNumber(numValue, APP_CONFIG.T2_CRITERIA_SETTINGS.SIZE_RANGE.min, APP_CONFIG.T2_CRITERIA_SETTINGS.SIZE_RANGE.max);
+        const clampedValue = clampNumber(numValue, window.APP_CONFIG.T2_CRITERIA_SETTINGS.SIZE_RANGE.min, window.APP_CONFIG.T2_CRITERIA_SETTINGS.SIZE_RANGE.max);
         if (currentCriteria.size.threshold !== clampedValue) {
             currentCriteria.size.threshold = clampedValue;
             isUnsaved = true;
@@ -98,8 +98,8 @@ const t2CriteriaManager = (() => {
     function applyCriteria() {
         appliedCriteria = cloneDeep(currentCriteria);
         appliedLogic = currentLogic;
-        saveToLocalStorage(APP_CONFIG.STORAGE_KEYS.APPLIED_CRITERIA, appliedCriteria);
-        saveToLocalStorage(APP_CONFIG.STORAGE_KEYS.APPLIED_LOGIC, appliedLogic);
+        saveToLocalStorage(window.APP_CONFIG.STORAGE_KEYS.APPLIED_CRITERIA, appliedCriteria);
+        saveToLocalStorage(window.APP_CONFIG.STORAGE_KEYS.APPLIED_LOGIC, appliedLogic);
         isUnsaved = false;
     }
 
