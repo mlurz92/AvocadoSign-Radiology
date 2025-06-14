@@ -1,4 +1,4 @@
-const uiComponents = (() => {
+window.uiComponents = (() => {
 
     function createHeaderButtonHTML(buttons, targetId, defaultTitle = 'Element') {
         let headerButtonHtml = '';
@@ -29,7 +29,7 @@ const uiComponents = (() => {
     function createDashboardCard(title, content, chartId = null, cardClasses = '', headerClasses = '', bodyClasses = '', downloadButtons = [], cohortDisplayName = '') {
         const headerButtonHtml = createHeaderButtonHTML(downloadButtons, chartId || title.replace(/[^a-z0-9]/gi, '_'), title);
         const tooltipKey = chartId ? chartId.replace(/^chart-dash-/, '') : title.toLowerCase().replace(/\s+/g, '');
-        let tooltipContent = APP_CONFIG.UI_TEXTS.tooltips.descriptiveStatistics[tooltipKey]?.description || title || '';
+        let tooltipContent = window.APP_CONFIG.UI_TEXTS.tooltips.descriptiveStatistics[tooltipKey]?.description || title || '';
         if (cohortDisplayName) {
             tooltipContent = tooltipContent.replace('[COHORT]', `<strong>${cohortDisplayName}</strong>`);
         }
@@ -54,12 +54,12 @@ const uiComponents = (() => {
         const logicChecked = initialLogic === 'OR';
         const defaultCriteria = getDefaultT2Criteria();
         const sizeThreshold = initialCriteria.size?.threshold ?? defaultCriteria?.size?.threshold ?? 5.0;
-        const { min, max, step } = APP_CONFIG.T2_CRITERIA_SETTINGS.SIZE_RANGE;
+        const { min, max, step } = window.APP_CONFIG.T2_CRITERIA_SETTINGS.SIZE_RANGE;
         const formattedThresholdForInput = formatNumber(sizeThreshold, 1, '5.0', true);
 
         const createButtonOptions = (key, isChecked, criterionLabel) => {
             const valuesKey = key.toUpperCase() + '_VALUES';
-            const values = APP_CONFIG.T2_CRITERIA_SETTINGS[valuesKey];
+            const values = window.APP_CONFIG.T2_CRITERIA_SETTINGS[valuesKey];
             if (!Array.isArray(values)) return '';
             const currentValue = initialCriteria[key]?.value;
 
@@ -74,7 +74,7 @@ const uiComponents = (() => {
 
         const createCriteriaGroup = (key, label, tooltipKey, contentGenerator) => {
             const isChecked = initialCriteria[key]?.active === true;
-            let tooltip = APP_CONFIG.UI_TEXTS.tooltips[tooltipKey]?.description || label;
+            let tooltip = window.APP_CONFIG.UI_TEXTS.tooltips[tooltipKey]?.description || label;
             if (tooltipKey === 't2Size') {
                 tooltip = tooltip.replace('[MIN]', min).replace('[MAX]', max).replace('[STEP]', step);
             }
@@ -95,10 +95,10 @@ const uiComponents = (() => {
             <div class="card criteria-card" id="t2-criteria-card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <span>Define T2 Malignancy Criteria</span>
-                    <div class="form-check form-switch" data-tippy-content="${APP_CONFIG.UI_TEXTS.tooltips.t2Logic.description}">
+                    <div class="form-check form-switch" data-tippy-content="${window.APP_CONFIG.UI_TEXTS.tooltips.t2Logic.description}">
                          <label class="form-check-label small me-2" for="t2-logic-switch" id="t2-logic-label-prefix">Logic:</label>
                          <input class="form-check-input" type="checkbox" role="switch" id="t2-logic-switch" ${logicChecked ? 'checked' : ''}>
-                         <label class="form-check-label fw-bold" for="t2-logic-switch" id="t2-logic-label">${APP_CONFIG.UI_TEXTS.t2LogicDisplayNames[initialLogic] || initialLogic}</label>
+                         <label class="form-check-label fw-bold" for="t2-logic-switch" id="t2-logic-label">${window.APP_CONFIG.UI_TEXTS.t2LogicDisplayNames[initialLogic] || initialLogic}</label>
                      </div>
                 </div>
                 <div class="card-body">
@@ -116,10 +116,10 @@ const uiComponents = (() => {
                         ${createCriteriaGroup('homogeneity', 'Homogeneity', 't2Homogeneity', createButtonOptions)}
                         ${createCriteriaGroup('signal', 'Signal', 't2Signal', createButtonOptions)}
                         <div class="col-12 d-flex justify-content-end align-items-center border-top pt-3 mt-3">
-                            <button class="btn btn-sm btn-outline-secondary me-2" id="btn-reset-criteria" data-tippy-content="${APP_CONFIG.UI_TEXTS.tooltips.t2Actions.reset}">
+                            <button class="btn btn-sm btn-outline-secondary me-2" id="btn-reset-criteria" data-tippy-content="${window.APP_CONFIG.UI_TEXTS.tooltips.t2Actions.reset}">
                                 <i class="fas fa-undo me-1"></i> Reset to Default
                             </button>
-                            <button class="btn btn-sm btn-primary" id="btn-apply-criteria" data-tippy-content="${APP_CONFIG.UI_TEXTS.tooltips.t2Actions.apply}">
+                            <button class="btn btn-sm btn-primary" id="btn-apply-criteria" data-tippy-content="${window.APP_CONFIG.UI_TEXTS.tooltips.t2Actions.apply}">
                                 <i class="fas fa-check me-1"></i> Apply & Save
                             </button>
                         </div>
@@ -130,8 +130,8 @@ const uiComponents = (() => {
 
     function createStatisticsCard(id, title, content = '', addPadding = true, tooltipKey = null, downloadButtons = [], tableId = null, cohortId = '') {
         let cardTooltipHtml = `data-tippy-content="${title}"`;
-        if (tooltipKey && APP_CONFIG.UI_TEXTS.tooltips[tooltipKey]?.cardTitle) {
-            let tooltipTemplate = APP_CONFIG.UI_TEXTS.tooltips[tooltipKey].cardTitle;
+        if (tooltipKey && window.APP_CONFIG.UI_TEXTS.tooltips[tooltipKey]?.cardTitle) {
+            let tooltipTemplate = window.APP_CONFIG.UI_TEXTS.tooltips[tooltipKey].cardTitle;
             let cohortName = cohortId ? getCohortDisplayName(cohortId) : 'the current cohort';
             let finalTooltip = tooltipTemplate.replace('[COHORT]', `<strong>${cohortName}</strong>`);
             cardTooltipHtml = `data-tippy-content="${finalTooltip}"`;
@@ -153,8 +153,8 @@ const uiComponents = (() => {
     }
 
     function createPublicationNav(currentSectionId) {
-        const navItems = PUBLICATION_CONFIG.sections.map(mainSection => {
-            const sectionLabel = APP_CONFIG.UI_TEXTS.publicationTab.sectionLabels[mainSection.labelKey] || mainSection.labelKey;
+        const navItems = window.PUBLICATION_CONFIG.sections.map(mainSection => {
+            const sectionLabel = window.APP_CONFIG.UI_TEXTS.publicationTab.sectionLabels[mainSection.labelKey] || mainSection.labelKey;
             
             const isMainActive = mainSection.id === currentSectionId || mainSection.subSections.some(sub => sub.id === currentSectionId);
             
@@ -174,7 +174,7 @@ const uiComponents = (() => {
             return '<p class="text-center text-muted">No brute-force results available.</p>';
         }
 
-        const formatCriteriaFunc = typeof studyT2CriteriaManager !== 'undefined' ? studyT2CriteriaManager.formatCriteriaForDisplay : (c, l) => 'N/A';
+        const formatCriteriaFunc = typeof window.studyT2CriteriaManager !== 'undefined' ? window.studyT2CriteriaManager.formatCriteriaForDisplay : (c, l) => 'N/A';
         const { results, metric, duration, totalTested, cohort, nTotal, nPlus, nMinus } = resultsData;
 
         let html = `
