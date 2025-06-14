@@ -38,6 +38,8 @@ const dataProcessor = (() => {
         p.countASNodes = validateCount(rawPatient.asTotalNodeCount);
         p.countASNodesPositive = validateCount(rawPatient.asPositiveNodeCount);
 
+        p.isMetastatic = p.nStatus === '+';
+
         p.notes = typeof rawPatient.notes === 'string' ? rawPatient.notes.trim() : '';
         p.age = calculateAge(p.birthDate, p.examDate);
 
