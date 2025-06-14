@@ -92,9 +92,10 @@ const resultsGenerator = (() => {
 
         let text;
         if (bfResultsAvailable) {
+            const comparisonASvsKoh = stats.Overall?.comparisonASvsT2_literature_koh_2008;
             text = `
                 <h3 id="results_comparison_as_vs_t2">Comparison of Avocado Sign vs T2-weighted Criteria</h3>
-                <p>The cohort-optimized T2-weighted criteria, identified through brute-force analysis to maximize ${bruteForceMetricForPublication}, yielded an AUC of ${helpers.formatMetricForPublication(overallStats.performanceT2Bruteforce.auc, 'auc')}. When directly compared in the overall cohort, the performance of the Avocado Sign was not inferior to the cohort-optimized T2-weighted criteria, with no significant difference in AUC (${helpers.formatPValueForPublication(overallStats.comparisonASvsT2Bruteforce.delong.pValue)}). The Avocado Sign showed a higher AUC than the literature-based criteria from Koh et al. (${helpers.formatMetricForPublication(stats.Overall.performanceAS.auc, 'auc')} vs ${helpers.formatMetricForPublication(stats.Overall.performanceT2Literature.koh_2008.auc, 'auc')}; ${helpers.formatPValueForPublication(stats.Overall.comparisonASvsT2_literature_koh_2008.delong.pValue)}). Detailed performance metrics and statistical comparisons for all evaluated criteria sets are presented in Table 4.</p>
+                <p>The cohort-optimized T2-weighted criteria, identified through brute-force analysis to maximize ${bruteForceMetricForPublication}, yielded an AUC of ${helpers.formatMetricForPublication(overallStats.performanceT2Bruteforce.auc, 'auc')}. When directly compared in the overall cohort, the performance of the Avocado Sign was not inferior to the cohort-optimized T2-weighted criteria, with no significant difference in AUC (${helpers.formatPValueForPublication(overallStats.comparisonASvsT2Bruteforce.delong.pValue)}). The Avocado Sign showed a higher AUC than the literature-based criteria from Koh et al. (${helpers.formatMetricForPublication(stats.Overall.performanceAS.auc, 'auc')} vs ${helpers.formatMetricForPublication(stats.Overall.performanceT2Literature.koh_2008.auc, 'auc')}; ${comparisonASvsKoh ? helpers.formatPValueForPublication(comparisonASvsKoh.delong.pValue) : 'N/A'}). Detailed performance metrics and statistical comparisons for all evaluated criteria sets are presented in Table 4.</p>
             `;
         } else {
              text = `
@@ -109,19 +110,22 @@ const resultsGenerator = (() => {
             caption: 'Table 4: Diagnostic Performance and Statistical Comparison of All Evaluated Criteria Sets versus the Avocado Sign',
             headers: ['Criteria Set', 'Applicable Cohort (n)', 'AUC (95% CI)', 'Sensitivity (95% CI)', 'Specificity (95% CI)', 'Accuracy (95% CI)', '<em>P</em> value (vs AS)'],
             rows: [],
-            notes: 'Performance metrics for literature-based criteria are calculated on their respective applicable cohorts, and the statistical comparison (DeLong test for AUC) is performed within that same cohort. A *P* value < .05 indicates a significant difference in AUC compared to the Avocado Sign. AS = Avocado Sign, T2w = T2-weighted, BF = Brute-Force.'
+            notes: 'Performance metrics for literature-based criteria are calculated on their respective applicable cohorts, and the statistical comparison (DeLong test for AUC) is performed within that same cohort. A <em>P</em> value < .05 indicates a significant difference in AUC compared to the Avocado Sign. AS = Avocado Sign, T2w = T2-weighted, BF = Brute-Force.'
         };
 
-        const addCompRow = (setName, statsObj, cohortName, perfKey, compKey) => {
+        const addCompRow = (setName, cohortId, perfKey, compKey) => {
+            const statsObj = stats[cohortId];
+            if (!statsObj) return [setName, getCohortDisplayName(cohortId) + ' (?)', 'N/A', 'N/A', 'N/A', 'N/A', 'N/A'];
+
             const perf = getObjectValueByPath(statsObj, perfKey);
             const comp = getObjectValueByPath(statsObj, compKey)?.delong;
             const patientCount = statsObj?.descriptive?.patientCount || '?';
             
-            if (!perf) return [setName, `${cohortName} (${patientCount})`, 'N/A', 'N/A', 'N/A', 'N/A', 'N/A'];
+            if (!perf) return [setName, `${getCohortDisplayName(cohortId)} (${patientCount})`, 'N/A', 'N/A', 'N/A', 'N/A', 'N/A'];
             
             return [
                 setName,
-                `${cohortName} (${patientCount})`,
+                `${getCohortDisplayName(cohortId)} (${patientCount})`,
                 helpers.formatMetricForPublication(perf.auc, 'auc'),
                 helpers.formatMetricForPublication(perf.sens, 'sens'),
                 helpers.formatMetricForPublication(perf.spec, 'spec'),
@@ -130,17 +134,17 @@ const resultsGenerator = (() => {
             ];
         };
 
-        table4Config.rows.push(addCompRow('<strong>Avocado Sign</strong>', stats.Overall, 'Overall', 'performanceAS', null));
+        table4Config.rows.push(addCompRow('<strong>Avocado Sign</strong>', 'Overall', 'performanceAS', null));
         
         if (bfResultsAvailable) {
-            table4Config.rows.push(addCompRow('Cohort-Optimized T2w (BF)', stats.Overall, 'Overall', 'performanceT2Bruteforce', 'comparisonASvsT2Bruteforce'));
+            table4Config.rows.push(addCompRow('Cohort-Optimized T2w (BF)', 'Overall', 'performanceT2Bruteforce', 'comparisonASvsT2Bruteforce'));
         } else {
-            table4Config.rows.push(['Cohort-Optimized T2w (BF)', `Overall (${stats.Overall.descriptive.patientCount})`, 'Pending', 'Pending', 'Pending', 'Pending', 'Pending']);
+            table4Config.rows.push(['Cohort-Optimized T2w (BF)', `Overall (${stats.Overall?.descriptive?.patientCount || '?'})`, 'Pending', 'Pending', 'Pending', 'Pending', 'Pending']);
         }
         
-        table4Config.rows.push(addCompRow('ESGAR 2016 (Rutegård et al)', stats.surgeryAlone, 'Surgery alone', 'performanceT2Literature.rutegard_et_al_esgar', 'comparisonASvsT2_literature_rutegard_et_al_esgar'));
-        table4Config.rows.push(addCompRow('Koh et al (2008)', stats.Overall, 'Overall', 'performanceT2Literature.koh_2008', 'comparisonASvsT2_literature_koh_2008'));
-        table4Config.rows.push(addCompRow('Barbaro et al (2024)', stats.neoadjuvantTherapy, 'Neoadjuvant therapy', 'performanceT2Literature.barbaro_2024', 'comparisonASvsT2_literature_barbaro_2024'));
+        table4Config.rows.push(addCompRow('ESGAR 2016 (Rutegård et al)', 'surgeryAlone', 'performanceT2Literature.rutegard_et_al_esgar', 'comparisonASvsT2_literature_rutegard_et_al_esgar'));
+        table4Config.rows.push(addCompRow('Koh et al (2008)', 'Overall', 'performanceT2Literature.koh_2008', 'comparisonASvsT2_literature_koh_2008'));
+        table4Config.rows.push(addCompRow('Barbaro et al (2024)', 'neoadjuvantTherapy', 'performanceT2Literature.barbaro_2024', 'comparisonASvsT2_literature_barbaro_2024'));
 
         return text + helpers.createPublicationTableHTML(table4Config);
     }
