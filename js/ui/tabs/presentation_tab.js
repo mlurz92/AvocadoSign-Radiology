@@ -17,7 +17,7 @@ const presentationTab = (() => {
             const cohortDisplayName = getCohortDisplayName(cohortKey);
             const na = '--';
             const fCI_p = (m, k) => { 
-                const d = (k === 'auc') ? 2 : ((k === 'f1') ? 3 : 1); 
+                const d = (k === 'auc') ? 3 : ((k === 'f1') ? 3 : 1); 
                 const p = !(k === 'auc' || k === 'f1'); 
                 return formatCI(m?.value, m?.ci?.lower, m?.ci?.upper, d, p, na); 
             };
@@ -102,7 +102,7 @@ const presentationTab = (() => {
             let comparisonTableHTML = `<div class="table-responsive"><table class="table table-sm table-striped small mb-0" id="pres-as-vs-t2-comp-table"><thead class="small"><tr><th>Metric</th><th>AS (Value, 95% CI)</th><th>${t2ShortNameEffective} (Value, 95% CI)</th></tr></thead><tbody>`;
             metrics.forEach(key => {
                 const isRate = !(key === 'f1' || key === 'auc'); 
-                const digits = (key === 'auc') ? 2 : ((key === 'f1') ? 3 : 1);
+                const digits = (key === 'auc') ? 3 : ((key === 'f1') ? 3 : 1);
                 const valAS = formatCI(performanceAS[key]?.value, performanceAS[key]?.ci?.lower, performanceAS[key]?.ci?.upper, digits, isRate, '--');
                 const valT2 = formatCI(performanceT2[key]?.value, performanceT2[key]?.ci?.lower, performanceT2[key]?.ci?.upper, digits, isRate, '--');
                 comparisonTableHTML += `<tr><td data-tippy-content="${getDefinitionTooltip(key)}">${metricNames[key]}</td><td data-tippy-content="${getInterpretationTooltip(key, performanceAS[key])}">${valAS}</td><td data-tippy-content="${getInterpretationTooltip(key, performanceT2[key])}">${valT2}</td></tr>`;
