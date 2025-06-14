@@ -8,7 +8,6 @@ window.publicationHelpers = (() => {
         if (p < 0.001) return `${prefix} < .001`;
         if (p > 0.99) return `${prefix} > .99`;
         
-        // Special handling for values like 0.046 which should display with 3 digits if it would otherwise round to .05 and become non-significant
         if (p < 0.05 && p >= 0.01 && (Math.round(p * 100) / 100).toFixed(2) === '0.05') {
             return `${prefix} = .${p.toFixed(3).substring(2)}`;
         }
@@ -48,6 +47,7 @@ window.publicationHelpers = (() => {
                 break;
             case 'auc':
             case 'kappa':
+            case 'balacc':
                 digits = 2;
                 isPercent = false;
                 break;
@@ -87,8 +87,8 @@ window.publicationHelpers = (() => {
         if (isPercent) {
              ciStr = `${lowerStr}%, ${upperStr}%`;
         } else {
-            const formattedLower = lowerStr.startsWith('0.' && lowerStr.length > 2) ? `.${lowerStr.substring(2)}` : lowerStr;
-            const formattedUpper = upperStr.startsWith('0.' && upperStr.length > 2) ? `.${upperStr.substring(2)}` : upperStr;
+            const formattedLower = lowerStr.startsWith('0.') ? `.${lowerStr.substring(2)}` : lowerStr;
+            const formattedUpper = upperStr.startsWith('0.') ? `.${upperStr.substring(2)}` : upperStr;
             ciStr = `${formattedLower}, ${formattedUpper}`;
         }
 
@@ -129,7 +129,6 @@ window.publicationHelpers = (() => {
     }
 
     function getReference(id) {
-        // Corrected: Return the ID within brackets so it can be picked up by regex in publication_tab.js
         const ref = window.APP_CONFIG.REFERENCES_FOR_PUBLICATION[id];
         return ref ? `[${id}]` : '[REF NOT FOUND]';
     }
