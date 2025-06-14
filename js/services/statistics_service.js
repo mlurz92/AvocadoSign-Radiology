@@ -1,4 +1,4 @@
-const statisticsService = (() => {
+window.statisticsService = (() => {
 
     function getMedian(arr) {
         if (!Array.isArray(arr) || arr.length === 0) return NaN;
@@ -132,8 +132,8 @@ const statisticsService = (() => {
         return regularizedGammaIncomplete(df / 2.0, x / 2.0);
     }
 
-    function calculateWilsonScoreCI(successes, trials, alpha = APP_CONFIG.STATISTICAL_CONSTANTS.BOOTSTRAP_CI_ALPHA) {
-        const defaultReturn = { lower: NaN, upper: NaN, method: APP_CONFIG.STATISTICAL_CONSTANTS.DEFAULT_CI_METHOD_PROPORTION };
+    function calculateWilsonScoreCI(successes, trials, alpha = window.APP_CONFIG.STATISTICAL_CONSTANTS.BOOTSTRAP_CI_ALPHA) {
+        const defaultReturn = { lower: NaN, upper: NaN, method: window.APP_CONFIG.STATISTICAL_CONSTANTS.DEFAULT_CI_METHOD_PROPORTION };
         if (trials <= 0) return defaultReturn;
         const p_hat = successes / trials, n = trials;
         const z = Math.abs(inverseNormalCDF(alpha / 2.0));
@@ -145,11 +145,11 @@ const statisticsService = (() => {
         return {
             lower: Math.max(0.0, (center - term) / denominator),
             upper: Math.min(1.0, (center + term) / denominator),
-            method: APP_CONFIG.STATISTICAL_CONSTANTS.DEFAULT_CI_METHOD_PROPORTION
+            method: window.APP_CONFIG.STATISTICAL_CONSTANTS.DEFAULT_CI_METHOD_PROPORTION
         };
     }
 
-    function calculateORCI(a, b, c, d, alpha = APP_CONFIG.STATISTICAL_CONSTANTS.BOOTSTRAP_CI_ALPHA) {
+    function calculateORCI(a, b, c, d, alpha = window.APP_CONFIG.STATISTICAL_CONSTANTS.BOOTSTRAP_CI_ALPHA) {
         const defaultReturn = { value: NaN, ci: null, method: 'Woolf Logit (Adjusted)' };
         if (a < 0 || b < 0 || c < 0 || d < 0) return defaultReturn;
         const or_raw = (b === 0 || c === 0) ? NaN : (a * d) / (b * c);
@@ -169,7 +169,7 @@ const statisticsService = (() => {
         return { value: or_raw, ci: { lower: Math.exp(logOR - z * seLogOR), upper: Math.exp(logOR + z * seLogOR) }, method: 'Woolf Logit (Haldane-Anscombe correction)' };
     }
 
-    function calculateRDCI(a, b, c, d, alpha = APP_CONFIG.STATISTICAL_CONSTANTS.BOOTSTRAP_CI_ALPHA) {
+    function calculateRDCI(a, b, c, d, alpha = window.APP_CONFIG.STATISTICAL_CONSTANTS.BOOTSTRAP_CI_ALPHA) {
         const defaultReturn = { value: NaN, ci: null, method: 'Wald' };
         if (a < 0 || b < 0 || c < 0 || d < 0) return defaultReturn;
         const n1 = a + b, n2 = c + d;
@@ -182,8 +182,8 @@ const statisticsService = (() => {
         return { value: rd, ci: { lower: Math.max(-1.0, rd - z * seRD), upper: Math.min(1.0, rd + z * seRD) }, method: 'Wald' };
     }
 
-    function bootstrapCI(data, statisticFn, nBoot = APP_CONFIG.STATISTICAL_CONSTANTS.BOOTSTRAP_CI_REPLICATIONS, alpha = APP_CONFIG.STATISTICAL_CONSTANTS.BOOTSTRAP_CI_ALPHA) {
-        const defaultReturn = { lower: NaN, upper: NaN, method: APP_CONFIG.STATISTICAL_CONSTANTS.DEFAULT_CI_METHOD_EFFECTSIZE, se: NaN };
+    function bootstrapCI(data, statisticFn, nBoot = window.APP_CONFIG.STATISTICAL_CONSTANTS.BOOTSTRAP_CI_REPLICATIONS, alpha = window.APP_CONFIG.STATISTICAL_CONSTANTS.BOOTSTRAP_CI_ALPHA) {
+        const defaultReturn = { lower: NaN, upper: NaN, method: window.APP_CONFIG.STATISTICAL_CONSTANTS.DEFAULT_CI_METHOD_EFFECTSIZE, se: NaN };
         if (!Array.isArray(data) || data.length < 2) return defaultReturn;
         const n = data.length;
         const bootStats = [];
@@ -202,14 +202,14 @@ const statisticsService = (() => {
         const finalLowerIndex = Math.max(0, Math.min(lowerIndex, bootStats.length - 1));
         const finalUpperIndex = Math.max(0, Math.min(upperIndex, bootStats.length - 1));
 
-        return { lower: bootStats[finalLowerIndex], upper: bootStats[finalUpperIndex], method: APP_CONFIG.STATISTICAL_CONSTANTS.DEFAULT_CI_METHOD_EFFECTSIZE, se: getStdDev(bootStats) };
+        return { lower: bootStats[finalLowerIndex], upper: bootStats[finalUpperIndex], method: window.APP_CONFIG.STATISTICAL_CONSTANTS.DEFAULT_CI_METHOD_EFFECTSIZE, se: getStdDev(bootStats) };
     }
 
     function calculateMcNemarTest(b, c) {
         if (isNaN(b) || isNaN(c) || b < 0 || c < 0) return { pValue: NaN, statistic: NaN, df: 1, method: "McNemar's Test (Invalid Input)" };
         const n = b + c;
         if (n === 0) return { pValue: 1.0, statistic: 0, df: 1, method: "McNemar's Test (No Discordance)" };
-        const useCorrection = n < APP_CONFIG.STATISTICAL_CONSTANTS.FISHER_EXACT_THRESHOLD * 4;
+        const useCorrection = n < window.APP_CONFIG.STATISTICAL_CONSTANTS.FISHER_EXACT_THRESHOLD * 4;
         const statistic = Math.pow(Math.abs(b - c) - (useCorrection ? 1 : 0), 2) / n;
         const pValue = 1.0 - chiSquareCDF(statistic, 1);
         return { pValue, statistic, df: 1, method: `McNemar's Test${useCorrection ? ' (Yates-corrected)' : ''}` };
@@ -405,7 +405,7 @@ const statisticsService = (() => {
 
     function calculateZTestForAUCComparison(auc1, se1, n1, auc2, se2, n2) {
         const defaultReturn = { pValue: NaN, Z: NaN, method: "Z-Test (AUC - Independent Samples, Invalid Input)" };
-        if (auc1 === null || auc2 === null || se1 === null || se2 === null || isNaN(auc1) || isNaN(auc2) || isNaN(se1) || isNaN(se2) || n1 < 2 || n2 < 2) return defaultReturn;
+        if (auc1 === null || auc2 === null || se1 === null || se1 === undefined || se2 === null || se2 === undefined || isNaN(auc1) || isNaN(auc2) || isNaN(se1) || isNaN(se2) || n1 < 2 || n2 < 2) return defaultReturn;
         const varDiff = se1 * se1 + se2 * se2;
         if (isNaN(varDiff) || varDiff <= 1e-12) return { pValue: 1.0, Z: 0, method: "Z-Test (AUC - Independent Samples, Zero Variance)" };
         const z = (auc1 - auc2) / Math.sqrt(varDiff);
@@ -473,11 +473,11 @@ const statisticsService = (() => {
 
         return {
             matrix,
-            sens: { value: sens_val, ci: calculateWilsonScoreCI(tp, tp + fn), n_success: tp, n_trials: tp + fn, method: APP_CONFIG.STATISTICAL_CONSTANTS.DEFAULT_CI_METHOD_PROPORTION },
-            spec: { value: spec_val, ci: calculateWilsonScoreCI(tn, fp + tn), n_success: tn, n_trials: fp + tn, method: APP_CONFIG.STATISTICAL_CONSTANTS.DEFAULT_CI_METHOD_PROPORTION },
-            ppv: { value: ppv_val, ci: calculateWilsonScoreCI(tp, tp + fp), n_success: tp, n_trials: tp + fp, method: APP_CONFIG.STATISTICAL_CONSTANTS.DEFAULT_CI_METHOD_PROPORTION },
-            npv: { value: npv_val, ci: calculateWilsonScoreCI(tn, fn + tn), n_success: tn, n_trials: fn + tn, method: APP_CONFIG.STATISTICAL_CONSTANTS.DEFAULT_CI_METHOD_PROPORTION },
-            acc: { value: acc_val, ci: calculateWilsonScoreCI(tp + tn, total), n_success: tp + tn, n_trials: total, method: APP_CONFIG.STATISTICAL_CONSTANTS.DEFAULT_CI_METHOD_PROPORTION },
+            sens: { value: sens_val, ci: calculateWilsonScoreCI(tp, tp + fn), n_success: tp, n_trials: tp + fn, method: window.APP_CONFIG.STATISTICAL_CONSTANTS.DEFAULT_CI_METHOD_PROPORTION },
+            spec: { value: spec_val, ci: calculateWilsonScoreCI(tn, fp + tn), n_success: tn, n_trials: fp + tn, method: window.APP_CONFIG.STATISTICAL_CONSTANTS.DEFAULT_CI_METHOD_PROPORTION },
+            ppv: { value: ppv_val, ci: calculateWilsonScoreCI(tp, tp + fp), n_success: tp, n_trials: tp + fp, method: window.APP_CONFIG.STATISTICAL_CONSTANTS.DEFAULT_CI_METHOD_PROPORTION },
+            npv: { value: npv_val, ci: calculateWilsonScoreCI(tn, fn + tn), n_success: tn, n_trials: fn + tn, method: window.APP_CONFIG.STATISTICAL_CONSTANTS.DEFAULT_CI_METHOD_PROPORTION },
+            acc: { value: acc_val, ci: calculateWilsonScoreCI(tp + tn, total), n_success: tp + tn, n_trials: total, method: window.APP_CONFIG.STATISTICAL_CONSTANTS.DEFAULT_CI_METHOD_PROPORTION },
             balAcc: { value: balAcc_val, ...bootstrapCI(data, bootstrapFactory(predictionKey, referenceKey, 'balAcc')), matrix_components: {tp, fp, fn, tn, total} },
             f1: { value: f1_val, ...bootstrapCI(data, bootstrapFactory(predictionKey, referenceKey, 'f1')), matrix_components: {tp, fp, fn, tn, total} },
             auc: { value: balAcc_val, ...bootstrapCI(data, bootstrapFactory(predictionKey, referenceKey, 'auc')), matrix_components: {tp, fp, fn, tn, total} },
@@ -575,7 +575,7 @@ const statisticsService = (() => {
     function calculateAllPublicationStats(data, appliedT2Criteria, appliedT2Logic, bruteForceResultsPerCohort) {
         if (!data || !Array.isArray(data)) return null;
         const results = {};
-        const cohorts = Object.values(APP_CONFIG.COHORTS).map(c => c.id);
+        const cohorts = Object.values(window.APP_CONFIG.COHORTS).map(c => c.id);
 
         cohorts.forEach(cohortId => {
             const cohortData = dataProcessor.filterDataByCohort(data, cohortId);
@@ -598,10 +598,10 @@ const statisticsService = (() => {
                 bruteforceDefinition: null
             };
 
-            PUBLICATION_CONFIG.literatureCriteriaSets.forEach(studySetConf => {
+            window.PUBLICATION_CONFIG.literatureCriteriaSets.forEach(studySetConf => {
                 const studySet = studyT2CriteriaManager.getStudyCriteriaSetById(studySetConf.id);
                 if (studySet) {
-                    const cohortForStudy = studySet.applicableCohort || APP_CONFIG.COHORTS.OVERALL.id;
+                    const cohortForStudy = studySet.applicableCohort || window.APP_CONFIG.COHORTS.OVERALL.id;
                     const dataForStudy = dataProcessor.filterDataByCohort(data, cohortForStudy);
                     if(dataForStudy.length > 0) {
                         const evaluatedDataStudy = studyT2CriteriaManager.evaluateDatasetWithStudyCriteria(cloneDeep(dataForStudy), studySet);
@@ -626,8 +626,8 @@ const statisticsService = (() => {
         });
 
         if (results.Overall) {
-            results.Overall.interobserverKappa = APP_CONFIG.STATISTICAL_CONSTANTS.INTEROBSERVER_KAPPA;
-            results.Overall.interobserverKappaCI = APP_CONFIG.STATISTICAL_CONSTANTS.INTEROBSERVER_KAPPA_CI;
+            results.Overall.interobserverKappa = window.APP_CONFIG.STATISTICAL_CONSTANTS.INTEROBSERVER_KAPPA;
+            results.Overall.interobserverKappaCI = window.APP_CONFIG.STATISTICAL_CONSTANTS.INTEROBSERVER_KAPPA_CI;
         }
 
         return results;
