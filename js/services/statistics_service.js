@@ -595,16 +595,23 @@ const statisticsService = (() => {
             };
 
             PUBLICATION_CONFIG.literatureCriteriaSets.forEach(studySetConf => {
-                if (studySetConf.applicableCohort === cohortId) {
-                    const studySet = studyT2CriteriaManager.getStudyCriteriaSetById(studySetConf.id);
-                    if (studySet) {
-                        const evaluatedDataStudy = studyT2CriteriaManager.evaluateDatasetWithStudyCriteria(cloneDeep(cohortData), studySet);
-                        results[cohortId].performanceT2Literature[studySetConf.id] = calculateDiagnosticPerformance(evaluatedDataStudy, 't2Status', 'nStatus');
-                        results[cohortId][`comparisonASvsT2_literature_${studySetConf.id}`] = compareDiagnosticMethods(evaluatedDataStudy, 'asStatus', 't2Status', 'nStatus');
+                const studySet = studyT2CriteriaManager.getStudyCriteriaSetById(studySetConf.id);
+                if (studySet) {
+                    const cohortForStudy = studySet.applicableCohort || APP_CONFIG.COHORTS.OVERALL.id;
+                    const dataForStudy = dataProcessor.filterDataByCohort(data, cohortForStudy);
+                    if(dataForStudy.length > 0) {
+                        const evaluatedDataStudy = studyT2CriteriaManager.evaluateDatasetWithStudyCriteria(cloneDeep(dataForStudy), studySet);
+                        const perfKey = `performanceT2Literature_${studySet.id}`;
+                        const compKey = `comparisonASvsT2_literature_${studySet.id}`;
+                        
+                        results[cohortForStudy] = results[cohortForStudy] || {};
+                        results[cohortForStudy].performanceT2Literature = results[cohortForStudy].performanceT2Literature || {};
+                        results[cohortForStudy].performanceT2Literature[studySet.id] = calculateDiagnosticPerformance(evaluatedDataStudy, 't2Status', 'nStatus');
+                        results[cohortForStudy][compKey] = compareDiagnosticMethods(evaluatedDataStudy, 'asStatus', 't2Status', 'nStatus');
                     }
                 }
             });
-
+            
             const bfResult = bruteForceResultsPerCohort?.[cohortId];
             if (bfResult && bfResult.bestResult?.criteria) {
                 const evaluatedDataBF = t2CriteriaManager.evaluateDataset(cloneDeep(cohortData), bfResult.bestResult.criteria, bfResult.bestResult.logic);
@@ -615,8 +622,8 @@ const statisticsService = (() => {
         });
 
         if (results.Overall) {
-            results.Overall.interobserverKappa = 0.92;
-            results.Overall.interobserverKappaCI = { lower: 0.85, upper: 0.99 };
+            results.Overall.interobserverKappa = APP_CONFIG.STATISTICAL_CONSTANTS.INTEROBSERVER_KAPPA;
+            results.Overall.interobserverKappaCI = APP_CONFIG.STATISTICAL_CONSTANTS.INTEROBSERVER_KAPPA_CI;
         }
 
         return results;
