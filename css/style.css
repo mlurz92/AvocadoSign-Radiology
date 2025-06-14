@@ -109,6 +109,8 @@ tr[aria-expanded="true"] .row-toggle-icon { transform: rotate(180deg); }
 }
 
 .modal-glass .modal-content { background-color: rgba(255, 255, 255, 0.9); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); }
+.comp-chart-container { min-height: 280px; }
+.comparison-row .card { height: 100%; }
 
 #publication-tab-pane .sticky-top { top: var(--sticky-header-offset); background-color: var(--bg-light-gray) !important; z-index: 1015; }
 #publication-sections-nav { max-height: calc(100vh - var(--sticky-header-offset) - 4rem); overflow-y: auto; padding-right: 0.5rem; border-right: 1px solid var(--border-color); }
@@ -118,11 +120,10 @@ tr[aria-expanded="true"] .row-toggle-icon { transform: rotate(180deg); }
 #publication-content-area h3 { font-size: 1.35rem; color: var(--text-dark); font-weight: 600; margin-top: 1.5rem; margin-bottom: 0.5rem; padding-bottom: 0.25rem; border-bottom: 1px solid var(--border-color); }
 #publication-content-area p { text-align: justify; }
 
-.flow-diagram-container .node { fill: #f0f8ff; stroke: #4682b4; stroke-width: 1px; }
-.flow-diagram-container .node-main { fill: #e0f0ff; stroke: #2a628a; stroke-width: 2px; }
-.flow-diagram-container .arrow { stroke: #333; stroke-width: 1.5px; fill: none; marker-end: url(#arrowhead); }
-.flow-diagram-container .label { font-family: sans-serif; font-size: 12px; fill: #333; text-anchor: middle; }
-.flow-diagram-container .badge-count { font-weight: bold; }
+.publication-chart-container {
+    max-width: 600px;
+    margin: 1rem auto;
+}
 
 @media (max-width: 1200px) { body { --base-font-size: 13px; } }
 @media (max-width: 991.98px) {
