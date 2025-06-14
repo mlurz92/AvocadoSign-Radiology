@@ -238,10 +238,10 @@ const chartRenderer = (() => {
         const y = d3.scaleLinear().domain([0, 1]).range([innerHeight, 0]);
 
         chartArea.append("g").attr("class", "x-axis axis").attr("transform", `translate(0,${innerHeight})`).call(d3.axisBottom(x).ticks(5).tickFormat(d3.format(".1f"))).selectAll("text").style("font-size", APP_CONFIG.CHART_SETTINGS.TICK_LABEL_FONT_SIZE);
-        svg.append("text").attr("class", "axis-label x-axis-label").attr("text-anchor", "middle").attr("x", margin.left + innerWidth / 2).attr("y", innerHeight + margin.top + 20).style("font-size", APP_CONFIG.CHART_SETTINGS.AXIS_LABEL_FONT_SIZE).text(APP_CONFIG.UI_TEXTS.axisLabels.oneMinusSpecificity);
+        svg.append("text").attr("class", "axis-label x-axis-label").attr("text-anchor", "middle").attr("x", margin.left + innerWidth / 2).attr("y", innerHeight + margin.top + 30).style("font-size", APP_CONFIG.CHART_SETTINGS.AXIS_LABEL_FONT_SIZE).text(APP_CONFIG.UI_TEXTS.axisLabels.oneMinusSpecificity);
 
         chartArea.append("g").attr("class", "y-axis axis").call(d3.axisLeft(y).ticks(5).tickFormat(d3.format(".1f"))).selectAll("text").style("font-size", APP_CONFIG.CHART_SETTINGS.TICK_LABEL_FONT_SIZE);
-        svg.append("text").attr("class", "axis-label y-axis-label").attr("text-anchor", "middle").attr("transform", `translate(${margin.left / 2 - 5}, ${margin.top + innerHeight / 2}) rotate(-90)`).style("font-size", APP_CONFIG.CHART_SETTINGS.AXIS_LABEL_FONT_SIZE).text(APP_CONFIG.UI_TEXTS.axisLabels.sensitivity);
+        svg.append("text").attr("class", "axis-label y-axis-label").attr("text-anchor", "middle").attr("transform", `translate(${margin.left / 2 - 10}, ${margin.top + innerHeight / 2}) rotate(-90)`).style("font-size", APP_CONFIG.CHART_SETTINGS.AXIS_LABEL_FONT_SIZE).text(APP_CONFIG.UI_TEXTS.axisLabels.sensitivity);
 
         if (APP_CONFIG.CHART_SETTINGS.ENABLE_GRIDLINES) {
             chartArea.append("g").attr("class", "grid x-grid").attr("transform", `translate(0,${innerHeight})`).call(d3.axisBottom(x).ticks(5).tickSize(-innerHeight).tickFormat(""));
@@ -256,9 +256,9 @@ const chartRenderer = (() => {
             .curve(d3.curveMonotoneX);
 
         const dataPoints = [
-            [0, 0], // Origin
-            [oneMinusSpecificity, sensitivity], // Classifier's performance point
-            [1, 1]  // Top-right corner
+            [0, 0], 
+            [oneMinusSpecificity, sensitivity], 
+            [1, 1]
         ];
 
         chartArea.append("path")
@@ -276,7 +276,7 @@ const chartRenderer = (() => {
             .attr("fill", APP_CONFIG.CHART_SETTINGS.AS_COLOR)
             .on("mouseover", (event) => {
                 tooltip.transition().duration(50).style("opacity", .95);
-                tooltip.html(`<strong>${methodName}</strong><br>Sensitivity: ${formatPercent(sensitivity, 1)}<br>1-Specificity: ${formatPercent(oneMinusSpecificity, 1)}<br>AUC: ${formatNumber(auc, 2)}`)
+                tooltip.html(`<strong>${methodName}</strong><br>Sensitivity: ${formatPercent(sensitivity, 1)}<br>1-Specificity: ${formatPercent(oneMinusSpecificity, 1)}<br>AUC: ${formatNumber(auc, 3)}`)
                     .style("left", (event.pageX + 10) + "px")
                     .style("top", (event.pageY - 15) + "px");
             })
@@ -289,7 +289,7 @@ const chartRenderer = (() => {
             .attr("x", x(0.95))
             .attr("y", y(0.05))
             .attr("text-anchor", "end")
-            .text(`AUC: ${formatNumber(auc, 2)}`);
+            .text(`AUC: ${formatNumber(auc, 3)}`);
     }
 
     return Object.freeze({
