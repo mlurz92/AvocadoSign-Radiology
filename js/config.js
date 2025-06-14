@@ -23,8 +23,8 @@ const APP_CONFIG = Object.freeze({
         STATS_LAYOUT: 'einzel',
         STATS_COHORT1: 'Overall',
         STATS_COHORT2: 'neoadjuvantTherapy',
-        PRESENTATION_VIEW: 'as-vs-t2',
-        PRESENTATION_STUDY_ID: 'applied_criteria',
+        COMPARISON_VIEW: 'as-vs-t2',
+        COMPARISON_STUDY_ID: 'applied_criteria',
         PUBLICATION_SECTION: 'abstract_main',
         PUBLICATION_BRUTE_FORCE_METRIC: 'Balanced Accuracy',
         PUBLICATION_LANG: 'en'
@@ -46,8 +46,8 @@ const APP_CONFIG = Object.freeze({
         STATS_LAYOUT: 'currentStatsLayout_v4.2_detailed',
         STATS_COHORT1: 'currentStatsCohort1_v4.3_unified',
         STATS_COHORT2: 'currentStatsCohort2_v4.3_unified',
-        PRESENTATION_VIEW: 'currentPresentationView_v4.2_detailed',
-        PRESENTATION_STUDY_ID: 'currentPresentationStudyId_v4.2_detailed',
+        COMPARISON_VIEW: 'currentComparisonView_v4.2_detailed',
+        COMPARISON_STUDY_ID: 'currentComparisonStudyId_v4.2_detailed',
         CHART_COLOR_SCHEME: 'chartColorScheme_v4.2_detailed',
         FIRST_APP_START: 'appFirstStart_v3.1.0'
     }),
@@ -120,18 +120,12 @@ const APP_CONFIG = Object.freeze({
             CHART_SINGLE_PNG: '{ChartName}_PNG',
             CHART_SINGLE_SVG: '{ChartName}_SVG',
             TABLE_PNG_EXPORT: '{TableName}_PNG',
-            PRES_AS_PERF_CSV: 'Pres_AS_Performance_CSV',
-            PRES_AS_PERF_MD: 'Pres_AS_Performance_MD',
-            PRES_AS_VS_T2_PERF_CSV: 'Pres_Performance_ASvsT2_{StudyID}_CSV',
-            PRES_AS_VS_T2_COMP_MD: 'Pres_Metrics_ASvsT2_{StudyID}_MD',
-            PRES_AS_VS_T2_TESTS_MD: 'Pres_Tests_ASvsT2_{StudyID}_MD',
+            COMP_AS_PERF_CSV: 'Comp_AS_Performance_CSV',
+            COMP_AS_PERF_MD: 'Comp_AS_Performance_MD',
+            COMP_AS_VS_T2_PERF_CSV: 'Comp_Performance_ASvsT2_{StudyID}_CSV',
+            COMP_AS_VS_T2_COMP_MD: 'Comp_Metrics_ASvsT2_{StudyID}_MD',
+            COMP_AS_VS_T2_TESTS_MD: 'Comp_Tests_ASvsT2_{StudyID}_MD',
             CRITERIA_COMPARISON_MD: 'Criteria_Comparison_MD',
-            PUBLICATION_ABSTRACT_MD: 'Publication_Abstract_MD',
-            PUBLICATION_INTRODUCTION_MD: 'Publication_Introduction_MD',
-            PUBLICATION_METHODS_MD: 'Publication_Methods_{SectionName}_MD',
-            PUBLICATION_RESULTS_MD: 'Publication_Results_{SectionName}_MD',
-            PUBLICATION_DISCUSSION_MD: 'Publication_Discussion_MD',
-            PUBLICATION_REFERENCES_MD: 'Publication_References_MD',
             PUBLICATION_SECTION_MD: 'Publication_Section_{SectionName}_MD',
             ALL_ZIP: 'Complete_Export_ZIP',
             CSV_ZIP: 'CSV_Package_ZIP',
@@ -163,19 +157,15 @@ const APP_CONFIG = Object.freeze({
         AVOCADO_SIGN_DISPLAY_NAME: 'Avocado Sign'
     }),
     REFERENCES_FOR_PUBLICATION: Object.freeze({
-        // Internal/Contextual References
-        STUDY_PERIOD_2020_2023: { id: 0, text: "January 2020 and November 2023", isInternal: true },
-
-        // External Scientific References (ordered by potential citation sequence)
-        REFERENCE_SAUER_2004: { id: 1, text: "Sauer R, Becker H, Hohenberger W, et al. Preoperative versus postoperative chemoradiotherapy for rectal cancer. N Engl J Med 2004;351:1731–1740. doi: 10.1056/NEJMoa040694" },
-        REFERENCE_HABR_GAMA_2019: { id: 2, text: "Habr-Gama A, São Julião GP, Vailati BB, et al. Organ preservation in cT2N0 rectal cancer after neoadjuvant chemoradiation therapy: the impact of radiation therapy dose-escalation and consolidation chemotherapy. Ann Surg 2019;269:102–107. doi: 10.1097/SLA.0000000000002447" },
-        REFERENCE_BEETS_TAN_2018: { id: 3, text: "Beets-Tan RGH, Lambregts DMJ, Maas M, et al. Magnetic resonance imaging for clinical management of rectal cancer: updated recommendations from the 2016 European Society of Gastrointestinal and Abdominal Radiology (ESGAR) consensus meeting. Eur Radiol 2018;28:1465–1475. doi: 10.1007/s00330-017-5026-2" },
-        REFERENCE_AL_SUKHNI_2012: { id: 4, text: "Al-Sukhni E, Milot L, Fruitman M, et al. Diagnostic accuracy of MRI for assessment of T category, lymph node metastases, and circumferential resection margin involvement in patients with rectal cancer: a systematic review and meta-analysis. Ann Surg Oncol 2012;19:2212–2223. doi: 10.1245/s10434-011-2210-5" },
-        REFERENCE_RUTEGARD_2025: { id: 5, text: "Rutegård J, Hallberg L, Carlsson J, Olsson J, Jarnheimer A. Anatomically matched mesorectal nodal structures: evaluation of the 2016 ESGAR consensus criteria. Eur Radiol 2025. doi: 10.1007/s00330-024-11357-1" },
-        REFERENCE_HAO_2025: { id: 6, text: "Hao Y, Zheng J, Li W, et al. Ultra-high b-value DWI in rectal cancer: image quality assessment and regional lymph node prediction based on radiomics. Eur Radiol 2025;35:49–60. doi: 10.1007/s00330-024-10958-3" },
-        REFERENCE_LURZ_SCHAEFER_2025: { id: 7, text: "Lurz M, Schäfer AO. The Avocado Sign: A novel imaging marker for nodal staging in rectal cancer. Eur Radiol 2025. doi: 10.1007/s00330-025-11462-y" },
-        REFERENCE_KOH_2008: { id: 8, text: "Koh DM, Chau I, Tait D, Wotherspoon A, Cunningham D, Brown G. Evaluating mesorectal lymph nodes in rectal cancer before and after neoadjuvant chemoradiation using thin-section T2-weighted magnetic resonance imaging. Int J Radiat Oncol Biol Phys 2008;71:456–461. doi: 10.1016/j.ijrobp.2007.10.016" },
-        REFERENCE_BARBARO_2024: { id: 9, text: "Barbaro B, Carafa MRP, Minordi LM, et al. Magnetic resonance imaging for assessment of rectal cancer nodes after chemoradiotherapy: a single center experience. Radiother Oncol 2024;193:110124. doi: 10.1016/j.radonc.2024.110124" }
+        Lurz_Schaefer_2025: { id: 1, text: "Lurz M, Schäfer AO. The Avocado Sign: A novel imaging marker for nodal staging in rectal cancer. Eur Radiol 2025. doi: 10.1007/s00330-025-11462-y" },
+        Sauer_2004: { id: 2, text: "Sauer R, Becker H, Hohenberger W, et al. Preoperative versus postoperative chemoradiotherapy for rectal cancer. N Engl J Med 2004;351:1731–1740. doi: 10.1056/NEJMoa040694" },
+        Habr_Gama_2019: { id: 3, text: "Habr-Gama A, São Julião GP, Vailati BB, et al. Organ preservation in cT2N0 rectal cancer after neoadjuvant chemoradiation therapy: the impact of radiation therapy dose-escalation and consolidation chemotherapy. Ann Surg 2019;269:102–107. doi: 10.1097/SLA.0000000000002447" },
+        Beets_Tan_2018: { id: 4, text: "Beets-Tan RGH, Lambregts DMJ, Maas M, et al. Magnetic resonance imaging for clinical management of rectal cancer: updated recommendations from the 2016 European Society of Gastrointestinal and Abdominal Radiology (ESGAR) consensus meeting. Eur Radiol 2018;28:1465–1475. doi: 10.1007/s00330-017-5026-2" },
+        Al_Sukhni_2012: { id: 5, text: "Al-Sukhni E, Milot L, Fruitman M, et al. Diagnostic accuracy of MRI for assessment of T category, lymph node metastases, and circumferential resection margin involvement in patients with rectal cancer: a systematic review and meta-analysis. Ann Surg Oncol 2012;19:2212–2223. doi: 10.1245/s10434-011-2210-5" },
+        Rutegard_2025: { id: 6, text: "Rutegård J, Hallberg L, Carlsson J, Olsson J, Jarnheimer A. Anatomically matched mesorectal nodal structures: evaluation of the 2016 ESGAR consensus criteria. Eur Radiol 2025. doi: 10.1007/s00330-024-11357-1" },
+        Hao_2025: { id: 7, text: "Hao Y, Zheng J, Li W, et al. Ultra-high b-value DWI in rectal cancer: image quality assessment and regional lymph node prediction based on radiomics. Eur Radiol 2025;35:49–60. doi: 10.1007/s00330-024-10958-3" },
+        Koh_2008: { id: 8, text: "Koh DM, Chau I, Tait D, Wotherspoon A, Cunningham D, Brown G. Evaluating mesorectal lymph nodes in rectal cancer before and after neoadjuvant chemoradiation using thin-section T2-weighted magnetic resonance imaging. Int J Radiat Oncol Biol Phys 2008;71:456–461. doi: 10.1016/j.ijrobp.2007.10.016" },
+        Barbaro_2024: { id: 9, text: "Barbaro B, Carafa MRP, Minordi LM, et al. Magnetic resonance imaging for assessment of rectal cancer nodes after chemoradiotherapy: a single center experience. Radiother Oncol 2024;193:110124. doi: 10.1016/j.radonc.2024.110124" }
     }),
     UI_TEXTS: Object.freeze({
         cohortDisplayNames: {
@@ -371,9 +361,9 @@ const APP_CONFIG = Object.freeze({
                 comprehensivereport_html: { description: "Comprehensive analysis report as an HTML file (statistics, configurations, charts), printable.", type: 'COMPREHENSIVE_REPORT_HTML', ext: "html" },
                 allzip: { description: "All available single files (Statistics CSV, BruteForce TXT, all MDs, Raw Data CSV, HTML Report) in one ZIP archive.", type: 'ALL_ZIP', ext: "zip"},
                 csvzip: { description: "All available CSV files (Statistics, Raw Data) in one ZIP archive.", type: 'CSV_ZIP', ext: "zip"},
-                mdzip: { description: "All available Markdown files (Descriptive, Data, Analysis, Publication Texts) in one ZIP archive.", type: 'MD_ZIP', ext: "zip"},
-                pngzip: { description: "All currently visible charts (Statistics, Analysis, Presentation) and selected tables as individual PNG files (ZIP archive).", type: 'PNG_ZIP', ext: "zip" },
-                svgzip: { description: "All currently visible charts (Statistics, Analysis, Presentation) as individual SVG files (ZIP archive).", type: 'SVG_ZIP', ext: "zip"}
+                mdzip: { description: "All available Markdown files (Descriptive, Data, Analysis, Publication Texts) in one ZIP archive.", type: 'MD_ZIP', ext: "md"},
+                pngzip: { description: "All currently visible charts (Statistics, Analysis, Comparison) and selected tables as individual PNG files (ZIP archive).", type: 'PNG_ZIP', ext: "zip" },
+                svgzip: { description: "All currently visible charts (Statistics, Analysis, Comparison) as individual SVG files (ZIP archive).", type: 'SVG_ZIP', ext: "zip"}
             }
         })
     }),
@@ -399,28 +389,6 @@ const APP_CONFIG = Object.freeze({
             { key: 'countT2Nodes', label: 'T2+/T2 total', tooltipKey: 't2_counts', textAlign: 'center', width: 'auto' },
             { key: 'details', label: '', width: '30px', tooltipKey: 'expandRow'}
         ])
-    }),
-    REPORT_SETTINGS: Object.freeze({
-        REPORT_TITLE: 'Comprehensive Analysis Report',
-        REPORT_AUTHOR: 'Generated by AvocadoSign Analysis Tool',
-        INCLUDE_APP_VERSION: true,
-        INCLUDE_GENERATION_TIMESTAMP: true,
-        INCLUDE_KOLLEKTIV_INFO: true,
-        INCLUDE_T2_CRITERIA: true,
-        INCLUDE_DESCRIPTIVES_TABLE: true,
-        INCLUDE_DESCRIPTIVES_CHARTS: true,
-        INCLUDE_AS_PERFORMANCE_TABLE: true,
-        INCLUDE_T2_PERFORMANCE_TABLE: true,
-        INCLUDE_AS_VS_T2_COMPARISON_TABLE: true,
-        INCLUDE_AS_VS_T2_COMPARISON_CHART: true,
-        INCLUDE_ASSOCIATIONS_TABLE: true,
-        INCLUDE_BRUTEFORCE_BEST_RESULT: true
-    }),
-    SPECIAL_IDS: Object.freeze({
-        APPLIED_CRITERIA_STUDY_ID: 'applied_criteria',
-        APPLIED_CRITERIA_DISPLAY_NAME: 'Applied T2 Criteria',
-        AVOCADO_SIGN_ID: 'avocado_sign',
-        AVOCADO_SIGN_DISPLAY_NAME: 'Avocado Sign'
     }),
     T2_ICON_SVGS: Object.freeze({
         SIZE_DEFAULT: (s, sw, iconColor, c, r, sq, sqPos) => `<path d="M${sw/2} ${c} H${s-sw/2} M${c} ${sw/2} V${s-sw/2}" stroke="${iconColor}" stroke-width="${sw/2}" stroke-linecap="round"/>`,
@@ -480,7 +448,7 @@ const PUBLICATION_CONFIG = Object.freeze({
                 signal: { active: false }
             },
             studyInfo: {
-                reference: 'Koh et al (8)',
+                reference: 'Koh et al',
                 patientCohort: 'Overall (n=25)',
                 investigationType: 'Prospective, Pre- and Post-nCRT',
                 keyCriteriaSummary: 'Irregular Border OR Heterogeneous Signal'
@@ -500,7 +468,7 @@ const PUBLICATION_CONFIG = Object.freeze({
                 signal: { active: false }
             },
             studyInfo: {
-                reference: 'Barbaro et al (9)',
+                reference: 'Barbaro et al',
                 patientCohort: 'Neoadjuvant Therapy (n=191)',
                 investigationType: 'Retrospective, Post-nCRT',
                 focus: 'Size criteria for predicting ypN0',
@@ -521,7 +489,7 @@ const PUBLICATION_CONFIG = Object.freeze({
                 signal: { active: false }
             },
             studyInfo: {
-                reference: 'Rutegård et al (5)',
+                reference: 'Rutegård et al',
                 patientCohort: 'Surgery Alone (n=46)',
                 investigationType: 'Prospective, Node-by-Node',
                 focus: 'Validation of combined ESGAR 2016 criteria',
