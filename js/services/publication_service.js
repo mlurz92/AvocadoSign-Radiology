@@ -1,21 +1,21 @@
-const publicationService = (() => {
+window.publicationService = (() => {
 
     const contentGenerators = {
-        'abstract_main': abstractGenerator.generateAbstractHTML,
-        'introduction_main': introductionGenerator.generateIntroductionHTML,
+        'abstract_main': window.abstractGenerator.generateAbstractHTML,
+        'introduction_main': window.introductionGenerator.generateIntroductionHTML,
         
-        'methoden_studienanlage_ethik': methodsGenerator.generateStudyDesignHTML,
-        'methoden_mrt_protokoll_akquisition': methodsGenerator.generateMriProtocolAndImageAnalysisHTML,
-        'methoden_vergleichskriterien_t2': methodsGenerator.generateComparativeCriteriaHTML,
-        'methoden_referenzstandard_histopathologie': methodsGenerator.generateReferenceStandardHTML,
-        'methoden_statistische_analyse_methoden': methodsGenerator.generateStatisticalAnalysisHTML,
+        'methoden_studienanlage_ethik': window.methodsGenerator.generateStudyDesignHTML,
+        'methoden_mrt_protokoll_akquisition': window.methodsGenerator.generateMriProtocolAndImageAnalysisHTML,
+        'methoden_vergleichskriterien_t2': window.methodsGenerator.generateComparativeCriteriaHTML,
+        'methoden_referenzstandard_histopathologie': window.methodsGenerator.generateReferenceStandardHTML,
+        'methoden_statistische_analyse_methoden': window.methodsGenerator.generateStatisticalAnalysisHTML,
 
-        'ergebnisse_patientencharakteristika': resultsGenerator.generatePatientCharacteristicsHTML,
-        'ergebnisse_as_diagnostische_guete': resultsGenerator.generateASPerformanceHTML,
-        'ergebnisse_vergleich_as_vs_t2': resultsGenerator.generateComparisonHTML,
+        'ergebnisse_patientencharakteristika': window.resultsGenerator.generatePatientCharacteristicsHTML,
+        'ergebnisse_as_diagnostische_guete': window.resultsGenerator.generateASPerformanceHTML,
+        'ergebnisse_vergleich_as_vs_t2': window.resultsGenerator.generateComparisonHTML,
 
-        'discussion_main': discussionGenerator.generateDiscussionHTML,
-        'references_main': referencesGenerator.generateReferencesHTML
+        'discussion_main': window.discussionGenerator.generateDiscussionHTML,
+        'references_main': window.referencesGenerator.generateReferencesHTML
     };
 
     function generateSectionHTML(sectionId, stats, commonData) {
@@ -30,7 +30,7 @@ const publicationService = (() => {
             }
         }
 
-        const mainSection = PUBLICATION_CONFIG.sections.find(s => s.id === sectionId);
+        const mainSection = window.PUBLICATION_CONFIG.sections.find(s => s.id === sectionId);
         if (mainSection && mainSection.subSections.length > 1) {
             let combinedHTML = '';
             try {
