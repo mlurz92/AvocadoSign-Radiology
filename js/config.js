@@ -10,6 +10,7 @@ window.DEFAULT_T2_CRITERIA = Object.freeze({
 window.APP_CONFIG = Object.freeze({
     APP_NAME: "Nodal Staging: Avocado Sign vs. T2 Criteria",
     APP_VERSION: "3.1.0",
+    NA_PLACEHOLDER: '--', // Global placeholder for 'Not Available'
     COHORTS: Object.freeze({
         OVERALL: { id: 'Overall', therapyValue: null, displayName: 'Overall' },
         SURGERY_ALONE: { id: 'surgeryAlone', therapyValue: 'surgeryAlone', displayName: 'Surgery alone' },
