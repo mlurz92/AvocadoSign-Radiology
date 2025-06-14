@@ -1,9 +1,9 @@
-const exportTab = (() => {
+window.exportTab = (() => {
 
     const createExportButton = (config) => {
         if (!config || !config.id) return '';
         const tooltipConfigKey = config.tooltipKey || config.id.replace(/-/g, '');
-        const tooltipConfig = APP_CONFIG.UI_TEXTS.tooltips.exportTab[tooltipConfigKey];
+        const tooltipConfig = window.APP_CONFIG.UI_TEXTS.tooltips.exportTab[tooltipConfigKey];
         
         if (!tooltipConfig) {
             return '';
@@ -29,7 +29,7 @@ const exportTab = (() => {
 
     function render(currentCohort) {
         const cohortDisplayName = getCohortDisplayName(currentCohort);
-        const descriptionTextTemplate = APP_CONFIG.UI_TEXTS.tooltips.exportTab.description;
+        const descriptionTextTemplate = window.APP_CONFIG.UI_TEXTS.tooltips.exportTab.description;
         const finalDescriptionText = descriptionTextTemplate.replace('[COHORT]', `<strong>${cohortDisplayName}</strong>`);
 
         const singleExports = [
