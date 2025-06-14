@@ -220,13 +220,11 @@ function getPValueText(pValue, forPublication = false) {
         if (p < 0.001) return `${prefix} < .001`;
         if (p > 0.99) return `${prefix} > .99`;
         if (p < 0.01) return `${prefix} = .${p.toFixed(3).substring(2)}`;
-        // Special rule: show 3 digits if rounding to 2 would cross the .05 threshold
         if (p.toFixed(2) === '0.05' && p < 0.05) {
              return `${prefix} = .${p.toFixed(3).substring(2)}`;
         }
         return `${prefix} = .${p.toFixed(2).substring(2)}`;
     } else {
-        // UI-friendly format
         const prefix = 'p';
         if (p < 0.001) return `${prefix} < 0.001`;
         return `${prefix} = ${p.toFixed(3)}`;
@@ -336,7 +334,7 @@ function getInterpretationTooltip(metricKey, data, context = {}) {
         case 'auc':
             const strength = getAUCInterpretation(value);
             baseText = template
-                .replace(/{value}/g, `<strong>${formatNumber(value, 2)}</strong>`)
+                .replace(/{value}/g, `<strong>${formatNumber(value, 3)}</strong>`)
                 .replace('{strength}', `<strong>${strength}</strong>`);
             break;
             
@@ -345,7 +343,7 @@ function getInterpretationTooltip(metricKey, data, context = {}) {
              break;
 
         case 'pValue':
-            const pValueFormatted = getPValueText(value, false); // Use UI format for tooltips
+            const pValueFormatted = getPValueText(value, false);
             const significance = value < APP_CONFIG.STATISTICAL_CONSTANTS.SIGNIFICANCE_LEVEL;
             const significanceText = significance ? templates.significance.significant : templates.significance.not_significant;
             const pStrength = significance ? templates.strength.strong : templates.strength.very_weak;
