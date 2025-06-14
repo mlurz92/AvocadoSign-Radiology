@@ -4,7 +4,7 @@ window.abstractGenerator = (() => {
         const overallStats = stats?.[window.APP_CONFIG.COHORTS.OVERALL.id];
         
         if (!overallStats || !overallStats.descriptive || !overallStats.performanceAS) {
-            return '<p class="text-warning">Required statistics for abstract generation are missing.</p>';
+            return '<div class="alert alert-warning">Required statistics for abstract generation are missing. Please ensure the analysis has been run.</div>';
         }
 
         const { descriptive, performanceAS, performanceT2Bruteforce, comparisonASvsT2Bruteforce } = overallStats;
@@ -19,13 +19,15 @@ window.abstractGenerator = (() => {
         let conclusionText;
 
         const medianAgeFormatted = helpers.formatValueForPublication(descriptive.age.median, 0);
-        const ageIQR = `${helpers.formatValueForPublication(descriptive.age.q1, 0)}–${helpers.formatValueForPublication(descriptive.age.q3, 0)}`;
+        const q1AgeFormatted = helpers.formatValueForPublication(descriptive.age.q1, 0);
+        const q3AgeFormatted = helpers.formatValueForPublication(descriptive.age.q3, 0);
+        const ageIQR = `${q1AgeFormatted}–${q3AgeFormatted}`;
 
         if (bfResultsAvailable) {
             keyResultsHTML = `
                 <h2 class="mt-0">Key Results</h2>
                 <ul>
-                    <li>In this retrospective study of ${nOverall} patients with rectal cancer, the Avocado Sign (AS) on contrast-enhanced MRI yielded an area under the receiver operating characteristic curve (AUC) of ${helpers.formatMetricForPublication(performanceAS.auc, 'auc', true)} for predicting nodal metastasis.</li>
+                    <li>In a retrospective study of ${nOverall} patients with rectal cancer, the Avocado Sign (AS) on contrast-enhanced MRI yielded an area under the receiver operating characteristic curve (AUC) of ${helpers.formatMetricForPublication(performanceAS.auc, 'auc', true)} for predicting nodal metastasis.</li>
                     <li>A cohort-optimized T2-weighted (T2w) criteria set, identified via brute-force analysis, yielded an AUC of ${helpers.formatMetricForPublication(performanceT2Bruteforce.auc, 'auc', true)}.</li>
                     <li>The diagnostic performance of the AS was not inferior to that of the cohort-optimized T2w criteria (${helpers.formatPValueForPublication(comparisonASvsT2Bruteforce.delong.pValue)}).</li>
                 </ul>
@@ -34,7 +36,7 @@ window.abstractGenerator = (() => {
                 <p><strong>In a retrospective analysis of ${nOverall} patients with rectal cancer, the Avocado Sign on contrast-enhanced MRI demonstrated diagnostic performance for nodal staging that was non-inferior to a cohort-optimized T2-weighted criteria set.</strong></p>
             `;
             resultsSectionHTML = `
-                <p>A total of ${nOverall} patients (median age, ${medianAgeFormatted} years; interquartile range, ${ageIQR} years; ${descriptive.sex.m} men) were evaluated. Of these, ${nPositive} of ${nOverall} (${helpers.formatValueForPublication(nPositive / nOverall, 1, true)}%) were N-positive at histopathology. The Avocado Sign demonstrated an AUC of ${helpers.formatMetricForPublication(performanceAS.auc, 'auc')}. A brute-force optimized T2w criteria set (target metric: ${bruteForceMetricForPublication}) yielded a numerically similar AUC of ${helpers.formatMetricForPublication(performanceT2Bruteforce.auc, 'auc')}. The difference in AUC between the Avocado Sign and the optimized T2w criteria was not statistically significant (${helpers.formatPValueForPublication(comparisonASvsT2Bruteforce.delong.pValue)}).</p>
+                <p>A total of ${nOverall} patients (median age, ${medianAgeFormatted} years; interquartile range, ${ageIQR} years; ${descriptive.sex.m} men) were evaluated. Of these, ${nPositive} of ${nOverall} (${helpers.formatValueForPublication(nPositive / nOverall, 0, true)}%) were N-positive at histopathology. The Avocado Sign demonstrated a sensitivity of ${helpers.formatMetricForPublication(performanceAS.sens, 'sens')} and a specificity of ${helpers.formatMetricForPublication(performanceAS.spec, 'spec')}, with an AUC of ${helpers.formatMetricForPublication(performanceAS.auc, 'auc')}. A brute-force optimized T2w criteria set (target metric: ${bruteForceMetricForPublication}) yielded a numerically similar AUC of ${helpers.formatMetricForPublication(performanceT2Bruteforce.auc, 'auc')}. The difference in AUC between the Avocado Sign and the optimized T2w criteria was not statistically significant (${helpers.formatPValueForPublication(comparisonASvsT2Bruteforce.delong.pValue)}).</p>
             `;
             conclusionText = `
                 <p>The Avocado Sign is an accurate and reproducible MRI marker for predicting lymph node status in rectal cancer, demonstrating diagnostic performance non-inferior to cohort-optimized T2-weighted criteria. Its application may simplify and improve the accuracy of preoperative nodal staging.</p>
@@ -43,7 +45,7 @@ window.abstractGenerator = (() => {
             keyResultsHTML = `
                 <h2 class="mt-0">Key Results</h2>
                 <ul>
-                    <li>In this retrospective study of ${nOverall} patients with rectal cancer, the contrast-based Avocado Sign (AS) showed an area under the curve (AUC) of ${helpers.formatMetricForPublication(performanceAS.auc, 'auc', true)} for predicting nodal metastasis.</li>
+                    <li>In a retrospective study of ${nOverall} patients with rectal cancer, the contrast-based Avocado Sign (AS) showed an area under the curve (AUC) of ${helpers.formatMetricForPublication(performanceAS.auc, 'auc', true)} for predicting nodal metastasis.</li>
                     <li>The diagnostic performance of the AS was superior to established literature-based T2-weighted (T2w) criteria.</li>
                     <li>A full comparison against a cohort-optimized T2w criteria set is pending completion of the brute-force analysis.</li>
                 </ul>
@@ -53,7 +55,7 @@ window.abstractGenerator = (() => {
                 <p><strong>In a retrospective analysis of ${nOverall} patients with rectal cancer, the Avocado Sign on contrast-enhanced MRI demonstrated high diagnostic performance for nodal staging, superior to established literature-based T2-weighted criteria.</strong></p>
             `;
             resultsSectionHTML = `
-                <p>A total of ${nOverall} patients (median age, ${medianAgeFormatted} years; interquartile range, ${ageIQR} years; ${descriptive.sex.m} men) were analyzed, of whom ${nPositive} (${helpers.formatValueForPublication(nPositive / nOverall, 1, true)}%) were N-positive. The Avocado Sign demonstrated an AUC of ${helpers.formatMetricForPublication(performanceAS.auc, 'auc')}. [Comparison to a brute-force optimized T2-weighted criteria set is pending].</p>
+                <p>A total of ${nOverall} patients (median age, ${medianAgeFormatted} years; interquartile range, ${ageIQR} years; ${descriptive.sex.m} men) were analyzed, of whom ${nPositive} (${helpers.formatValueForPublication(nPositive / nOverall, 0, true)}%) were N-positive. The Avocado Sign demonstrated an AUC of ${helpers.formatMetricForPublication(performanceAS.auc, 'auc')}. A comparison to a brute-force optimized T2-weighted criteria set is pending.</p>
             `;
              conclusionText = `
                 <p>The Avocado Sign is a highly reproducible MRI marker for predicting lymph node status in rectal cancer. It shows high diagnostic performance and has the potential to simplify and improve the accuracy of preoperative nodal staging, pending final comparison with cohort-optimized T2-weighted criteria.</p>
