@@ -93,7 +93,7 @@ const flowchartRenderer = (() => {
 
         textElements.each(function(d) {
             const el = d3.select(this);
-            const lineHeight = 1.1; // ems
+            const lineHeight = 1.1;
             const startY = -((d.text.length - 1) * lineHeight) / 2;
             d.text.forEach((line, i) => {
                 el.append('tspan')
