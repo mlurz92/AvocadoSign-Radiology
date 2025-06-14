@@ -1,4 +1,4 @@
-const dataTab = (() => {
+window.dataTab = (() => {
 
     function createTableHeaderHTML(columns, sortState) {
         let headerHTML = `<thead class="small sticky-top bg-light" id="data-table-header"><tr>`;
@@ -20,7 +20,7 @@ const dataTab = (() => {
                 }
             }
             
-            const baseTooltipContent = APP_CONFIG.UI_TEXTS.tooltips.dataTab[col.tooltipKey] || `Sort by ${col.label}`;
+            const baseTooltipContent = window.APP_CONFIG.UI_TEXTS.tooltips.dataTab[col.tooltipKey] || `Sort by ${col.label}`;
             const subHeaders = col.subKeys ? col.subKeys.map(sk => {
                 const isActiveSubSort = activeSubKey === sk.key;
                 const style = isActiveSubSort ? 'font-weight: bold; text-decoration: underline; color: var(--primary-color);' : '';
@@ -43,7 +43,7 @@ const dataTab = (() => {
     function createDataTableHTML(data, sortState) {
         if (!Array.isArray(data)) return '<p class="text-danger">Error: Invalid data for table.</p>';
         const tableId = 'data-table';
-        const columns = APP_CONFIG.TABLE_COLUMN_DEFINITIONS.DATA_TABLE_COLUMNS;
+        const columns = window.APP_CONFIG.TABLE_COLUMN_DEFINITIONS.DATA_TABLE_COLUMNS;
         let tableHTML = `<table class="table table-sm table-hover table-striped data-table" id="${tableId}">`;
         tableHTML += createTableHeaderHTML(columns, sortState);
         tableHTML += `<tbody id="${tableId}-body">`;
@@ -51,7 +51,7 @@ const dataTab = (() => {
             tableHTML += `<tr><td colspan="${columns.length}" class="text-center text-muted">No data found in the selected cohort.</td></tr>`;
         } else {
             data.forEach(patient => {
-                tableHTML += tableRenderer.createDataTableRow(patient);
+                tableHTML += window.tableRenderer.createDataTableRow(patient);
             });
         }
         tableHTML += `</tbody></table>`;
@@ -60,7 +60,7 @@ const dataTab = (() => {
 
     function render(data, sortState) {
         if (!data) throw new Error("Data for data tab not available.");
-        const expandAllTooltip = APP_CONFIG.UI_TEXTS.tooltips.dataTab.expandAll || 'Expand All Details';
+        const expandAllTooltip = window.APP_CONFIG.UI_TEXTS.tooltips.dataTab.expandAll || 'Expand All Details';
         const toggleButtonHTML = `
             <div class="d-flex justify-content-end mb-3" id="data-toggle-button-container">
                 <button id="data-toggle-details" class="btn btn-sm btn-outline-secondary" data-action="expand" data-tippy-content="${expandAllTooltip}">
@@ -73,15 +73,15 @@ const dataTab = (() => {
         setTimeout(() => {
             const tableBody = document.getElementById('data-table-body');
             const tableHeader = document.getElementById('data-table-header');
-            if (tableBody && data.length > 0) uiManager.attachRowCollapseListeners(tableBody.id);
-            if (tableHeader) uiManager.updateSortIcons(tableHeader.id, sortState);
-            uiManager.initializeTooltips(document.getElementById('data-pane'));
+            if (tableBody && data.length > 0) window.uiManager.attachRowCollapseListeners(tableBody.id);
+            if (tableHeader) window.uiManager.updateSortIcons(tableHeader.id, sortState);
+            window.uiManager.initializeTooltips(document.getElementById('data-pane'));
         }, 0);
 
         return finalHTML;
     }
 
-    return {
+    return Object.freeze({
         render
-    };
+    });
 })();
