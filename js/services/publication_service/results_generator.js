@@ -2,43 +2,50 @@ window.resultsGenerator = (() => {
 
     function generatePatientCharacteristicsHTML(stats, commonData) {
         const overallStats = stats?.[window.APP_CONFIG.COHORTS.OVERALL.id];
-        if (!overallStats || !overallStats.descriptive) return '<p class="text-warning">Patient characteristics data not available.</p>';
-        
-        const { descriptive } = overallStats;
-        const { nOverall, nSurgeryAlone, nNeoadjuvantTherapy, nPositive } = commonData;
-        const helpers = window.publicationHelpers;
+        const surgeryAloneStats = stats?.[window.APP_CONFIG.COHORTS.SURGERY_ALONE.id];
+        const neoadjuvantStats = stats?.[window.APP_CONFIG.COHORTS.NEOADJUVANT.id];
 
-        const meanAgeFormatted = helpers.formatValueForPublication(descriptive.age.mean, 1);
-        const stdDevAgeFormatted = helpers.formatValueForPublication(descriptive.age.sd, 1);
-        const medianAgeFormatted = helpers.formatValueForPublication(descriptive.age.median, 0);
-        const q1AgeFormatted = helpers.formatValueForPublication(descriptive.age.q1, 0);
-        const q3AgeFormatted = helpers.formatValueForPublication(descriptive.age.q3, 0);
+        if (!overallStats?.descriptive || !surgeryAloneStats?.descriptive || !neoadjuvantStats?.descriptive) {
+            return '<p class="text-warning">Patient characteristics data is incomplete and could not be generated.</p>';
+        }
+        
+        const helpers = window.publicationHelpers;
+        const { nOverall, nSurgeryAlone, nNeoadjuvantTherapy, nPositive } = commonData;
 
         const text = `
             <h3 id="results_patient_characteristics">Patient Characteristics</h3>
-            <p>The study cohort comprised ${helpers.formatValueForPublication(nOverall, 0)} patients (mean age, ${meanAgeFormatted} years ± ${stdDevAgeFormatted} [standard deviation]; ${descriptive.sex.m} men). The process of patient enrollment is detailed in the study flowchart (Figure 1). Of the included patients, ${helpers.formatValueForPublication(nSurgeryAlone, 0)} (${helpers.formatValueForPublication(nSurgeryAlone / nOverall, 1, true)}%) underwent primary surgery, and ${helpers.formatValueForPublication(nNeoadjuvantTherapy, 0)} (${helpers.formatValueForPublication(nNeoadjuvantTherapy / nOverall, 1, true)}%) received neoadjuvant chemoradiotherapy. Overall, ${helpers.formatValueForPublication(nPositive, 0)} of ${nOverall} patients (${helpers.formatValueForPublication(nPositive / nOverall, 1, true)}%) had histopathologically confirmed lymph node metastases (N-positive). Detailed patient characteristics for the overall cohort and by treatment subgroup are provided in Table 1.</p>
+            <p>The study cohort comprised ${helpers.formatValueForPublication(nOverall, 0)} patients (mean age, ${helpers.formatValueForPublication(overallStats.descriptive.age.mean, 1)} years ± ${helpers.formatValueForPublication(overallStats.descriptive.age.sd, 1)} [standard deviation]; ${overallStats.descriptive.sex.m} men). The process of patient enrollment is detailed in the study flowchart (Figure 1). Of the included patients, ${helpers.formatValueForPublication(nSurgeryAlone, 0)} (${helpers.formatValueForPublication(nSurgeryAlone / nOverall, 0, true)}%) underwent primary surgery, and ${helpers.formatValueForPublication(nNeoadjuvantTherapy, 0)} (${helpers.formatValueForPublication(nNeoadjuvantTherapy / nOverall, 0, true)}%) received neoadjuvant chemoradiotherapy. Overall, ${helpers.formatValueForPublication(nPositive, 0)} of ${nOverall} patients (${helpers.formatValueForPublication(nPositive / nOverall, 0, true)}%) had histopathologically confirmed lymph node metastases (N-positive). Detailed patient characteristics for the overall cohort and by treatment subgroup are provided in Table 1.</p>
         `;
 
         const figurePlaceholder = `
             <div class="my-4 p-3 border rounded text-center bg-light" id="figure-1-flowchart-container-wrapper">
                 <p class="mb-1 fw-bold">Figure 1: Study Flowchart</p>
                 <div id="figure-1-flowchart-container" class="publication-chart-container">
-                    <p class="mb-0 text-muted small">[Flowchart will be rendered here. Shows patient enrollment, allocation to cohorts, and exclusions.]</p>
+                    <p class="mb-0 text-muted small">[Flowchart showing participant enrollment and cohort allocation will be rendered here.]</p>
                 </div>
             </div>
         `;
+
+        const getAgeRow = (statsObj, type) => {
+            if (!statsObj?.age) return 'N/A';
+            if (type === 'mean') return `${helpers.formatValueForPublication(statsObj.age.mean, 1)} ± ${helpers.formatValueForPublication(statsObj.age.sd, 1)}`;
+            if (type === 'median') return `${helpers.formatValueForPublication(statsObj.age.median, 0)} (${helpers.formatValueForPublication(statsObj.age.q1, 0)}–${helpers.formatValueForPublication(statsObj.age.q3, 0)})`;
+            return 'N/A';
+        };
+
+        const getCountRow = (count, total) => `${helpers.formatValueForPublication(count, 0)} (${helpers.formatValueForPublication(count / total, 0, true)}%)`;
 
         const tableConfig = {
             id: 'table-results-patient-char',
             caption: 'Table 1: Patient Demographics and Clinical Characteristics',
             headers: [`Characteristic`, `Overall Cohort (n=${nOverall})`, `Surgery alone (n=${nSurgeryAlone})`, `Neoadjuvant therapy (n=${nNeoadjuvantTherapy})`, '<em>P</em> value'],
             rows: [
-                ['Age (y), mean ± SD', `${helpers.formatValueForPublication(descriptive.age.mean, 1)} ± ${helpers.formatValueForPublication(descriptive.age.sd, 1)}`, `${helpers.formatValueForPublication(stats.surgeryAlone.descriptive.age.mean, 1)} ± ${helpers.formatValueForPublication(stats.surgeryAlone.descriptive.age.sd, 1)}`, `${helpers.formatValueForPublication(stats.neoadjuvantTherapy.descriptive.age.mean, 1)} ± ${helpers.formatValueForPublication(stats.neoadjuvantTherapy.descriptive.age.sd, 1)}`, '.12'],
-                ['Age (y), median (IQR)', `${medianAgeFormatted} (${q1AgeFormatted}–${q3AgeFormatted})`, `${helpers.formatValueForPublication(stats.surgeryAlone.descriptive.age.median, 0)} (${helpers.formatValueForPublication(stats.surgeryAlone.descriptive.age.q1, 0)}–${helpers.formatValueForPublication(stats.surgeryAlone.descriptive.age.q3, 0)})`, `${helpers.formatValueForPublication(stats.neoadjuvantTherapy.descriptive.age.median, 0)} (${helpers.formatValueForPublication(stats.neoadjuvantTherapy.descriptive.age.q1, 0)}–${helpers.formatValueForPublication(stats.neoadjuvantTherapy.descriptive.age.q3, 0)})`, '.14'],
-                ['Men', `${descriptive.sex.m} (${helpers.formatValueForPublication(descriptive.sex.m / nOverall, 1, true)}%)`, `${stats.surgeryAlone.descriptive.sex.m} (${helpers.formatValueForPublication(stats.surgeryAlone.descriptive.sex.m / nSurgeryAlone, 1, true)}%)`, `${stats.neoadjuvantTherapy.descriptive.sex.m} (${helpers.formatValueForPublication(stats.neoadjuvantTherapy.descriptive.sex.m / nNeoadjuvantTherapy, 1, true)}%)`, '.65'],
-                ['Histopathologic N-status, positive', `${nPositive} (${helpers.formatValueForPublication(nPositive / nOverall, 1, true)}%)`, `${stats.surgeryAlone.descriptive.nStatus.plus} (${helpers.formatValueForPublication(stats.surgeryAlone.descriptive.nStatus.plus / nSurgeryAlone, 1, true)}%)`, `${stats.neoadjuvantTherapy.descriptive.nStatus.plus} (${helpers.formatValueForPublication(stats.neoadjuvantTherapy.descriptive.nStatus.plus / nNeoadjuvantTherapy, 1, true)}%)`, '.04']
+                ['Age (y), mean ± SD', getAgeRow(overallStats.descriptive, 'mean'), getAgeRow(surgeryAloneStats.descriptive, 'mean'), getAgeRow(neoadjuvantStats.descriptive, 'mean'), '.12'],
+                ['   Age (y), median (IQR)', getAgeRow(overallStats.descriptive, 'median'), getAgeRow(surgeryAloneStats.descriptive, 'median'), getAgeRow(neoadjuvantStats.descriptive, 'median'), '.14'],
+                ['Men', getCountRow(overallStats.descriptive.sex.m, nOverall), getCountRow(surgeryAloneStats.descriptive.sex.m, nSurgeryAlone), getCountRow(neoadjuvantStats.descriptive.sex.m, nNeoadjuvantTherapy), '.65'],
+                ['Histopathologic N-status, positive', getCountRow(overallStats.descriptive.nStatus.plus, nOverall), getCountRow(surgeryAloneStats.descriptive.nStatus.plus, nSurgeryAlone), getCountRow(neoadjuvantStats.descriptive.nStatus.plus, nNeoadjuvantTherapy), '.04']
             ],
-            notes: "Data are numbers of patients, with percentages in parentheses, or mean ± standard deviation or median and interquartile range (IQR). P values are from t-tests for continuous variables and chi-square tests for categorical variables comparing surgery-alone and neoadjuvant therapy groups."
+            notes: "Data are numbers of patients, with percentages in parentheses, or mean ± standard deviation or median and interquartile range (IQR). P values were derived from t-tests for continuous variables and chi-square tests for categorical variables comparing the surgery-alone and neoadjuvant therapy groups and are included for descriptive purposes."
         };
         
         return text + figurePlaceholder + helpers.createPublicationTableHTML(tableConfig);
@@ -46,7 +53,7 @@ window.resultsGenerator = (() => {
 
     function generateASPerformanceHTML(stats, commonData) {
         const overallStats = stats?.[window.APP_CONFIG.COHORTS.OVERALL.id];
-        if (!overallStats || !overallStats.performanceAS) return '<p class="text-warning">Avocado Sign performance data not available.</p>';
+        if (!overallStats?.performanceAS) return '<p class="text-warning">Avocado Sign performance data not available.</p>';
         
         const { performanceAS, interobserverKappa, interobserverKappaCI } = overallStats;
         const helpers = window.publicationHelpers;
@@ -61,7 +68,7 @@ window.resultsGenerator = (() => {
             caption: 'Table 3: Diagnostic Performance of the Avocado Sign by Patient Cohort',
             headers: ['Metric', `Overall (n=${stats.Overall.descriptive.patientCount})`, `Surgery alone (n=${stats.surgeryAlone.descriptive.patientCount})`, `Neoadjuvant therapy (n=${stats.neoadjuvantTherapy.descriptive.patientCount})`],
             rows: [],
-            notes: 'Data are value (95% Confidence Interval). PPV = Positive Predictive Value, NPV = Negative Predictive Value, AUC = Area under the receiver operating characteristic curve.'
+            notes: 'Data are value (numerator/denominator) (95% Confidence Interval). PPV = Positive Predictive Value, NPV = Negative Predictive Value, AUC = Area under the receiver operating characteristic curve.'
         };
 
         const metrics = [
@@ -110,7 +117,7 @@ window.resultsGenerator = (() => {
             caption: 'Table 4: Diagnostic Performance and Statistical Comparison of All Evaluated Criteria Sets versus the Avocado Sign',
             headers: ['Criteria Set', 'Applicable Cohort (n)', 'AUC (95% CI)', 'Sensitivity (95% CI)', 'Specificity (95% CI)', 'Accuracy (95% CI)', '<em>P</em> value (vs AS)'],
             rows: [],
-            notes: 'Performance metrics for literature-based criteria are calculated on their respective applicable cohorts, and the statistical comparison (DeLong test for AUC) is performed within that same cohort. A <em>P</em> value < .05 indicates a significant difference in AUC compared to the Avocado Sign. AS = Avocado Sign, T2w = T2-weighted, BF = Brute-Force.'
+            notes: 'Performance metrics for literature-based criteria are calculated on their respective applicable cohorts, and the statistical comparison (DeLong test for AUC) is performed within that same cohort. A P value < .05 indicates a significant difference in AUC compared to the Avocado Sign. AS = Avocado Sign, T2w = T2-weighted, BF = Brute-Force.'
         };
 
         const addCompRow = (setName, cohortId, perfKey, compKey) => {
@@ -130,7 +137,7 @@ window.resultsGenerator = (() => {
                 helpers.formatMetricForPublication(perf.sens, 'sens'),
                 helpers.formatMetricForPublication(perf.spec, 'spec'),
                 helpers.formatMetricForPublication(perf.acc, 'acc'),
-                comp ? helpers.formatPValueForPublication(comp.pValue) : 'N/A'
+                comp ? helpers.formatPValueForPublication(comp.pValue) : '–'
             ];
         };
 
