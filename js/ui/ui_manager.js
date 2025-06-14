@@ -419,10 +419,12 @@ window.uiManager = (() => {
         const tableHeader = document.getElementById(tableHeaderId);
         if (!tableHeader) return;
         tableHeader.querySelectorAll('th[data-sort-key]').forEach(th => {
+            const sortKey = th.dataset.sortKey;
             const sortIcon = th.querySelector('.fa-sort, .fa-sort-up, .fa-sort-down');
             if (sortIcon) {
                 sortIcon.className = 'fas fa-sort text-muted opacity-50 ms-1';
             }
+            // Check if sortKey is 'status' to handle sub-headers specific styling
             if (sortKey === 'status') {
                  th.querySelectorAll('.sortable-sub-header').forEach(sub => {
                      sub.style.fontWeight = 'normal';
