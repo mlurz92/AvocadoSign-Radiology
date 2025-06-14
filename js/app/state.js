@@ -1,36 +1,36 @@
-const state = (() => {
+window.state = (() => {
     let currentState = {};
     let defaultState = {};
 
     function init() {
         defaultState = {
-            currentCohort: APP_CONFIG.DEFAULT_SETTINGS.COHORT,
-            dataTableSort: cloneDeep(APP_CONFIG.DEFAULT_SETTINGS.DATA_TABLE_SORT),
-            analysisTableSort: cloneDeep(APP_CONFIG.DEFAULT_SETTINGS.ANALYSIS_TABLE_SORT),
-            publicationSection: APP_CONFIG.DEFAULT_SETTINGS.PUBLICATION_SECTION,
-            publicationBruteForceMetric: APP_CONFIG.DEFAULT_SETTINGS.PUBLICATION_BRUTE_FORCE_METRIC,
-            publicationLang: APP_CONFIG.DEFAULT_SETTINGS.PUBLICATION_LANG,
-            statsLayout: APP_CONFIG.DEFAULT_SETTINGS.STATS_LAYOUT,
-            statsCohort1: APP_CONFIG.DEFAULT_SETTINGS.STATS_COHORT1,
-            statsCohort2: APP_CONFIG.DEFAULT_SETTINGS.STATS_COHORT2,
-            comparisonView: APP_CONFIG.DEFAULT_SETTINGS.COMPARISON_VIEW,
-            comparisonStudyId: APP_CONFIG.DEFAULT_SETTINGS.COMPARISON_STUDY_ID,
+            currentCohort: window.APP_CONFIG.DEFAULT_SETTINGS.COHORT,
+            dataTableSort: cloneDeep(window.APP_CONFIG.DEFAULT_SETTINGS.DATA_TABLE_SORT),
+            analysisTableSort: cloneDeep(window.APP_CONFIG.DEFAULT_SETTINGS.ANALYSIS_TABLE_SORT),
+            publicationSection: window.APP_CONFIG.DEFAULT_SETTINGS.PUBLICATION_SECTION,
+            publicationBruteForceMetric: window.APP_CONFIG.DEFAULT_SETTINGS.PUBLICATION_BRUTE_FORCE_METRIC,
+            publicationLang: window.APP_CONFIG.DEFAULT_SETTINGS.PUBLICATION_LANG,
+            statsLayout: window.APP_CONFIG.DEFAULT_SETTINGS.STATS_LAYOUT,
+            statsCohort1: window.APP_CONFIG.DEFAULT_SETTINGS.STATS_COHORT1,
+            statsCohort2: window.APP_CONFIG.DEFAULT_SETTINGS.STATS_COHORT2,
+            comparisonView: window.APP_CONFIG.DEFAULT_SETTINGS.COMPARISON_VIEW,
+            comparisonStudyId: window.APP_CONFIG.DEFAULT_SETTINGS.COMPARISON_STUDY_ID,
             activeTabId: 'publication'
         };
 
-        const loadedSection = loadFromLocalStorage(APP_CONFIG.STORAGE_KEYS.PUBLICATION_SECTION);
-        const isValidSection = PUBLICATION_CONFIG.sections.some(s => s.id === loadedSection || s.subSections.some(sub => sub.id === loadedSection));
+        const loadedSection = loadFromLocalStorage(window.APP_CONFIG.STORAGE_KEYS.PUBLICATION_SECTION);
+        const isValidSection = window.PUBLICATION_CONFIG.sections.some(s => s.id === loadedSection || s.subSections.some(sub => sub.id === loadedSection));
 
         currentState = {
-            currentCohort: loadFromLocalStorage(APP_CONFIG.STORAGE_KEYS.CURRENT_COHORT) ?? defaultState.currentCohort,
+            currentCohort: loadFromLocalStorage(window.APP_CONFIG.STORAGE_KEYS.CURRENT_COHORT) ?? defaultState.currentCohort,
             publicationSection: isValidSection ? loadedSection : defaultState.publicationSection,
-            publicationBruteForceMetric: loadFromLocalStorage(APP_CONFIG.STORAGE_KEYS.PUBLICATION_BRUTE_FORCE_METRIC) ?? defaultState.publicationBruteForceMetric,
-            publicationLang: loadFromLocalStorage(APP_CONFIG.STORAGE_KEYS.PUBLICATION_LANG) ?? defaultState.publicationLang,
-            statsLayout: loadFromLocalStorage(APP_CONFIG.STORAGE_KEYS.STATS_LAYOUT) ?? defaultState.statsLayout,
-            statsCohort1: loadFromLocalStorage(APP_CONFIG.STORAGE_KEYS.STATS_COHORT1) ?? defaultState.statsCohort1,
-            statsCohort2: loadFromLocalStorage(APP_CONFIG.STORAGE_KEYS.STATS_COHORT2) ?? defaultState.statsCohort2,
-            comparisonView: loadFromLocalStorage(APP_CONFIG.STORAGE_KEYS.COMPARISON_VIEW) ?? defaultState.comparisonView,
-            comparisonStudyId: loadFromLocalStorage(APP_CONFIG.STORAGE_KEYS.COMPARISON_STUDY_ID) ?? defaultState.comparisonStudyId,
+            publicationBruteForceMetric: loadFromLocalStorage(window.APP_CONFIG.STORAGE_KEYS.PUBLICATION_BRUTE_FORCE_METRIC) ?? defaultState.publicationBruteForceMetric,
+            publicationLang: loadFromLocalStorage(window.APP_CONFIG.STORAGE_KEYS.PUBLICATION_LANG) ?? defaultState.publicationLang,
+            statsLayout: loadFromLocalStorage(window.APP_CONFIG.STORAGE_KEYS.STATS_LAYOUT) ?? defaultState.statsLayout,
+            statsCohort1: loadFromLocalStorage(window.APP_CONFIG.STORAGE_KEYS.STATS_COHORT1) ?? defaultState.statsCohort1,
+            statsCohort2: loadFromLocalStorage(window.APP_CONFIG.STORAGE_KEYS.STATS_COHORT2) ?? defaultState.statsCohort2,
+            comparisonView: loadFromLocalStorage(window.APP_CONFIG.STORAGE_KEYS.COMPARISON_VIEW) ?? defaultState.comparisonView,
+            comparisonStudyId: loadFromLocalStorage(window.APP_CONFIG.STORAGE_KEYS.COMPARISON_STUDY_ID) ?? defaultState.comparisonStudyId,
             dataTableSort: cloneDeep(defaultState.dataTableSort),
             analysisTableSort: cloneDeep(defaultState.analysisTableSort),
             activeTabId: defaultState.activeTabId
@@ -49,7 +49,7 @@ const state = (() => {
     }
 
     function getCurrentCohort() { return currentState.currentCohort; }
-    function setCurrentCohort(newCohort) { return _setter('currentCohort', APP_CONFIG.STORAGE_KEYS.CURRENT_COHORT, newCohort); }
+    function setCurrentCohort(newCohort) { return _setter('currentCohort', window.APP_CONFIG.STORAGE_KEYS.CURRENT_COHORT, newCohort); }
 
     function getDataTableSort() { return cloneDeep(currentState.dataTableSort); }
     function updateDataTableSort(key, subKey = null) {
@@ -73,20 +73,20 @@ const state = (() => {
 
     function getPublicationSection() { return currentState.publicationSection; }
     function setPublicationSection(newSectionId) {
-        const isValid = PUBLICATION_CONFIG.sections.some(s => s.id === newSectionId || s.subSections.some(sub => sub.id === newSectionId));
-        return isValid ? _setter('publicationSection', APP_CONFIG.STORAGE_KEYS.PUBLICATION_SECTION, newSectionId) : false;
+        const isValid = window.PUBLICATION_CONFIG.sections.some(s => s.id === newSectionId || s.subSections.some(sub => sub.id === newSectionId));
+        return isValid ? _setter('publicationSection', window.APP_CONFIG.STORAGE_KEYS.PUBLICATION_SECTION, newSectionId) : false;
     }
 
     function getPublicationBruteForceMetric() { return currentState.publicationBruteForceMetric; }
     function setPublicationBruteForceMetric(newMetric) {
-        const isValid = APP_CONFIG.AVAILABLE_BRUTE_FORCE_METRICS.some(m => m.value === newMetric);
-        return isValid ? _setter('publicationBruteForceMetric', APP_CONFIG.STORAGE_KEYS.PUBLICATION_BRUTE_FORCE_METRIC, newMetric) : false;
+        const isValid = window.APP_CONFIG.AVAILABLE_BRUTE_FORCE_METRICS.some(m => m.value === newMetric);
+        return isValid ? _setter('publicationBruteForceMetric', window.APP_CONFIG.STORAGE_KEYS.PUBLICATION_BRUTE_FORCE_METRIC, newMetric) : false;
     }
 
     function getCurrentPublikationLang() { return currentState.publicationLang; }
     function setPublicationLang(newLang) {
         if (newLang === 'en' || newLang === 'de') {
-            return _setter('publicationLang', APP_CONFIG.STORAGE_KEYS.PUBLICATION_LANG, newLang);
+            return _setter('publicationLang', window.APP_CONFIG.STORAGE_KEYS.PUBLICATION_LANG, newLang);
         }
         return false;
     }
@@ -94,16 +94,16 @@ const state = (() => {
     function getStatsLayout() { return currentState.statsLayout; }
     function setStatsLayout(newLayout) {
         if (newLayout === 'einzel' || newLayout === 'vergleich') {
-            return _setter('statsLayout', APP_CONFIG.STORAGE_KEYS.STATS_LAYOUT, newLayout);
+            return _setter('statsLayout', window.APP_CONFIG.STORAGE_KEYS.STATS_LAYOUT, newLayout);
         }
         return false;
     }
 
     function getStatsCohort1() { return currentState.statsCohort1; }
-    function setStatsCohort1(newCohort) { return _setter('statsCohort1', APP_CONFIG.STORAGE_KEYS.STATS_COHORT1, newCohort); }
+    function setStatsCohort1(newCohort) { return _setter('statsCohort1', window.APP_CONFIG.STORAGE_KEYS.STATS_COHORT1, newCohort); }
 
     function getStatsCohort2() { return currentState.statsCohort2; }
-    function setStatsCohort2(newCohort) { return _setter('statsCohort2', APP_CONFIG.STORAGE_KEYS.STATS_COHORT2, newCohort); }
+    function setStatsCohort2(newCohort) { return _setter('statsCohort2', window.APP_CONFIG.STORAGE_KEYS.STATS_COHORT2, newCohort); }
 
     function getComparisonView() { return currentState.comparisonView; }
     function setComparisonView(newView) {
@@ -111,14 +111,14 @@ const state = (() => {
             return false;
         }
         
-        const viewChanged = _setter('comparisonView', APP_CONFIG.STORAGE_KEYS.COMPARISON_VIEW, newView);
+        const viewChanged = _setter('comparisonView', window.APP_CONFIG.STORAGE_KEYS.COMPARISON_VIEW, newView);
         let studyIdChanged = false;
 
         if (newView === 'as-pur') {
-            studyIdChanged = _setter('comparisonStudyId', APP_CONFIG.STORAGE_KEYS.COMPARISON_STUDY_ID, null);
+            studyIdChanged = _setter('comparisonStudyId', window.APP_CONFIG.STORAGE_KEYS.COMPARISON_STUDY_ID, null);
         } else if (newView === 'as-vs-t2') {
             if (currentState.comparisonStudyId === null) {
-                studyIdChanged = _setter('comparisonStudyId', APP_CONFIG.STORAGE_KEYS.COMPARISON_STUDY_ID, APP_CONFIG.DEFAULT_SETTINGS.COMPARISON_STUDY_ID);
+                studyIdChanged = _setter('comparisonStudyId', window.APP_CONFIG.STORAGE_KEYS.COMPARISON_STUDY_ID, window.APP_CONFIG.DEFAULT_SETTINGS.COMPARISON_STUDY_ID);
             }
         }
         
@@ -127,7 +127,7 @@ const state = (() => {
 
     function getComparisonStudyId() { return currentState.comparisonStudyId; }
     function setComparisonStudyId(newStudyId) {
-        return _setter('comparisonStudyId', APP_CONFIG.STORAGE_KEYS.COMPARISON_STUDY_ID, newStudyId ?? null);
+        return _setter('comparisonStudyId', window.APP_CONFIG.STORAGE_KEYS.COMPARISON_STUDY_ID, newStudyId ?? null);
     }
 
     function getActiveTabId() { return currentState.activeTabId; }
