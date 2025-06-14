@@ -441,7 +441,7 @@ const statisticsService = (() => {
         const { tp, fp, fn, tn } = matrix;
         const total = tp + fp + fn + tn;
         const nullMetric = { value: NaN, ci: null, method: null, se: NaN };
-        if (total === 0) return { matrix, sens: nullMetric, spec: nullMetric, ppv: nullMetric, npv: nullMetric, acc: nullMetric, balAcc: nullMetric, f1: nullMetric, auc: nullMetric };
+        if (total === 0) return { matrix, sens: nullMetric, spec: nullMetric, ppv: nullMetric, npv: nullMetric, acc: nullMetric, balAcc: nullMetric, f1: nullMetric, auc: nullMetric, youden: nullMetric };
 
         const sens_val = (tp + fn) > 0 ? tp / (tp + fn) : NaN;
         const spec_val = (fp + tn) > 0 ? tn / (fp + tn) : NaN;
@@ -450,6 +450,7 @@ const statisticsService = (() => {
         const acc_val = (tp + tn) / total;
         const balAcc_val = (!isNaN(sens_val) && !isNaN(spec_val)) ? (sens_val + spec_val) / 2.0 : NaN;
         const f1_val = (!isNaN(ppv_val) && !isNaN(sens_val) && (ppv_val + sens_val) > 0) ? 2 * (ppv_val * sens_val) / (ppv_val + sens_val) : NaN;
+        const youden_val = (!isNaN(sens_val) && !isNaN(spec_val)) ? (sens_val + spec_val - 1) : NaN;
 
         const bootstrapFactory = (pKey, rKey, metric) => (sample) => {
             const m = calculateConfusionMatrix(sample, pKey, rKey);
@@ -463,6 +464,8 @@ const statisticsService = (() => {
                 case 'balAcc':
                 case 'auc':
                     return (isNaN(s) || isNaN(sp)) ? NaN : (s + sp) / 2.0;
+                case 'youden':
+                    return (isNaN(s) || isNaN(sp)) ? NaN : (s + sp - 1);
                 default:
                     return NaN;
             }
@@ -477,7 +480,8 @@ const statisticsService = (() => {
             acc: { value: acc_val, ci: calculateWilsonScoreCI(tp + tn, total), n_success: tp + tn, n_trials: total, method: APP_CONFIG.STATISTICAL_CONSTANTS.DEFAULT_CI_METHOD_PROPORTION },
             balAcc: { value: balAcc_val, ...bootstrapCI(data, bootstrapFactory(predictionKey, referenceKey, 'balAcc')), matrix_components: {tp, fp, fn, tn, total} },
             f1: { value: f1_val, ...bootstrapCI(data, bootstrapFactory(predictionKey, referenceKey, 'f1')), matrix_components: {tp, fp, fn, tn, total} },
-            auc: { value: balAcc_val, ...bootstrapCI(data, bootstrapFactory(predictionKey, referenceKey, 'auc')), matrix_components: {tp, fp, fn, tn, total} }
+            auc: { value: balAcc_val, ...bootstrapCI(data, bootstrapFactory(predictionKey, referenceKey, 'auc')), matrix_components: {tp, fp, fn, tn, total} },
+            youden: { value: youden_val, ...bootstrapCI(data, bootstrapFactory(predictionKey, referenceKey, 'youden')), matrix_components: {tp, fp, fn, tn, total} }
         };
     }
 
@@ -707,7 +711,8 @@ const statisticsService = (() => {
         calculateAllPublicationStats,
         calculateMcNemarTest,
         calculateDeLongTest,
-        calculateWilsonScoreCI
+        calculateWilsonScoreCI,
+        calculateZTestForAUCComparison
     });
 
 })();
