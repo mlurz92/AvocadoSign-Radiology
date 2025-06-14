@@ -1,7 +1,7 @@
-const abstractGenerator = (() => {
+window.abstractGenerator = (() => {
 
     function generateAbstractHTML(stats, commonData) {
-        const overallStats = stats?.[APP_CONFIG.COHORTS.OVERALL.id];
+        const overallStats = stats?.[window.APP_CONFIG.COHORTS.OVERALL.id];
         
         if (!overallStats || !overallStats.descriptive || !overallStats.performanceAS) {
             return '<p class="text-warning">Required statistics for abstract generation are missing.</p>';
@@ -9,7 +9,7 @@ const abstractGenerator = (() => {
 
         const { descriptive, performanceAS, performanceT2Bruteforce, comparisonASvsT2Bruteforce } = overallStats;
         const { nOverall, nPositive, bruteForceMetricForPublication } = commonData;
-        const helpers = publicationHelpers;
+        const helpers = window.publicationHelpers;
         
         const bfResultsAvailable = !!(performanceT2Bruteforce && comparisonASvsT2Bruteforce);
 
