@@ -1,6 +1,6 @@
 class App {
     constructor() {
-        this.rawData = typeof patientDataRaw !== 'undefined' ? patientDataRaw : [];
+        this.rawData = typeof window.patientDataRaw !== 'undefined' ? window.patientDataRaw : [];
         this.processedData = [];
         this.currentCohortData = [];
         this.allPublicationStats = null;
@@ -11,14 +11,14 @@ class App {
         try {
             this.checkDependencies();
             
-            state.init();
-            t2CriteriaManager.init();
+            window.state.init();
+            window.t2CriteriaManager.init();
             this.initializeBruteForceManager();
-            eventManager.init(this);
+            window.eventManager.init(this);
 
-            this.processedData = dataProcessor.processAllData(this.rawData);
+            this.processedData = window.dataProcessor.processAllData(this.rawData);
             if (this.processedData.length === 0) {
-                uiManager.showToast("Warning: No valid patient data loaded.", "warning");
+                window.uiManager.showToast("Warning: No valid patient data loaded.", "warning");
             }
             
             this.recalculateAllStats();
@@ -26,109 +26,131 @@ class App {
             this.updateUI();
             this.renderCurrentTab();
             
-            if (!loadFromLocalStorage(APP_CONFIG.STORAGE_KEYS.FIRST_APP_START)) {
-                uiManager.showQuickGuide();
-                saveToLocalStorage(APP_CONFIG.STORAGE_KEYS.FIRST_APP_START, true);
+            if (!loadFromLocalStorage(window.APP_CONFIG.STORAGE_KEYS.FIRST_APP_START)) {
+                window.uiManager.showQuickGuide();
+                saveToLocalStorage(window.APP_CONFIG.STORAGE_KEYS.FIRST_APP_START, true);
             }
             
-            uiManager.initializeTooltips(document.body);
-            uiManager.markCriteriaSavedIndicator(t2CriteriaManager.isUnsaved());
-            uiManager.showToast('Application initialized.', 'success', 2500);
+            window.uiManager.initializeTooltips(document.body);
+            window.uiManager.markCriteriaSavedIndicator(window.t2CriteriaManager.isUnsaved());
+            window.uiManager.showToast('Application initialized.', 'success', 2500);
 
         } catch (error) {
             console.error("Fatal error during app initialization:", error);
-            uiManager.updateElementHTML('app-container', `<div class="alert alert-danger m-5"><strong>Initialization Error:</strong> ${error.message}.<br>Please check the browser console for more details.</div>`);
+            window.uiManager.updateElementHTML('app-container', `<div class="alert alert-danger m-5"><strong>Initialization Error:</strong> ${error.message}.<br>Please check the browser console for more details.</div>`);
         }
     }
 
     checkDependencies() {
         const dependencies = { 
-            state, t2CriteriaManager, studyT2CriteriaManager, dataProcessor, 
-            statisticsService, bruteForceManager, exportService,
-            publicationHelpers, abstractGenerator, introductionGenerator, methodsGenerator,
-            resultsGenerator, discussionGenerator, referencesGenerator, publicationService,
-            uiManager, uiComponents, tableRenderer, chartRenderer, flowchartRenderer,
-            dataTab, analysisTab, statisticsTab, comparisonTab, publicationTab, exportTab,
-            eventManager, APP_CONFIG, PUBLICATION_CONFIG
+            state: window.state, 
+            t2CriteriaManager: window.t2CriteriaManager, 
+            studyT2CriteriaManager: window.studyT2CriteriaManager, 
+            dataProcessor: window.dataProcessor, 
+            statisticsService: window.statisticsService, 
+            bruteForceManager: window.bruteForceManager, 
+            exportService: window.exportService,
+            publicationHelpers: window.publicationHelpers, 
+            abstractGenerator: window.abstractGenerator, 
+            introductionGenerator: window.introductionGenerator, 
+            methodsGenerator: window.methodsGenerator,
+            resultsGenerator: window.resultsGenerator, 
+            discussionGenerator: window.discussionGenerator, 
+            referencesGenerator: window.referencesGenerator, 
+            publicationService: window.publicationService,
+            uiManager: window.uiManager, 
+            uiComponents: window.uiComponents, 
+            tableRenderer: window.tableRenderer, 
+            chartRenderer: window.chartRenderer, 
+            flowchartRenderer: window.flowchartRenderer,
+            dataTab: window.dataTab, 
+            analysisTab: window.analysisTab, 
+            statisticsTab: window.statisticsTab, 
+            comparisonTab: window.comparisonTab, 
+            publicationTab: window.publicationTab, 
+            exportTab: window.exportTab,
+            eventManager: window.eventManager, 
+            APP_CONFIG: window.APP_CONFIG, 
+            PUBLICATION_CONFIG: window.PUBLICATION_CONFIG
         };
         for (const dep in dependencies) {
             if (typeof dependencies[dep] === 'undefined' || dependencies[dep] === null) {
                 throw new Error(`Core module or dependency '${dep}' is not available. Check script loading order or definition.`);
             }
         }
-        if (typeof patientDataRaw === 'undefined' || patientDataRaw === null) {
+        if (typeof window.patientDataRaw === 'undefined' || window.patientDataRaw === null) {
             throw new Error("Global 'patientDataRaw' is not available. Please ensure 'data/data.js' is loaded correctly.");
         }
     }
 
     initializeBruteForceManager() {
         const bfCallbacks = {
-            onStarted: (payload) => uiManager.updateBruteForceUI('started', payload, true, state.getCurrentCohort()),
-            onProgress: (payload) => uiManager.updateBruteForceUI('progress', payload, true, state.getCurrentCohort()),
+            onStarted: (payload) => window.uiManager.updateBruteForceUI('started', payload, true, window.state.getCurrentCohort()),
+            onProgress: (payload) => window.uiManager.updateBruteForceUI('progress', payload, true, window.state.getCurrentCohort()),
             onResult: (payload) => {
-                uiManager.updateBruteForceUI('result', payload, true, payload.cohort);
+                window.uiManager.updateBruteForceUI('result', payload, true, payload.cohort);
                 if (payload?.results?.length > 0) {
-                    uiManager.updateElementHTML('brute-force-modal-body', uiComponents.createBruteForceModalContent(payload));
-                    uiManager.initializeTooltips(document.getElementById('brute-force-modal-body'));
-                    uiManager.showToast('Optimization finished.', 'success');
+                    window.uiManager.updateElementHTML('brute-force-modal-body', window.uiComponents.createBruteForceModalContent(payload));
+                    window.uiManager.initializeTooltips(document.getElementById('brute-force-modal-body'));
+                    window.uiManager.showToast('Optimization finished.', 'success');
                     this.recalculateAllStats();
                     this.refreshCurrentTab();
                 } else {
-                    uiManager.showToast('Optimization finished with no valid results.', 'warning');
+                    window.uiManager.showToast('Optimization finished with no valid results.', 'warning');
                 }
                 this.updateUI();
             },
             onCancelled: (payload) => {
-                uiManager.updateBruteForceUI('cancelled', {}, bruteForceManager.isWorkerAvailable(), payload.cohort);
-                uiManager.showToast('Optimization cancelled.', 'warning');
+                window.uiManager.updateBruteForceUI('cancelled', {}, window.bruteForceManager.isWorkerAvailable(), payload.cohort);
+                window.uiManager.showToast('Optimization cancelled.', 'warning');
                 this.updateUI();
             },
             onError: (payload) => {
-                uiManager.showToast(`Optimization Error: ${payload?.message || 'Unknown'}`, 'danger');
-                uiManager.updateBruteForceUI('error', payload, bruteForceManager.isWorkerAvailable(), payload.cohort);
+                window.uiManager.showToast(`Optimization Error: ${payload?.message || 'Unknown'}`, 'danger');
+                window.uiManager.updateBruteForceUI('error', payload, window.bruteForceManager.isWorkerAvailable(), payload.cohort);
                 this.updateUI();
             }
         };
-        bruteForceManager.init(bfCallbacks);
+        window.bruteForceManager.init(bfCallbacks);
     }
     
     filterAndPrepareData() {
         try {
-            const currentCohort = state.getCurrentCohort();
-            const filteredByCohort = dataProcessor.filterDataByCohort(this.processedData, currentCohort);
-            const appliedCriteria = t2CriteriaManager.getAppliedCriteria();
-            const appliedLogic = t2CriteriaManager.getAppliedLogic();
-            const evaluatedData = t2CriteriaManager.evaluateDataset(filteredByCohort, appliedCriteria, appliedLogic);
+            const currentCohort = window.state.getCurrentCohort();
+            const filteredByCohort = window.dataProcessor.filterDataByCohort(this.processedData, currentCohort);
+            const appliedCriteria = window.t2CriteriaManager.getAppliedCriteria();
+            const appliedLogic = window.t2CriteriaManager.getAppliedLogic();
+            const evaluatedData = window.t2CriteriaManager.evaluateDataset(filteredByCohort, appliedCriteria, appliedLogic);
 
-            const activeTabId = state.getActiveTabId();
-            const sortState = activeTabId === 'data' ? state.getDataTableSort() : state.getAnalysisTableSort();
+            const activeTabId = window.state.getActiveTabId();
+            const sortState = activeTabId === 'data' ? window.state.getDataTableSort() : window.state.getAnalysisTableSort();
             if(sortState && sortState.key) {
                  evaluatedData.sort(getSortFunction(sortState.key, sortState.direction, sortState.subKey));
             }
             this.currentCohortData = evaluatedData;
         } catch (error) {
             this.currentCohortData = [];
-            uiManager.showToast("Error during data preparation.", "danger");
+            window.uiManager.showToast("Error during data preparation.", "danger");
             console.error("Data preparation error:", error);
         }
     }
     
     recalculateAllStats() {
-        const criteria = t2CriteriaManager.getAppliedCriteria();
-        const logic = t2CriteriaManager.getAppliedLogic();
-        const bruteForceResults = bruteForceManager.getAllResults();
-        this.allPublicationStats = statisticsService.calculateAllPublicationStats(this.processedData, criteria, logic, bruteForceResults);
+        const criteria = window.t2CriteriaManager.getAppliedCriteria();
+        const logic = window.t2CriteriaManager.getAppliedLogic();
+        const bruteForceResults = window.bruteForceManager.getAllResults();
+        this.allPublicationStats = window.statisticsService.calculateAllPublicationStats(this.processedData, criteria, logic, bruteForceResults);
     }
     
     _prepareComparisonData() {
-        const cohortForComparisonTab = state.getCurrentCohort(); 
-        const selectedStudyId = state.getComparisonStudyId();
+        const cohortForComparisonTab = window.state.getCurrentCohort(); 
+        const selectedStudyId = window.state.getComparisonStudyId();
         
         const statsCurrentCohort = this.allPublicationStats[cohortForComparisonTab];
-        const statsOverall = this.allPublicationStats[APP_CONFIG.COHORTS.OVERALL.id];
-        const statsSurgeryAlone = this.allPublicationStats[APP_CONFIG.COHORTS.SURGERY_ALONE.id];
-        const statsNeoadjuvantTherapy = this.allPublicationStats[APP_CONFIG.COHORTS.NEOADJUVANT.id];
-        const filteredDataForComparisonTab = dataProcessor.filterDataByCohort(this.processedData, cohortForComparisonTab);
+        const statsOverall = this.allPublicationStats[window.APP_CONFIG.COHORTS.OVERALL.id];
+        const statsSurgeryAlone = this.allPublicationStats[window.APP_CONFIG.COHORTS.SURGERY_ALONE.id];
+        const statsNeoadjuvantTherapy = this.allPublicationStats[window.APP_CONFIG.COHORTS.NEOADJUVANT.id];
+        const filteredDataForComparisonTab = window.dataProcessor.filterDataByCohort(this.processedData, cohortForComparisonTab);
         
         let performanceT2 = null;
         let comparisonCriteriaSet = null;
@@ -137,30 +159,30 @@ class App {
         let cohortForSet = cohortForComparisonTab;
         let patientCountForSet = filteredDataForComparisonTab.length;
 
-        if (selectedStudyId === APP_CONFIG.SPECIAL_IDS.APPLIED_CRITERIA_STUDY_ID) {
+        if (selectedStudyId === window.APP_CONFIG.SPECIAL_IDS.APPLIED_CRITERIA_STUDY_ID) {
             performanceT2 = statsCurrentCohort?.performanceT2Applied;
-            const appliedCriteria = t2CriteriaManager.getAppliedCriteria();
-            const appliedLogic = t2CriteriaManager.getAppliedLogic();
+            const appliedCriteria = window.t2CriteriaManager.getAppliedCriteria();
+            const appliedLogic = window.t2CriteriaManager.getAppliedLogic();
             comparisonCriteriaSet = {
-                id: APP_CONFIG.SPECIAL_IDS.APPLIED_CRITERIA_STUDY_ID,
-                name: APP_CONFIG.SPECIAL_IDS.APPLIED_CRITERIA_DISPLAY_NAME,
-                displayShortName: APP_CONFIG.SPECIAL_IDS.APPLIED_CRITERIA_DISPLAY_NAME,
+                id: window.APP_CONFIG.SPECIAL_IDS.APPLIED_CRITERIA_STUDY_ID,
+                name: window.APP_CONFIG.SPECIAL_IDS.APPLIED_CRITERIA_DISPLAY_NAME,
+                displayShortName: window.APP_CONFIG.SPECIAL_IDS.APPLIED_CRITERIA_DISPLAY_NAME,
                 criteria: appliedCriteria,
                 logic: appliedLogic,
                 studyInfo: {
                     reference: 'User-defined criteria',
                     patientCohort: `Current: ${getCohortDisplayName(cohortForComparisonTab)} (N=${filteredDataForComparisonTab.length})`,
-                    keyCriteriaSummary: studyT2CriteriaManager.formatCriteriaForDisplay(appliedCriteria, appliedLogic, false)
+                    keyCriteriaSummary: window.studyT2CriteriaManager.formatCriteriaForDisplay(appliedCriteria, appliedLogic, false)
                 }
             };
-            t2ShortName = APP_CONFIG.SPECIAL_IDS.APPLIED_CRITERIA_DISPLAY_NAME;
+            t2ShortName = window.APP_CONFIG.SPECIAL_IDS.APPLIED_CRITERIA_DISPLAY_NAME;
             comparisonASvsT2 = statsCurrentCohort?.comparisonASvsT2Applied;
         } else if (selectedStudyId) {
-            const studySet = studyT2CriteriaManager.getStudyCriteriaSetById(selectedStudyId);
+            const studySet = window.studyT2CriteriaManager.getStudyCriteriaSetById(selectedStudyId);
             if (studySet) {
-                cohortForSet = studySet.applicableCohort || APP_CONFIG.COHORTS.OVERALL.id;
+                cohortForSet = studySet.applicableCohort || window.APP_CONFIG.COHORTS.OVERALL.id;
                 const statsForStudyCohort = this.allPublicationStats[cohortForSet];
-                patientCountForSet = dataProcessor.filterDataByCohort(this.processedData, cohortForSet).length;
+                patientCountForSet = window.dataProcessor.filterDataByCohort(this.processedData, cohortForSet).length;
                 
                 performanceT2 = statsForStudyCohort?.performanceT2Literature?.[selectedStudyId];
                 comparisonCriteriaSet = studySet;
@@ -187,42 +209,42 @@ class App {
     }
 
     updateUI() {
-        const currentCohort = state.getCurrentCohort();
-        const headerStats = dataProcessor.calculateHeaderStats(this.currentCohortData, currentCohort);
-        uiManager.updateHeaderStatsUI(headerStats);
-        uiManager.updateCohortButtonsUI(currentCohort);
+        const currentCohort = window.state.getCurrentCohort();
+        const headerStats = window.dataProcessor.calculateHeaderStats(this.currentCohortData, currentCohort);
+        window.uiManager.updateHeaderStatsUI(headerStats);
+        window.uiManager.updateCohortButtonsUI(currentCohort);
         
-        const activeTabId = state.getActiveTabId();
+        const activeTabId = window.state.getActiveTabId();
         if (activeTabId === 'statistics') {
-            uiManager.updateStatisticsSelectorsUI(state.getStatsLayout(), state.getStatsCohort1(), state.getStatsCohort2());
+            window.uiManager.updateStatisticsSelectorsUI(window.state.getStatsLayout(), window.state.getStatsCohort1(), window.state.getStatsCohort2());
         } else if (activeTabId === 'comparison') {
-            uiManager.updateComparisonViewUI(state.getComparisonView(), state.getComparisonStudyId());
+            window.uiManager.updateComparisonViewUI(window.state.getComparisonView(), window.state.getComparisonStudyId());
         } else if (activeTabId === 'publication') {
-            uiManager.updatePublicationUI(state.getPublicationSection(), state.getPublicationBruteForceMetric());
+            window.uiManager.updatePublicationUI(window.state.getPublicationSection(), window.state.getPublicationBruteForceMetric());
         }
         
-        const bfResults = bruteForceManager.getAllResults();
-        uiManager.updateExportButtonStates(activeTabId, !!bfResults && Object.keys(bfResults).length > 0, this.currentCohortData.length > 0);
+        const bfResults = window.bruteForceManager.getAllResults();
+        window.uiManager.updateExportButtonStates(activeTabId, !!bfResults && Object.keys(bfResults).length > 0, this.currentCohortData.length > 0);
     }
 
     processTabChange(tabId) {
-        if (state.setActiveTabId(tabId)) {
+        if (window.state.setActiveTabId(tabId)) {
             this.refreshCurrentTab();
         }
     }
 
     renderCurrentTab() {
-        const tabId = state.getActiveTabId();
-        const cohort = state.getCurrentCohort();
-        const criteria = t2CriteriaManager.getAppliedCriteria();
-        const logic = t2CriteriaManager.getAppliedLogic();
-        const bruteForceResults = bruteForceManager.getAllResults();
+        const tabId = window.state.getActiveTabId();
+        const cohort = window.state.getCurrentCohort();
+        const criteria = window.t2CriteriaManager.getAppliedCriteria();
+        const logic = window.t2CriteriaManager.getAppliedLogic();
+        const bruteForceResults = window.bruteForceManager.getAllResults();
         
         const publicationData = {
             rawData: this.rawData,
             allCohortStats: this.allPublicationStats,
             bruteForceResults: bruteForceResults,
-            currentLanguage: state.getCurrentPublikationLang()
+            currentLanguage: window.state.getCurrentPublikationLang()
         };
 
         let currentComparisonData = null;
@@ -232,103 +254,103 @@ class App {
         }
 
         switch (tabId) {
-            case 'data': uiManager.renderTabContent(tabId, () => dataTab.render(this.currentCohortData, state.getDataTableSort())); break;
-            case 'analysis': uiManager.renderTabContent(tabId, () => analysisTab.render(this.currentCohortData, t2CriteriaManager.getCurrentCriteria(), t2CriteriaManager.getAppliedLogic(), state.getAnalysisTableSort(), cohort, bruteForceManager.isWorkerAvailable(), this.allPublicationStats[cohort], bruteForceResults[cohort])); break;
-            case 'statistics': uiManager.renderTabContent(tabId, () => statisticsTab.render(this.processedData, criteria, logic, state.getStatsLayout(), state.getStatsCohort1(), state.getStatsCohort2(), cohort)); break;
-            case 'comparison': uiManager.renderTabContent(tabId, () => comparisonTab.render(state.getComparisonView(), currentComparisonData, state.getComparisonStudyId(), cohort, this.processedData, criteria, logic)); break;
-            case 'publication': uiManager.renderTabContent(tabId, () => publicationTab.render(publicationData, state.getPublicationSection())); break;
-            case 'export': uiManager.renderTabContent(tabId, () => exportTab.render(cohort)); break;
+            case 'data': window.uiManager.renderTabContent(tabId, () => window.dataTab.render(this.currentCohortData, window.state.getDataTableSort())); break;
+            case 'analysis': window.uiManager.renderTabContent(tabId, () => window.analysisTab.render(this.currentCohortData, window.t2CriteriaManager.getCurrentCriteria(), window.t2CriteriaManager.getAppliedLogic(), window.state.getAnalysisTableSort(), cohort, window.bruteForceManager.isWorkerAvailable(), this.allPublicationStats[cohort], bruteForceResults[cohort])); break;
+            case 'statistics': window.uiManager.renderTabContent(tabId, () => window.statisticsTab.render(this.processedData, criteria, logic, window.state.getStatsLayout(), window.state.getStatsCohort1(), window.state.getStatsCohort2(), cohort)); break;
+            case 'comparison': window.uiManager.renderTabContent(tabId, () => window.comparisonTab.render(window.state.getComparisonView(), currentComparisonData, window.state.getComparisonStudyId(), cohort, this.processedData, criteria, logic)); break;
+            case 'publication': window.uiManager.renderTabContent(tabId, () => window.publicationTab.render(publicationData, window.state.getPublicationSection())); break;
+            case 'export': window.uiManager.renderTabContent(tabId, () => window.exportTab.render(cohort)); break;
         }
     }
 
     handleCohortChange(newCohort, source = "user") {
-        if (state.setCurrentCohort(newCohort)) {
+        if (window.state.setCurrentCohort(newCohort)) {
             this.refreshCurrentTab();
             if (source === "user") {
-                uiManager.showToast(`Cohort '${getCohortDisplayName(newCohort)}' selected.`, 'info');
+                window.uiManager.showToast(`Cohort '${getCohortDisplayName(newCohort)}' selected.`, 'info');
             } else if (source === "auto_comparison") {
-                uiManager.showToast(`Global cohort automatically set to '${getCohortDisplayName(newCohort)}' to match the study selection in the Comparison tab.`, 'info', 4000);
-                uiManager.highlightElement(`btn-cohort-${newCohort}`);
+                window.uiManager.showToast(`Global cohort automatically set to '${getCohortDisplayName(newCohort)}' to match the study selection in the Comparison tab.`, 'info', 4000);
+                window.uiManager.highlightElement(`btn-cohort-${newCohort}`);
             }
         }
     }
     
     handleSortRequest(context, key, subKey) {
-        if (context === 'data') state.updateDataTableSort(key, subKey);
-        else if (context === 'analysis') state.updateAnalysisTableSort(key, subKey);
+        if (context === 'data') window.state.updateDataTableSort(key, subKey);
+        else if (context === 'analysis') window.state.updateAnalysisTableSort(key, subKey);
         this.refreshCurrentTab();
     }
     
     applyAndRefreshAll() {
-        t2CriteriaManager.applyCriteria();
+        window.t2CriteriaManager.applyCriteria();
         this.recalculateAllStats();
         this.refreshCurrentTab();
-        uiManager.markCriteriaSavedIndicator(false);
-        uiManager.showToast('T2 criteria applied & saved.', 'success');
+        window.uiManager.markCriteriaSavedIndicator(false);
+        window.uiManager.showToast('T2 criteria applied & saved.', 'success');
     }
 
     startBruteForceAnalysis() {
         const metric = document.getElementById('brute-force-metric')?.value || 'Balanced Accuracy';
-        const cohortId = state.getCurrentCohort();
-        const dataForWorker = dataProcessor.filterDataByCohort(this.processedData, cohortId).map(p => ({
+        const cohortId = window.state.getCurrentCohort();
+        const dataForWorker = window.dataProcessor.filterDataByCohort(this.processedData, cohortId).map(p => ({
             id: p.id,
             nStatus: p.nStatus,
             t2Nodes: p.t2Nodes
         }));
         
         if (dataForWorker.length > 0) {
-            bruteForceManager.startAnalysis(dataForWorker, metric, cohortId);
+            window.bruteForceManager.startAnalysis(dataForWorker, metric, cohortId);
         } else {
-            uiManager.showToast("No data for optimization in this cohort. Please select another cohort.", "warning");
+            window.uiManager.showToast("No data for optimization in this cohort. Please select another cohort.", "warning");
         }
     }
 
     applyBestBruteForceCriteria() {
-        const cohortId = state.getCurrentCohort();
-        const bfResult = bruteForceManager.getResultsForCohort(cohortId);
+        const cohortId = window.state.getCurrentCohort();
+        const bfResult = window.bruteForceManager.getResultsForCohort(cohortId);
         if (!bfResult?.bestResult?.criteria) {
-            uiManager.showToast('No valid brute-force results to apply for this cohort.', 'warning');
+            window.uiManager.showToast('No valid brute-force results to apply for this cohort.', 'warning');
             return;
         }
         const best = bfResult.bestResult;
         Object.keys(best.criteria).forEach(key => {
             if (key === 'logic') return;
             const criterion = best.criteria[key];
-            t2CriteriaManager.toggleCriterionActive(key, criterion.active);
+            window.t2CriteriaManager.toggleCriterionActive(key, criterion.active);
             if (criterion.active) {
-                if (key === 'size') t2CriteriaManager.updateCriterionThreshold(criterion.threshold);
-                else t2CriteriaManager.updateCriterionValue(key, criterion.value);
+                if (key === 'size') window.t2CriteriaManager.updateCriterionThreshold(criterion.threshold);
+                else window.t2CriteriaManager.updateCriterionValue(key, criterion.value);
             }
         });
-        t2CriteriaManager.updateLogic(best.logic);
-        uiManager.updateT2CriteriaControlsUI(t2CriteriaManager.getCurrentCriteria(), t2CriteriaManager.getCurrentLogic());
+        window.t2CriteriaManager.updateLogic(best.logic);
+        window.uiManager.updateT2CriteriaControlsUI(window.t2CriteriaManager.getCurrentCriteria(), window.t2CriteriaManager.getCurrentLogic());
         this.applyAndRefreshAll();
-        uiManager.showToast('Best brute-force criteria applied & saved.', 'success');
+        window.uiManager.showToast('Best brute-force criteria applied & saved.', 'success');
     }
     
     handleSingleExport(exportType) {
-        const cohort = state.getCurrentCohort();
+        const cohort = window.state.getCurrentCohort();
         const data = this.processedData;
-        const bfResults = bruteForceManager.getAllResults();
-        const criteria = t2CriteriaManager.getAppliedCriteria();
-        const logic = t2CriteriaManager.getAppliedLogic();
+        const bfResults = window.bruteForceManager.getAllResults();
+        const criteria = window.t2CriteriaManager.getAppliedCriteria();
+        const logic = window.t2CriteriaManager.getAppliedLogic();
         
-        const currentFilteredData = dataProcessor.filterDataByCohort(data, cohort);
-        const evaluatedCurrentFilteredData = t2CriteriaManager.evaluateDataset(currentFilteredData, criteria, logic);
+        const currentFilteredData = window.dataProcessor.filterDataByCohort(data, cohort);
+        const evaluatedCurrentFilteredData = window.t2CriteriaManager.evaluateDataset(currentFilteredData, criteria, logic);
         
         const exporter = {
-            'stats-csv': () => exportService.exportStatistikCSV(this.allPublicationStats[cohort], cohort, criteria, logic),
-            'bruteforce-txt': () => exportService.exportBruteForceReport(bfResults[cohort]),
-            'datatable-md': () => exportService.exportTableMarkdown(currentFilteredData, 'daten', cohort),
-            'analysistable-md': () => exportService.exportTableMarkdown(evaluatedCurrentFilteredData, 'auswertung', cohort, criteria, logic),
-            'filtered-data-csv': () => exportService.exportFilteredDataCSV(currentFilteredData, cohort),
-            'comprehensive-report-html': () => exportService.exportComprehensiveReportHTML(data, bfResults, cohort, criteria, logic)
+            'stats-csv': () => window.exportService.exportStatistikCSV(this.allPublicationStats[cohort], cohort, criteria, logic),
+            'bruteforce-txt': () => window.exportService.exportBruteForceReport(bfResults[cohort]),
+            'datatable-md': () => window.exportService.exportTableMarkdown(currentFilteredData, 'daten', cohort),
+            'analysistable-md': () => window.exportService.exportTableMarkdown(evaluatedCurrentFilteredData, 'auswertung', cohort, criteria, logic),
+            'filtered-data-csv': () => window.exportService.exportFilteredDataCSV(currentFilteredData, cohort),
+            'comprehensive-report-html': () => window.exportService.exportComprehensiveReportHTML(data, bfResults, cohort, criteria, logic)
         };
 
         if (exporter[exportType]) {
             exporter[exportType]();
         } else {
-            uiManager.showToast(`Export type '${exportType}' not recognized or implemented.`, 'warning');
+            window.uiManager.showToast(`Export type '${exportType}' not recognized or implemented.`, 'warning');
         }
     }
 
