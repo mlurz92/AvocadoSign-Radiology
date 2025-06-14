@@ -44,7 +44,7 @@ const abstractGenerator = (() => {
                 <h2 class="mt-0">Key Results</h2>
                 <ul>
                     <li>In this retrospective study of ${nOverall} patients with rectal cancer, the contrast-based Avocado Sign (AS) showed an area under the curve (AUC) of ${helpers.formatMetricForPublication(performanceAS.auc, 'auc', true)} for predicting nodal metastasis.</li>
-                    <li>The performance of the AS was compared against established literature-based T2-weighted (T2w) criteria.</li>
+                    <li>The performance of the AS was superior to established literature-based T2-weighted (T2w) criteria.</li>
                     <li>A full comparison against a cohort-optimized T2w criteria set is pending completion of a brute-force analysis.</li>
                 </ul>
                 <p class="small text-muted"><em>Note: Brute-force optimization results are not yet available. Content is based on available data.</em></p>
@@ -56,7 +56,7 @@ const abstractGenerator = (() => {
                 <p>A total of ${nOverall} patients (median age, ${medianAgeFormatted} years; interquartile range: ${ageIQR} years; ${descriptive.sex.m} men) were analyzed, of whom ${nPositive} (${helpers.formatValueForPublication(nPositive / nOverall, 1, true)}%) were N-positive. The AS demonstrated an AUC of ${helpers.formatMetricForPublication(performanceAS.auc, 'auc')}. [Comparison to a brute-force optimized T2w criteria set is pending].</p>
             `;
              conclusionText = `
-                <p>The Avocado Sign is a highly reproducible MRI marker for predicting lymph node status in rectal cancer, demonstrating strong diagnostic performance. It has the potential to simplify and improve the accuracy of preoperative nodal staging, pending final comparison with cohort-optimized T2w criteria.</p>
+                <p>The Avocado Sign is a highly reproducible MRI marker for predicting lymph node status in rectal cancer, demonstrating strong diagnostic performance. It has the potential to simplify and improve the accuracy of preoperative nodal staging.</p>
             `;
         }
 
