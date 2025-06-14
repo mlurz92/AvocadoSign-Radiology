@@ -1,4 +1,4 @@
-const flowchartRenderer = (() => {
+window.flowchartRenderer = (() => {
 
     function renderFlowchart(statsData, targetElementId) {
         const container = d3.select(`#${targetElementId}`);
