@@ -4,7 +4,7 @@ window.statisticsTab = (() => {
         if (!stats || !stats.descriptive || !stats.descriptive.patientCount) return '<p class="text-muted small p-3">No descriptive data available.</p>';
         const d = stats.descriptive;
         const total = d.patientCount;
-        const na = '--';
+        const na = window.APP_CONFIG.NA_PLACEHOLDER; // Use global placeholder
         const fv = (val, dig = 1, useStd = true) => formatNumber(val, dig, na, useStd);
         const fP = (val, dig = 1) => formatPercent(val, dig, na);
         const fLK = (lkData) => `${fv(lkData?.median,1)} (${fv(lkData?.min,0)}–${fv(lkData?.max,0)}) [${fv(lkData?.mean,1)} ± ${fv(lkData?.sd,1)}]`;
@@ -67,7 +67,7 @@ window.statisticsTab = (() => {
     }
 
     function createCriteriaComparisonTableHTML(allStats, globalCoh) {
-        const na_stat = '--';
+        const na_stat = window.APP_CONFIG.NA_PLACEHOLDER; // Use global placeholder
         const results = [];
         const asPerf = allStats[globalCoh]?.performanceAS;
         if(asPerf) {
@@ -190,8 +190,8 @@ window.statisticsTab = (() => {
                 allCohortStats[cohortId] = stats;
                 innerContainer.innerHTML += window.uiComponents.createStatisticsCard(`descriptive-stats-${i}`, 'Descriptive Statistics', createDescriptiveStatsContentHTML({descriptive: stats.descriptive}, i, cohortId), true, null, [{id: `dl-desc-table-${i}-png`, icon: 'fa-image', format: 'png', tableId: `table-descriptive-demographics-${i}`, tableName: `Descriptive_Demographics_${cohortId.replace(/\s+/g, '_')}`}], `table-descriptive-demographics-${i}`);
 
-                const fCI_p_stat = (m, k) => { const d = (k === 'auc') ? 3 : ((k === 'f1' || k==='youden') ? 3 : 1); const p = !(k === 'auc'||k==='f1'||k==='youden'); return formatCI(m?.value, m?.ci?.lower, m?.ci?.upper, d, p, '--'); };
-                const na_stat = '--';
+                const fCI_p_stat = (m, k) => { const d = (k === 'auc') ? 3 : ((k === 'f1' || k==='youden') ? 3 : 1); const p = !(k === 'auc'||k==='f1'||k==='youden'); return formatCI(m?.value, m?.ci?.lower, m?.ci?.upper, d, p, window.APP_CONFIG.NA_PLACEHOLDER); }; // Use global placeholder
+                const na_stat = window.APP_CONFIG.NA_PLACEHOLDER; // Use global placeholder
                 const createPerfTableHTML = (perfStats) => {
                     if (!perfStats || typeof perfStats.matrix !== 'object') return '<p class="text-muted small p-2">No diagnostic performance data.</p>';
                     return `<div class="table-responsive"><table class="table table-sm table-striped small mb-0"><thead><tr>
@@ -294,8 +294,8 @@ window.statisticsTab = (() => {
                         <th>p-Value (unpaired)</th>
                     </tr></thead>
                     <tbody>
-                        <tr><td>Avocado Sign</td><td>AUC</td><td>${formatNumber(c1Stats.performanceAS.auc.value, 3, '--', true)}</td><td>${formatNumber(c2Stats.performanceAS.auc.value, 3, '--', true)}</td><td>${getPValueText(aucCompAS.pValue, false)}</td></tr>
-                        <tr><td>T2 (Applied)</td><td>AUC</td><td>${formatNumber(c1Stats.performanceT2.auc.value, 3, '--', true)}</td><td>${formatNumber(c2Stats.performanceT2.auc.value, 3, '--', true)}</td><td>${getPValueText(aucCompT2.pValue, false)}</td></tr>
+                        <tr><td>Avocado Sign</td><td>AUC</td><td>${formatNumber(c1Stats.performanceAS.auc.value, 3, window.APP_CONFIG.NA_PLACEHOLDER, true)}</td><td>${formatNumber(c2Stats.performanceAS.auc.value, 3, window.APP_CONFIG.NA_PLACEHOLDER, true)}</td><td>${getPValueText(aucCompAS.pValue, false)}</td></tr>
+                        <tr><td>T2 (Applied)</td><td>AUC</td><td>${formatNumber(c1Stats.performanceT2.auc.value, 3, window.APP_CONFIG.NA_PLACEHOLDER, true)}</td><td>${formatNumber(c2Stats.performanceT2.auc.value, 3, window.APP_CONFIG.NA_PLACEHOLDER, true)}</td><td>${getPValueText(aucCompT2.pValue, false)}</td></tr>
                     </tbody>
                  </table></div>`;
              }
