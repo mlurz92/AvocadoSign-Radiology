@@ -1,12 +1,12 @@
-const resultsGenerator = (() => {
+window.resultsGenerator = (() => {
 
     function generatePatientCharacteristicsHTML(stats, commonData) {
-        const overallStats = stats?.[APP_CONFIG.COHORTS.OVERALL.id];
+        const overallStats = stats?.[window.APP_CONFIG.COHORTS.OVERALL.id];
         if (!overallStats || !overallStats.descriptive) return '<p class="text-warning">Patient characteristics data not available.</p>';
         
         const { descriptive } = overallStats;
         const { nOverall, nSurgeryAlone, nNeoadjuvantTherapy, nPositive } = commonData;
-        const helpers = publicationHelpers;
+        const helpers = window.publicationHelpers;
 
         const meanAgeFormatted = helpers.formatValueForPublication(descriptive.age.mean, 1);
         const stdDevAgeFormatted = helpers.formatValueForPublication(descriptive.age.sd, 1);
@@ -45,11 +45,11 @@ const resultsGenerator = (() => {
     }
 
     function generateASPerformanceHTML(stats, commonData) {
-        const overallStats = stats?.[APP_CONFIG.COHORTS.OVERALL.id];
+        const overallStats = stats?.[window.APP_CONFIG.COHORTS.OVERALL.id];
         if (!overallStats || !overallStats.performanceAS) return '<p class="text-warning">Avocado Sign performance data not available.</p>';
         
         const { performanceAS, interobserverKappa, interobserverKappaCI } = overallStats;
-        const helpers = publicationHelpers;
+        const helpers = window.publicationHelpers;
 
         const text = `
             <h3 id="results_as_performance">Diagnostic Performance of the Avocado Sign</h3>
@@ -85,9 +85,9 @@ const resultsGenerator = (() => {
     }
     
     function generateComparisonHTML(stats, commonData) {
-        const overallStats = stats?.[APP_CONFIG.COHORTS.OVERALL.id];
+        const overallStats = stats?.[window.APP_CONFIG.COHORTS.OVERALL.id];
         const { bruteForceMetricForPublication } = commonData;
-        const helpers = publicationHelpers;
+        const helpers = window.publicationHelpers;
         const bfResultsAvailable = !!(overallStats?.performanceT2Bruteforce && overallStats?.comparisonASvsT2Bruteforce);
 
         let text;
