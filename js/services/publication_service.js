@@ -31,13 +31,15 @@ window.publicationService = (() => {
         }
 
         const mainSection = window.PUBLICATION_CONFIG.sections.find(s => s.id === sectionId);
-        if (mainSection && mainSection.subSections.length > 1) {
+        if (mainSection && Array.isArray(mainSection.subSections) && mainSection.subSections.length > 0) {
             let combinedHTML = '';
             try {
                 mainSection.subSections.forEach(sub => {
                     const subGenerator = contentGenerators[sub.id];
                     if (typeof subGenerator === 'function') {
                         combinedHTML += subGenerator(stats, commonData);
+                    } else {
+                         combinedHTML += `<div class="alert alert-warning">Content generator for sub-section ID '${sub.id}' not found.</div>`;
                     }
                 });
                 return combinedHTML;
