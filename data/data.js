@@ -1,4 +1,4 @@
-const patientDataRaw = [
+window.patientDataRaw = [
   {
     id: 1,
     lastName: "John",
