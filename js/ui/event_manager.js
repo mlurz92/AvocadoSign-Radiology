@@ -1,15 +1,15 @@
-const eventManager = (() => {
+window.eventManager = (() => {
     let app;
 
     const debouncedUpdateSizeInput = debounce(value => {
-        if (t2CriteriaManager.updateCriterionThreshold(value)) {
-            if (!t2CriteriaManager.getCurrentCriteria().size?.active) {
-                t2CriteriaManager.toggleCriterionActive('size', true);
+        if (window.t2CriteriaManager.updateCriterionThreshold(value)) {
+            if (!window.t2CriteriaManager.getCurrentCriteria().size?.active) {
+                window.t2CriteriaManager.toggleCriterionActive('size', true);
             }
-            uiManager.updateT2CriteriaControlsUI(t2CriteriaManager.getCurrentCriteria(), t2CriteriaManager.getCurrentLogic());
-            uiManager.markCriteriaSavedIndicator(t2CriteriaManager.isUnsaved());
+            window.uiManager.updateT2CriteriaControlsUI(window.t2CriteriaManager.getCurrentCriteria(), window.t2CriteriaManager.getCurrentLogic());
+            window.uiManager.markCriteriaSavedIndicator(window.t2CriteriaManager.isUnsaved());
         }
-    }, APP_CONFIG.PERFORMANCE_SETTINGS.DEBOUNCE_DELAY_MS);
+    }, window.APP_CONFIG.PERFORMANCE_SETTINGS.DEBOUNCE_DELAY_MS);
 
     function init(appInstance) {
         app = appInstance;
@@ -53,21 +53,21 @@ const eventManager = (() => {
         if (!button) return;
 
         const singleClickActions = {
-            'btn-quick-guide': () => uiManager.showQuickGuide(),
-            'data-toggle-details': () => uiManager.toggleAllDetails('data-table-body', button.id),
-            'analysis-toggle-details': () => uiManager.toggleAllDetails('analysis-table-body', button.id),
+            'btn-quick-guide': () => window.uiManager.showQuickGuide(),
+            'data-toggle-details': () => window.uiManager.toggleAllDetails('data-table-body', button.id),
+            'analysis-toggle-details': () => window.uiManager.toggleAllDetails('analysis-table-body', button.id),
             'btn-reset-criteria': () => {
-                t2CriteriaManager.resetCriteria();
-                uiManager.updateT2CriteriaControlsUI(t2CriteriaManager.getCurrentCriteria(), t2CriteriaManager.getCurrentLogic());
-                uiManager.markCriteriaSavedIndicator(t2CriteriaManager.isUnsaved());
-                uiManager.showToast('T2 criteria have been reset to default.', 'info');
+                window.t2CriteriaManager.resetCriteria();
+                window.uiManager.updateT2CriteriaControlsUI(window.t2CriteriaManager.getCurrentCriteria(), window.t2CriteriaManager.getCurrentLogic());
+                window.uiManager.markCriteriaSavedIndicator(window.t2CriteriaManager.isUnsaved());
+                window.uiManager.showToast('T2 criteria have been reset to default.', 'info');
             },
             'btn-apply-criteria': () => app.applyAndRefreshAll(),
             'btn-start-brute-force': () => app.startBruteForceAnalysis(),
-            'btn-cancel-brute-force': () => bruteForceManager.cancelAnalysis(),
+            'btn-cancel-brute-force': () => window.bruteForceManager.cancelAnalysis(),
             'btn-apply-best-bf-criteria': () => app.applyBestBruteForceCriteria(),
             'statistics-toggle-comparison': () => handleStatsLayoutToggle(button),
-            'export-bruteforce-modal-txt': () => exportService.exportBruteForceReport(bruteForceManager.getResultsForCohort(state.getCurrentCohort()))
+            'export-bruteforce-modal-txt': () => window.exportService.exportBruteForceReport(window.bruteForceManager.getResultsForCohort(window.state.getCurrentCohort()))
         };
 
         if (singleClickActions[button.id] && !button.disabled) {
@@ -76,25 +76,25 @@ const eventManager = (() => {
         }
         
         if (button.classList.contains('t2-criteria-button') && !button.disabled) {
-            if (t2CriteriaManager.updateCriterionValue(button.dataset.criterion, button.dataset.value)) {
-                uiManager.updateT2CriteriaControlsUI(t2CriteriaManager.getCurrentCriteria(), t2CriteriaManager.getCurrentLogic());
-                uiManager.markCriteriaSavedIndicator(t2CriteriaManager.isUnsaved());
+            if (window.t2CriteriaManager.updateCriterionValue(button.dataset.criterion, button.dataset.value)) {
+                window.uiManager.updateT2CriteriaControlsUI(window.t2CriteriaManager.getCurrentCriteria(), window.t2CriteriaManager.getCurrentLogic());
+                window.uiManager.markCriteriaSavedIndicator(window.t2CriteriaManager.isUnsaved());
             }
             return;
         }
 
         if (button.classList.contains('chart-download-btn') && !button.disabled) {
-            exportService.exportSingleChart(
+            window.exportService.exportSingleChart(
                 button.dataset.chartId, 
                 button.dataset.format, 
-                state.getCurrentCohort(), 
+                window.state.getCurrentCohort(), 
                 { chartName: button.dataset.chartName || button.dataset.defaultName }
             );
             return;
         }
 
         if (button.classList.contains('table-download-png-btn') && !button.disabled) {
-            exportService.exportTablePNG(button.dataset.tableId, state.getCurrentCohort(), 'TABLE_PNG_EXPORT', button.dataset.tableName);
+            window.exportService.exportTablePNG(button.dataset.tableId, window.state.getCurrentCohort(), 'TABLE_PNG_EXPORT', button.dataset.tableName);
             return;
         }
 
@@ -104,7 +104,7 @@ const eventManager = (() => {
         }
 
         if (button.closest('#comparison-tab-pane') && button.id.startsWith('download-') && !button.disabled) {
-            exportService.exportComparisonData(button.id, app.getComparisonDataForExport(), state.getCurrentCohort());
+            window.exportService.exportComparisonData(button.id, app.getComparisonDataForExport(), window.state.getCurrentCohort());
             return;
         }
     }
@@ -164,25 +164,25 @@ const eventManager = (() => {
     }
 
     function handleT2CheckboxChange(checkbox) {
-        if (t2CriteriaManager.toggleCriterionActive(checkbox.value, checkbox.checked)) {
-            uiManager.updateT2CriteriaControlsUI(t2CriteriaManager.getCurrentCriteria(), t2CriteriaManager.getCurrentLogic());
-            uiManager.markCriteriaSavedIndicator(t2CriteriaManager.isUnsaved());
+        if (window.t2CriteriaManager.toggleCriterionActive(checkbox.value, checkbox.checked)) {
+            window.uiManager.updateT2CriteriaControlsUI(window.t2CriteriaManager.getCurrentCriteria(), window.t2CriteriaManager.getCurrentLogic());
+            window.uiManager.markCriteriaSavedIndicator(window.t2CriteriaManager.isUnsaved());
         }
     }
 
     function handleT2LogicChange(logicSwitch) {
         const newLogic = logicSwitch.checked ? 'OR' : 'AND';
-        if (t2CriteriaManager.updateLogic(newLogic)) {
-            uiManager.updateT2CriteriaControlsUI(t2CriteriaManager.getCurrentCriteria(), t2CriteriaManager.getCurrentLogic());
-            uiManager.markCriteriaSavedIndicator(t2CriteriaManager.isUnsaved());
+        if (window.t2CriteriaManager.updateLogic(newLogic)) {
+            window.uiManager.updateT2CriteriaControlsUI(window.t2CriteriaManager.getCurrentCriteria(), window.t2CriteriaManager.getCurrentLogic());
+            window.uiManager.markCriteriaSavedIndicator(window.t2CriteriaManager.isUnsaved());
         }
     }
 
     function handleStatsLayoutToggle(button) {
         const newLayout = button.classList.contains('active') ? 'einzel' : 'vergleich';
-        if (state.setStatsLayout(newLayout)) {
+        if (window.state.setStatsLayout(newLayout)) {
             app.updateUI();
-            if (state.getActiveTabId() === 'statistics') app.refreshCurrentTab();
+            if (window.state.getActiveTabId() === 'statistics') app.refreshCurrentTab();
         }
     }
 
@@ -190,40 +190,40 @@ const eventManager = (() => {
         const newValue = selectElement.value;
         let needsRender = false;
         if (selectElement.id === 'statistics-cohort-select-1') {
-            needsRender = state.setStatsCohort1(newValue);
+            needsRender = window.state.setStatsCohort1(newValue);
         } else if (selectElement.id === 'statistics-cohort-select-2') {
-            needsRender = state.setStatsCohort2(newValue);
+            needsRender = window.state.setStatsCohort2(newValue);
         }
-        if (needsRender && state.getStatsLayout() === 'vergleich' && state.getActiveTabId() === 'statistics') {
+        if (needsRender && window.state.getStatsLayout() === 'vergleich' && window.state.getActiveTabId() === 'statistics') {
             app.refreshCurrentTab();
         }
     }
 
     function handleComparisonViewChange(view) {
-        if (state.setComparisonView(view)) {
+        if (window.state.setComparisonView(view)) {
             app.updateUI();
-            if (state.getActiveTabId() === 'comparison') app.refreshCurrentTab();
+            if (window.state.getActiveTabId() === 'comparison') app.refreshCurrentTab();
         }
     }
 
     function handleComparisonStudyChange(studyId) {
-        if (state.getComparisonStudyId() === studyId) return;
-        const studySet = studyT2CriteriaManager.getStudyCriteriaSetById(studyId);
-        let refreshNeeded = state.setComparisonStudyId(studyId);
-        if (studySet?.applicableCohort && state.getCurrentCohort() !== studySet.applicableCohort) {
+        if (window.state.getComparisonStudyId() === studyId) return;
+        const studySet = window.studyT2CriteriaManager.getStudyCriteriaSetById(studyId);
+        let refreshNeeded = window.state.setComparisonStudyId(studyId);
+        if (studySet?.applicableCohort && window.state.getCurrentCohort() !== studySet.applicableCohort) {
             app.handleCohortChange(studySet.applicableCohort, "auto_comparison");
             refreshNeeded = false;
         }
         if (refreshNeeded) {
             app.updateUI();
-            if (state.getActiveTabId() === 'comparison') app.refreshCurrentTab();
+            if (window.state.getActiveTabId() === 'comparison') app.refreshCurrentTab();
         }
     }
 
     function handlePublicationSectionChange(sectionId) {
-        if (state.setPublicationSection(sectionId)) {
+        if (window.state.setPublicationSection(sectionId)) {
             app.updateUI();
-            if (state.getActiveTabId() === 'publication') {
+            if (window.state.getActiveTabId() === 'publication') {
                 app.refreshCurrentTab();
                 setTimeout(() => {
                     const element = document.getElementById(sectionId);
@@ -236,9 +236,9 @@ const eventManager = (() => {
     }
 
     function handlePublicationBfMetricChange(newMetric) {
-        if (state.setPublicationBruteForceMetric(newMetric)) {
+        if (window.state.setPublicationBruteForceMetric(newMetric)) {
             app.updateUI();
-            if (state.getActiveTabId() === 'publication') app.refreshCurrentTab();
+            if (window.state.getActiveTabId() === 'publication') app.refreshCurrentTab();
         }
     }
 
@@ -246,13 +246,13 @@ const eventManager = (() => {
         const exportType = button.id.replace('export-', '');
         if (exportType.endsWith('-zip')) {
             const category = exportType.replace('-zip', '');
-            exportService.exportCategoryZip(category, app.getProcessedData(), bruteForceManager.getAllResults(), state.getCurrentCohort(), t2CriteriaManager.getAppliedCriteria(), t2CriteriaManager.getAppliedLogic());
+            window.exportService.exportCategoryZip(category, app.getProcessedData(), window.bruteForceManager.getAllResults(), window.state.getCurrentCohort(), window.t2CriteriaManager.getAppliedCriteria(), window.t2CriteriaManager.getAppliedLogic());
         } else {
             app.handleSingleExport(exportType);
         }
     }
 
-    return {
+    return Object.freeze({
         init
-    };
+    });
 })();
