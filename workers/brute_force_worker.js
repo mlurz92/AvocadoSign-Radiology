@@ -185,6 +185,9 @@ function calculateMetric(data, criteria, logic, metricName) {
         case 'NPV':
             result = npv;
             break;
+        case 'Youden-Index':
+            result = (isNaN(sens) || isNaN(spec)) ? NaN : (sens + spec - 1);
+            break;
         default:
             result = (isNaN(sens) || isNaN(spec)) ? NaN : (sens + spec) / 2.0;
             break;
