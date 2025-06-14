@@ -103,8 +103,8 @@ const eventManager = (() => {
             return;
         }
 
-        if (button.closest('#presentation-tab-pane') && button.id.startsWith('download-') && !button.disabled) {
-            exportService.exportPraesentationData(button.id, app.getPresentationDataForExport(), state.getCurrentCohort());
+        if (button.closest('#comparison-tab-pane') && button.id.startsWith('download-') && !button.disabled) {
+            exportService.exportComparisonData(button.id, app.getComparisonDataForExport(), state.getCurrentCohort());
             return;
         }
     }
@@ -120,7 +120,7 @@ const eventManager = (() => {
             't2-logic-switch': () => handleT2LogicChange(target),
             'statistics-cohort-select-1': () => handleStatsCohortChange(target),
             'statistics-cohort-select-2': () => handleStatsCohortChange(target),
-            'pres-study-select': () => handlePresentationStudyChange(target.value),
+            'comp-study-select': () => handleComparisonStudyChange(target.value),
             'publication-bf-metric-select': () => handlePublicationBfMetricChange(target.value)
         };
         
@@ -129,8 +129,8 @@ const eventManager = (() => {
             return;
         }
 
-        if (target.name === 'presentationView') {
-            handlePresentationViewChange(target.value);
+        if (target.name === 'comparisonView') {
+            handleComparisonViewChange(target.value);
             return;
         }
     }
@@ -199,24 +199,24 @@ const eventManager = (() => {
         }
     }
 
-    function handlePresentationViewChange(view) {
-        if (state.setPresentationView(view)) {
+    function handleComparisonViewChange(view) {
+        if (state.setComparisonView(view)) {
             app.updateUI();
-            if (state.getActiveTabId() === 'presentation') app.refreshCurrentTab();
+            if (state.getActiveTabId() === 'comparison') app.refreshCurrentTab();
         }
     }
 
-    function handlePresentationStudyChange(studyId) {
-        if (state.getPresentationStudyId() === studyId) return;
+    function handleComparisonStudyChange(studyId) {
+        if (state.getComparisonStudyId() === studyId) return;
         const studySet = studyT2CriteriaManager.getStudyCriteriaSetById(studyId);
-        let refreshNeeded = state.setPresentationStudyId(studyId);
+        let refreshNeeded = state.setComparisonStudyId(studyId);
         if (studySet?.applicableCohort && state.getCurrentCohort() !== studySet.applicableCohort) {
-            app.handleCohortChange(studySet.applicableCohort, "auto_presentation");
+            app.handleCohortChange(studySet.applicableCohort, "auto_comparison");
             refreshNeeded = false;
         }
         if (refreshNeeded) {
             app.updateUI();
-            if (state.getActiveTabId() === 'presentation') app.refreshCurrentTab();
+            if (state.getActiveTabId() === 'comparison') app.refreshCurrentTab();
         }
     }
 
