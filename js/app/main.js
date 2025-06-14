@@ -4,7 +4,7 @@ class App {
         this.processedData = [];
         this.currentCohortData = [];
         this.allPublicationStats = null;
-        this.presentationDataForExport = null;
+        this.comparisonDataForExport = null;
     }
 
     init() {
@@ -48,7 +48,7 @@ class App {
             publicationHelpers, abstractGenerator, introductionGenerator, methodsGenerator,
             resultsGenerator, discussionGenerator, referencesGenerator, publicationService,
             uiManager, uiComponents, tableRenderer, chartRenderer, flowchartRenderer,
-            dataTab, analysisTab, statisticsTab, presentationTab, publicationTab, exportTab,
+            dataTab, analysisTab, statisticsTab, comparisonTab, publicationTab, exportTab,
             eventManager, APP_CONFIG, PUBLICATION_CONFIG
         };
         for (const dep in dependencies) {
@@ -120,20 +120,22 @@ class App {
         this.allPublicationStats = statisticsService.calculateAllPublicationStats(this.processedData, criteria, logic, bruteForceResults);
     }
     
-    _preparePresentationData() {
-        const cohortForPresentation = state.getCurrentCohort(); 
-        const selectedStudyId = state.getPresentationStudyId();
+    _prepareComparisonData() {
+        const cohortForComparisonTab = state.getCurrentCohort(); 
+        const selectedStudyId = state.getComparisonStudyId();
         
-        const statsCurrentCohort = this.allPublicationStats[cohortForPresentation];
+        const statsCurrentCohort = this.allPublicationStats[cohortForComparisonTab];
         const statsOverall = this.allPublicationStats[APP_CONFIG.COHORTS.OVERALL.id];
         const statsSurgeryAlone = this.allPublicationStats[APP_CONFIG.COHORTS.SURGERY_ALONE.id];
         const statsNeoadjuvantTherapy = this.allPublicationStats[APP_CONFIG.COHORTS.NEOADJUVANT.id];
-        const filteredDataForPresentation = dataProcessor.filterDataByCohort(this.processedData, cohortForPresentation);
+        const filteredDataForComparisonTab = dataProcessor.filterDataByCohort(this.processedData, cohortForComparisonTab);
         
         let performanceT2 = null;
         let comparisonCriteriaSet = null;
         let t2ShortName = null;
         let comparisonASvsT2 = null;
+        let cohortForSet = cohortForComparisonTab;
+        let patientCountForSet = filteredDataForComparisonTab.length;
 
         if (selectedStudyId === APP_CONFIG.SPECIAL_IDS.APPLIED_CRITERIA_STUDY_ID) {
             performanceT2 = statsCurrentCohort?.performanceT2Applied;
@@ -147,7 +149,7 @@ class App {
                 logic: appliedLogic,
                 studyInfo: {
                     reference: 'User-defined criteria',
-                    patientCohort: `Current: ${getCohortDisplayName(cohortForPresentation)} (N=${filteredDataForPresentation.length})`,
+                    patientCohort: `Current: ${getCohortDisplayName(cohortForComparisonTab)} (N=${filteredDataForComparisonTab.length})`,
                     keyCriteriaSummary: studyT2CriteriaManager.formatCriteriaForDisplay(appliedCriteria, appliedLogic, false)
                 }
             };
@@ -156,8 +158,9 @@ class App {
         } else if (selectedStudyId) {
             const studySet = studyT2CriteriaManager.getStudyCriteriaSetById(selectedStudyId);
             if (studySet) {
-                const cohortForStudySet = studySet.applicableCohort || APP_CONFIG.COHORTS.OVERALL.id;
-                const statsForStudyCohort = this.allPublicationStats[cohortForStudySet];
+                cohortForSet = studySet.applicableCohort || APP_CONFIG.COHORTS.OVERALL.id;
+                const statsForStudyCohort = this.allPublicationStats[cohortForSet];
+                patientCountForSet = dataProcessor.filterDataByCohort(this.processedData, cohortForSet).length;
                 
                 performanceT2 = statsForStudyCohort?.performanceT2Literature?.[selectedStudyId];
                 comparisonCriteriaSet = studySet;
@@ -167,19 +170,19 @@ class App {
         }
 
         return {
-            cohort: cohortForPresentation,
-            patientCount: filteredDataForPresentation.length,
-            statsCurrentCohort: statsCurrentCohort,
+            cohort: cohortForComparisonTab,
+            patientCount: filteredDataForComparisonTab.length,
+            statsCurrentCohort,
             statsGesamt: statsOverall,
-            statsSurgeryAlone: statsSurgeryAlone,
-            statsNeoadjuvantTherapy: statsNeoadjuvantTherapy,
+            statsSurgeryAlone,
+            statsNeoadjuvantTherapy,
             performanceAS: statsCurrentCohort?.performanceAS,
-            performanceT2: performanceT2,
+            performanceT2,
             comparison: comparisonASvsT2,
-            comparisonCriteriaSet: comparisonCriteriaSet,
-            cohortForComparison: selectedStudyId ? (comparisonCriteriaSet?.applicableCohort || cohortForPresentation) : cohortForPresentation,
-            patientCountForComparison: selectedStudyId ? (dataProcessor.filterDataByCohort(this.processedData, comparisonCriteriaSet?.applicableCohort || cohortForPresentation).length) : filteredDataForPresentation.length,
-            t2ShortName: t2ShortName
+            comparisonCriteriaSet,
+            cohortForComparison: cohortForSet,
+            patientCountForComparison: patientCountForSet,
+            t2ShortName
         };
     }
 
@@ -192,8 +195,8 @@ class App {
         const activeTabId = state.getActiveTabId();
         if (activeTabId === 'statistics') {
             uiManager.updateStatisticsSelectorsUI(state.getStatsLayout(), state.getStatsCohort1(), state.getStatsCohort2());
-        } else if (activeTabId === 'presentation') {
-            uiManager.updatePresentationViewUI(state.getPresentationView(), state.getPresentationStudyId());
+        } else if (activeTabId === 'comparison') {
+            uiManager.updateComparisonViewUI(state.getComparisonView(), state.getComparisonStudyId());
         } else if (activeTabId === 'publication') {
             uiManager.updatePublicationUI(state.getPublicationSection(), state.getPublicationBruteForceMetric());
         }
@@ -222,17 +225,17 @@ class App {
             currentLanguage: state.getCurrentPublikationLang()
         };
 
-        let currentPresentationData = null;
-        if (tabId === 'presentation') {
-            currentPresentationData = this._preparePresentationData();
-            this.presentationDataForExport = currentPresentationData;
+        let currentComparisonData = null;
+        if (tabId === 'comparison') {
+            currentComparisonData = this._prepareComparisonData();
+            this.comparisonDataForExport = currentComparisonData;
         }
 
         switch (tabId) {
             case 'data': uiManager.renderTabContent(tabId, () => dataTab.render(this.currentCohortData, state.getDataTableSort())); break;
             case 'analysis': uiManager.renderTabContent(tabId, () => analysisTab.render(this.currentCohortData, t2CriteriaManager.getCurrentCriteria(), t2CriteriaManager.getAppliedLogic(), state.getAnalysisTableSort(), cohort, bruteForceManager.isWorkerAvailable(), this.allPublicationStats[cohort], bruteForceResults[cohort])); break;
             case 'statistics': uiManager.renderTabContent(tabId, () => statisticsTab.render(this.processedData, criteria, logic, state.getStatsLayout(), state.getStatsCohort1(), state.getStatsCohort2(), cohort)); break;
-            case 'presentation': uiManager.renderTabContent(tabId, () => presentationTab.render(state.getPresentationView(), currentPresentationData, state.getPresentationStudyId(), cohort, this.processedData, criteria, logic)); break;
+            case 'comparison': uiManager.renderTabContent(tabId, () => comparisonTab.render(state.getComparisonView(), currentComparisonData, state.getComparisonStudyId(), cohort, this.processedData, criteria, logic)); break;
             case 'publication': uiManager.renderTabContent(tabId, () => publicationTab.render(publicationData, state.getPublicationSection())); break;
             case 'export': uiManager.renderTabContent(tabId, () => exportTab.render(cohort)); break;
         }
@@ -243,8 +246,8 @@ class App {
             this.refreshCurrentTab();
             if (source === "user") {
                 uiManager.showToast(`Cohort '${getCohortDisplayName(newCohort)}' selected.`, 'info');
-            } else if (source === "auto_presentation") {
-                uiManager.showToast(`Global cohort automatically set to '${getCohortDisplayName(newCohort)}' to match the study selection in the Presentation tab.`, 'info', 4000);
+            } else if (source === "auto_comparison") {
+                uiManager.showToast(`Global cohort automatically set to '${getCohortDisplayName(newCohort)}' to match the study selection in the Comparison tab.`, 'info', 4000);
                 uiManager.highlightElement(`btn-cohort-${newCohort}`);
             }
         }
@@ -337,7 +340,7 @@ class App {
     
     getRawData() { return this.rawData; }
     getProcessedData() { return this.processedData; }
-    getPresentationDataForExport() { return this.presentationDataForExport; }
+    getComparisonDataForExport() { return this.comparisonDataForExport; }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
