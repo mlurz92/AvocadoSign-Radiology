@@ -136,7 +136,7 @@ const uiManager = (() => {
         }
         let modalElement = document.getElementById('quick-guide-modal');
         if (!modalElement) {
-            const appVersion = (typeof APP_CONFIG !== 'undefined') ? APP_CONFIG.APP_VERSION : '3.0.1';
+            const appVersion = (typeof APP_CONFIG !== 'undefined') ? APP_CONFIG.APP_VERSION : '3.1.0';
             const quickGuideContent = `
                 <h2>1. Introduction</h2>
                 <p>The <strong>Nodal Staging: Avocado Sign vs. T2 Criteria</strong> analysis tool is a client-side web application designed for scientific research in the radiological diagnosis of rectal cancer. It enables in-depth analyses and detailed comparisons of diagnostic performance for various MRI-based criteria for assessing mesorectal lymph node status (N-status). The application focuses on evaluating the novel "Avocado Sign" (AS) against established T2-weighted (T2w) morphological criteria. It is intended solely as a <strong>research instrument</strong>. The results are <strong>not for clinical diagnosis or direct patient treatment decisions</strong>. </p>
@@ -146,8 +146,8 @@ const uiManager = (() => {
                     <li>Flexible definition and immediate application of complex T2w criteria sets.</li>
                     <li>Automated identification of optimal T2w criteria combinations via an integrated brute-force optimization algorithm.</li>
                     <li>Comprehensive statistical evaluation of diagnostic performance (sensitivity, specificity, predictive values, accuracy, AUC with CIs and p-values).</li>
+                    <li>Creation of content for scientific presentations and comparisons.</li>
                     <li>Generation of manuscript drafts and materials for scientific publications (specifically tailored to <em>Radiology</em> journal requirements).</li>
-                    <li>Creation of content for scientific presentations.</li>
                     <li>Versatile export options for data, results, and graphics.</li>
                 </ul>
                 <p>The application operates on a fixed, integrated, pseudonymized dataset of <strong>106 patient cases</strong>.
@@ -157,7 +157,7 @@ const uiManager = (() => {
                     <li><strong>Application Title:</strong> "Nodal Staging: Avocado Sign vs. T2".</li>
                     <li><strong>Global Cohort Selection:</strong> Buttons ("Overall", "Upfront Surgery", "nRCT") to select the patient cohort, affecting all analyses and displays.</li>
                     <li><strong>Dynamic Meta-Statistics:</strong> Displays key metrics for the current cohort (total patients, N+, AS+, T2+ percentages).</li>
-                    <li><strong>Main Navigation (Tab Bar):</strong> Switches between Data, Analysis, Statistics, Presentation, Publication, and Export tabs.</li>
+                    <li><strong>Main Navigation (Tab Bar):</strong> Switches between Data, Analysis, Statistics, Comparison, Publication, and Export tabs.</li>
                     <li><strong>Quick Guide Button:</strong> Opens this modal.</li>
                 </ul>
                 <h2>3. Core Concepts</h2>
@@ -181,9 +181,9 @@ const uiManager = (() => {
                     <li><strong>Purpose:</strong> Comprehensive statistical evaluation of AS and T2 criteria.</li>
                     <li><strong>Features:</strong> "Single View" / "Comparison" layout toggle. Displays Descriptive Statistics, Diagnostic Performance (AS vs. N and T2 vs. N), Statistical Comparison (AS vs. T2 via McNemar's and DeLong's tests), Association Analyses (OR, RD, Phi), and Cohort Comparison (unpaired tests). Criteria Comparison table with AS, applied T2, and literature-based sets.</li>
                 </ul>
-                <h3>4.4 Presentation Tab</h3>
+                <h3>4.4 Comparison Tab</h3>
                 <ul>
-                    <li><strong>Purpose:</strong> Formats selected analysis results for scientific presentations.</li>
+                    <li><strong>Purpose:</strong> Formats selected analysis results for scientific presentations and direct comparisons.</li>
                     <li><strong>Features:</strong> "AS Performance" / "AS vs. T2 Comparison" view selection. T2 Comparison Basis Selection (applied or literature). Dynamic content (info cards, comparison tables, statistical tests, bar charts). Download functions (CSV, MD, PNG, SVG).</li>
                 </ul>
                 <h3>4.5 Publication Tab</h3>
@@ -201,7 +201,7 @@ const uiManager = (() => {
                     <li><strong>Configuration:</strong> <code>js/config.js</code> centralizes settings, UI texts, statistical constants, and publication configurations.</li>
                     <li><strong>Glossary of Key Terms:</strong> AS (Avocado Sign), AUC (Area Under the Curve), BF (Brute-Force), CI (Confidence Interval), nRCT (Neoadjuvant Chemoradiotherapy), NPV (Negative Predictive Value), OR (Odds Ratio), PPV (Positive Predictive Value), RD (Risk Difference), T2w (T2-weighted).</li>
                 </ul>
-                <p class="small text-muted text-end"><em>Description generated for Application Version ${appVersion}. Last updated: June 12, 2025.</em></p>
+                <p class="small text-muted text-end"><em>Description generated for Application Version ${appVersion}. Last updated: June 14, 2025.</em></p>
             `;
             const modalHTML = `
                 <div class="modal fade" id="quick-guide-modal" tabindex="-1" aria-labelledby="quickGuideModalLabel" aria-hidden="true">
@@ -278,7 +278,7 @@ const uiManager = (() => {
         }
     }
 
-    function updatePresentationViewUI(currentView, currentStudyId) {
+    function updateComparisonViewUI(currentView, currentStudyId) {
         const viewAsPerf = document.getElementById('view-as-perf');
         const viewAsVsT2 = document.getElementById('view-as-vs-t2');
         if (viewAsPerf) {
@@ -288,10 +288,10 @@ const uiManager = (() => {
             viewAsVsT2.checked = currentView === 'as-vs-t2';
         }
 
-        const presStudySelect = document.getElementById('pres-study-select');
-        if (presStudySelect) {
-            presStudySelect.value = currentStudyId || '';
-            presStudySelect.disabled = currentView === 'as-pur';
+        const compStudySelect = document.getElementById('comp-study-select');
+        if (compStudySelect) {
+            compStudySelect.value = currentStudyId || '';
+            compStudySelect.disabled = currentView === 'as-pur';
         }
     }
 
@@ -508,7 +508,7 @@ const uiManager = (() => {
         updateCohortButtonsUI,
         updateExportButtonStates,
         updateStatisticsSelectorsUI,
-        updatePresentationViewUI,
+        updateComparisonViewUI,
         updatePublicationUI,
         updateT2CriteriaControlsUI,
         updateBruteForceUI,
