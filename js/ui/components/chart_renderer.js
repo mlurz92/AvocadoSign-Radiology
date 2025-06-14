@@ -1,4 +1,4 @@
-const chartRenderer = (() => {
+window.chartRenderer = (() => {
 
     function createSvgContainer(targetElementId, options = {}) {
         const container = d3.select(`#${targetElementId}`);
@@ -9,14 +9,14 @@ const chartRenderer = (() => {
         const containerNode = container.node();
         const initialWidth = containerNode.clientWidth || 0;
         const initialHeight = containerNode.clientHeight || 0;
-        const margin = { ...APP_CONFIG.CHART_SETTINGS.DEFAULT_MARGIN, ...(options.margin || {}) };
-        const width = options.width || (initialWidth > 20 ? initialWidth : APP_CONFIG.CHART_SETTINGS.DEFAULT_WIDTH);
-        let height = options.height || (initialHeight > 20 ? initialHeight : APP_CONFIG.CHART_SETTINGS.DEFAULT_HEIGHT);
+        const margin = { ...window.APP_CONFIG.CHART_SETTINGS.DEFAULT_MARGIN, ...(options.margin || {}) };
+        const width = options.width || (initialWidth > 20 ? initialWidth : window.APP_CONFIG.CHART_SETTINGS.DEFAULT_WIDTH);
+        let height = options.height || (initialHeight > 20 ? initialHeight : window.APP_CONFIG.CHART_SETTINGS.DEFAULT_HEIGHT);
 
         const legendItemCount = options.legendItemCount || 0;
         const estimatedLegendHeight = options.legendBelow ? Math.max(25, legendItemCount * 12 + 15) : 0;
         if (options.useCompactMargins && options.legendBelow) {
-            height = Math.max(height, (options.height || APP_CONFIG.CHART_SETTINGS.DEFAULT_HEIGHT) + estimatedLegendHeight);
+            height = Math.max(height, (options.height || window.APP_CONFIG.CHART_SETTINGS.DEFAULT_HEIGHT) + estimatedLegendHeight);
         }
 
         const innerWidth = width - margin.left - margin.right;
@@ -31,7 +31,7 @@ const chartRenderer = (() => {
             .attr("viewBox", `0 0 ${width} ${height}`)
             .attr("preserveAspectRatio", "xMidYMid meet")
             .style("width", "100%").style("height", "100%").style("max-width", `${width}px`)
-            .style("background-color", options.backgroundColor || APP_CONFIG.CHART_SETTINGS.PLOT_BACKGROUND_COLOR)
+            .style("background-color", options.backgroundColor || window.APP_CONFIG.CHART_SETTINGS.PLOT_BACKGROUND_COLOR)
             .style("font-family", "var(--font-family-sans-serif)").style("overflow", "visible");
 
         const chartArea = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`).attr("class", "chart-area");
@@ -44,19 +44,19 @@ const chartRenderer = (() => {
             tooltip = d3.select("body").append("div").attr("class", "chart-tooltip")
                 .style("opacity", 0).style("position", "absolute").style("pointer-events", "none")
                 .style("background", "rgba(33, 37, 41, 0.9)").style("color", "#fff").style("padding", "6px 10px")
-                .style("border-radius", "4px").style("font-size", APP_CONFIG.CHART_SETTINGS.TOOLTIP_FONT_SIZE).style("z-index", "3050")
-                .style("line-height", "1.4").style("transition", `opacity ${APP_CONFIG.UI_SETTINGS.TRANSITION_DURATION_MS / 2}ms ease-out`);
+                .style("border-radius", "4px").style("font-size", window.APP_CONFIG.CHART_SETTINGS.TOOLTIP_FONT_SIZE).style("z-index", "3050")
+                .style("line-height", "1.4").style("transition", `opacity ${window.APP_CONFIG.UI_SETTINGS.TRANSITION_DURATION_MS / 2}ms ease-out`);
         }
         return tooltip;
     }
 
     function renderAgeDistributionChart(ageData, targetElementId, options = {}) {
-        const setupOptions = { ...options, margin: { ...APP_CONFIG.CHART_SETTINGS.DEFAULT_MARGIN, ...options.margin } };
+        const setupOptions = { ...options, margin: { ...window.APP_CONFIG.CHART_SETTINGS.DEFAULT_MARGIN, ...options.margin } };
         const containerSetup = createSvgContainer(targetElementId, setupOptions);
         if (!containerSetup) return;
         const { svg, chartArea, innerWidth, innerHeight, width, height, margin } = containerSetup;
         const tooltip = createTooltip();
-        const barColor = APP_CONFIG.CHART_SETTINGS.AS_COLOR;
+        const barColor = window.APP_CONFIG.CHART_SETTINGS.AS_COLOR;
 
         if (!Array.isArray(ageData) || ageData.length === 0) {
             chartArea.append('text').attr('x', innerWidth / 2).attr('y', innerHeight / 2).attr('text-anchor', 'middle').attr('class', 'text-muted small').text('No age data available.');
@@ -68,18 +68,18 @@ const chartRenderer = (() => {
         const xDomain = (xMin !== undefined && xMax !== undefined && !isNaN(xMin) && !isNaN(xMax)) ? [Math.max(0, xMin - 5), xMax + 5] : [0, 100];
         const x = d3.scaleLinear().domain(xDomain).nice().range([0, innerWidth]);
         const tickCountX = Math.max(3, Math.min(10, Math.floor(innerWidth / 50)));
-        chartArea.append("g").attr("class", "x-axis axis").attr("transform", `translate(0,${innerHeight})`).call(d3.axisBottom(x).ticks(tickCountX).tickSizeOuter(0).tickFormat(d3.format("d"))).selectAll("text").style("font-size", APP_CONFIG.CHART_SETTINGS.TICK_LABEL_FONT_SIZE);
-        svg.append("text").attr("class", "axis-label x-axis-label").attr("text-anchor", "middle").attr("x", margin.left + innerWidth / 2).attr("y", height - 5).style("font-size", APP_CONFIG.CHART_SETTINGS.AXIS_LABEL_FONT_SIZE).text(APP_CONFIG.UI_TEXTS.axisLabels.age);
+        chartArea.append("g").attr("class", "x-axis axis").attr("transform", `translate(0,${innerHeight})`).call(d3.axisBottom(x).ticks(tickCountX).tickSizeOuter(0).tickFormat(d3.format("d"))).selectAll("text").style("font-size", window.APP_CONFIG.CHART_SETTINGS.TICK_LABEL_FONT_SIZE);
+        svg.append("text").attr("class", "axis-label x-axis-label").attr("text-anchor", "middle").attr("x", margin.left + innerWidth / 2).attr("y", height - 5).style("font-size", window.APP_CONFIG.CHART_SETTINGS.AXIS_LABEL_FONT_SIZE).text(window.APP_CONFIG.UI_TEXTS.axisLabels.age);
 
         const histogram = d3.histogram().value(d => d).domain(x.domain()).thresholds(x.ticks(Math.max(5, Math.min(20, Math.floor(innerWidth / 25)))));
         const bins = histogram(ageData.filter(d => !isNaN(d) && isFinite(d)));
         const yMax = d3.max(bins, d => d.length);
         const y = d3.scaleLinear().range([innerHeight, 0]).domain([0, yMax > 0 ? yMax : 1]).nice();
         const tickCountY = Math.max(2, Math.min(6, Math.floor(innerHeight / 35)));
-        chartArea.append("g").attr("class", "y-axis axis").call(d3.axisLeft(y).ticks(tickCountY).tickSizeOuter(0).tickFormat(d3.format("d"))).selectAll("text").style("font-size", APP_CONFIG.CHART_SETTINGS.TICK_LABEL_FONT_SIZE);
-        svg.append("text").attr("class", "axis-label y-axis-label").attr("text-anchor", "middle").attr("transform", `translate(${margin.left / 2 - 5}, ${margin.top + innerHeight / 2}) rotate(-90)`).style("font-size", APP_CONFIG.CHART_SETTINGS.AXIS_LABEL_FONT_SIZE).text(APP_CONFIG.UI_TEXTS.axisLabels.patientCount);
+        chartArea.append("g").attr("class", "y-axis axis").call(d3.axisLeft(y).ticks(tickCountY).tickSizeOuter(0).tickFormat(d3.format("d"))).selectAll("text").style("font-size", window.APP_CONFIG.CHART_SETTINGS.TICK_LABEL_FONT_SIZE);
+        svg.append("text").attr("class", "axis-label y-axis-label").attr("text-anchor", "middle").attr("transform", `translate(${margin.left / 2 - 5}, ${margin.top + innerHeight / 2}) rotate(-90)`).style("font-size", window.APP_CONFIG.CHART_SETTINGS.AXIS_LABEL_FONT_SIZE).text(window.APP_CONFIG.UI_TEXTS.axisLabels.patientCount);
 
-        if (APP_CONFIG.CHART_SETTINGS.ENABLE_GRIDLINES) {
+        if (window.APP_CONFIG.CHART_SETTINGS.ENABLE_GRIDLINES) {
             chartArea.append("g").attr("class", "grid y-grid").call(d3.axisLeft(y).ticks(tickCountY).tickSize(-innerWidth).tickFormat(""));
         }
 
@@ -93,16 +93,16 @@ const chartRenderer = (() => {
                 tooltip.transition().duration(200).style("opacity", 0);
                 d3.select(event.currentTarget).style("opacity", 0.8).style("stroke", "none");
             })
-            .transition().duration(APP_CONFIG.CHART_SETTINGS.ANIMATION_DURATION_MS).ease(d3.easeCubicOut).attr("y", d => y(d.length)).attr("height", d => Math.max(0, innerHeight - y(d.length)));
+            .transition().duration(window.APP_CONFIG.CHART_SETTINGS.ANIMATION_DURATION_MS).ease(d3.easeCubicOut).attr("y", d => y(d.length)).attr("height", d => Math.max(0, innerHeight - y(d.length)));
     }
 
     function renderPieChart(data, targetElementId, options = {}) {
-        const setupOptions = { ...options, margin: options.useCompactMargins ? { ...APP_CONFIG.CHART_SETTINGS.COMPACT_PIE_MARGIN, ...options.margin } : { ...APP_CONFIG.CHART_SETTINGS.DEFAULT_MARGIN, ...options.margin }, legendBelow: options.legendBelow ?? options.useCompactMargins, legendItemCount: data?.length || 0 };
+        const setupOptions = { ...options, margin: options.useCompactMargins ? { ...window.APP_CONFIG.CHART_SETTINGS.COMPACT_PIE_MARGIN, ...options.margin } : { ...window.APP_CONFIG.CHART_SETTINGS.DEFAULT_MARGIN, ...options.margin }, legendBelow: options.legendBelow ?? options.useCompactMargins, legendItemCount: data?.length || 0 };
         const containerSetup = createSvgContainer(targetElementId, setupOptions);
         if (!containerSetup) return;
         const { svg, chartArea, innerWidth, innerHeight, margin, legendSpaceY } = containerSetup;
         const tooltip = createTooltip();
-        const colorScheme = [APP_CONFIG.CHART_SETTINGS.AS_COLOR, APP_CONFIG.CHART_SETTINGS.T2_COLOR, '#2ca02c', '#d62728'];
+        const colorScheme = [window.APP_CONFIG.CHART_SETTINGS.AS_COLOR, window.APP_CONFIG.CHART_SETTINGS.T2_COLOR, '#2ca02c', '#d62728'];
         const validData = data.filter(d => d && typeof d.value === 'number' && d.value >= 0 && typeof d.label === 'string');
         const totalValue = d3.sum(validData, d => d.value);
 
@@ -126,7 +126,7 @@ const chartRenderer = (() => {
         const pieGroup = chartArea.append("g").attr("class", "pie-group").attr("transform", `translate(${innerWidth / 2},${innerHeight / 2})`);
         const arcs = pieGroup.selectAll(".arc").data(pie(validData)).join("g").attr("class", "arc");
 
-        arcs.append("path").style("fill", d => color(d.data.label)).style("stroke", APP_CONFIG.CHART_SETTINGS.PLOT_BACKGROUND_COLOR).style("stroke-width", "1.5px").style("opacity", 0.85)
+        arcs.append("path").style("fill", d => color(d.data.label)).style("stroke", window.APP_CONFIG.CHART_SETTINGS.PLOT_BACKGROUND_COLOR).style("stroke-width", "1.5px").style("opacity", 0.85)
             .on("mouseover", function(event, d) {
                 tooltip.transition().duration(50).style("opacity", .95);
                 tooltip.html(`<strong>${d.data.label}:</strong> ${formatNumber(d.data.value, 0)} (${formatPercent(d.data.value / totalValue)})`).style("left", (event.pageX + 10) + "px").style("top", (event.pageY - 15) + "px");
@@ -136,13 +136,13 @@ const chartRenderer = (() => {
                 tooltip.transition().duration(200).style("opacity", 0);
                 d3.select(this).transition().duration(100).style("opacity", 0.85).attr("transform", "scale(1)");
             })
-            .transition().duration(APP_CONFIG.CHART_SETTINGS.ANIMATION_DURATION_MS).ease(d3.easeCubicOut).attrTween("d", d => {
+            .transition().duration(window.APP_CONFIG.CHART_SETTINGS.ANIMATION_DURATION_MS).ease(d3.easeCubicOut).attrTween("d", d => {
                 const i = d3.interpolate({startAngle: d.startAngle, endAngle: d.startAngle}, d);
                 return t => arcGenerator(i(t));
             });
         
         if (setupOptions.legendBelow && legendSpaceY > 0) {
-            const legendGroup = svg.append("g").attr("class", "legend pie-legend").attr("transform", `translate(${margin.left}, ${margin.top + innerHeight + 15})`).attr("font-size", APP_CONFIG.CHART_SETTINGS.LEGEND_FONT_SIZE).attr("text-anchor", "start");
+            const legendGroup = svg.append("g").attr("class", "legend pie-legend").attr("transform", `translate(${margin.left}, ${margin.top + innerHeight + 15})`).attr("font-size", window.APP_CONFIG.CHART_SETTINGS.LEGEND_FONT_SIZE).attr("text-anchor", "start");
             let currentX = 0; let currentY = 0;
             const legendItems = legendGroup.selectAll("g.legend-item").data(validData).join("g").attr("class", "legend-item");
             legendItems.each(function(d, i) {
@@ -170,16 +170,16 @@ const chartRenderer = (() => {
         
         const groups = chartData.map(d => d.metric);
         const subgroups = Object.keys(chartData[0]).filter(key => key !== 'metric');
-        const subgroupDisplayNames = { 'AS': APP_CONFIG.UI_TEXTS.legendLabels.avocadoSign, 'T2': t2Label };
+        const subgroupDisplayNames = { 'AS': window.APP_CONFIG.UI_TEXTS.legendLabels.avocadoSign, 'T2': t2Label };
         const x0 = d3.scaleBand().domain(groups).range([0, innerWidth]).paddingInner(0.35);
         const x1 = d3.scaleBand().domain(subgroups).range([0, x0.bandwidth()]).padding(0.15);
         const y = d3.scaleLinear().domain([0, 1.0]).nice().range([innerHeight, 0]);
-        const color = d3.scaleOrdinal().domain(subgroups).range([APP_CONFIG.CHART_SETTINGS.AS_COLOR, APP_CONFIG.CHART_SETTINGS.T2_COLOR]);
+        const color = d3.scaleOrdinal().domain(subgroups).range([window.APP_CONFIG.CHART_SETTINGS.AS_COLOR, window.APP_CONFIG.CHART_SETTINGS.T2_COLOR]);
         
-        chartArea.append("g").attr("class", "y-axis axis").call(d3.axisLeft(y).ticks(5, "%").tickSizeOuter(0)).selectAll("text").style("font-size", APP_CONFIG.CHART_SETTINGS.TICK_LABEL_FONT_SIZE);
-        svg.append("text").attr("class", "axis-label y-axis-label").attr("text-anchor", "middle").attr("transform", `translate(${margin.left / 2}, ${margin.top + innerHeight / 2}) rotate(-90)`).style("font-size", APP_CONFIG.CHART_SETTINGS.AXIS_LABEL_FONT_SIZE).text(APP_CONFIG.UI_TEXTS.axisLabels.metricValue);
-        chartArea.append("g").attr("class", "x-axis axis").attr("transform", `translate(0,${innerHeight})`).call(d3.axisBottom(x0).tickSizeOuter(0)).selectAll(".tick text").style("text-anchor", "middle").style("font-size", APP_CONFIG.CHART_SETTINGS.TICK_LABEL_FONT_SIZE);
-        if (APP_CONFIG.CHART_SETTINGS.ENABLE_GRIDLINES) {
+        chartArea.append("g").attr("class", "y-axis axis").call(d3.axisLeft(y).ticks(5, "%").tickSizeOuter(0)).selectAll("text").style("font-size", window.APP_CONFIG.CHART_SETTINGS.TICK_LABEL_FONT_SIZE);
+        svg.append("text").attr("class", "axis-label y-axis-label").attr("text-anchor", "middle").attr("transform", `translate(${margin.left / 2}, ${margin.top + innerHeight / 2}) rotate(-90)`).style("font-size", window.APP_CONFIG.CHART_SETTINGS.AXIS_LABEL_FONT_SIZE).text(window.APP_CONFIG.UI_TEXTS.axisLabels.metricValue);
+        chartArea.append("g").attr("class", "x-axis axis").attr("transform", `translate(0,${innerHeight})`).call(d3.axisBottom(x0).tickSizeOuter(0)).selectAll(".tick text").style("text-anchor", "middle").style("font-size", window.APP_CONFIG.CHART_SETTINGS.TICK_LABEL_FONT_SIZE);
+        if (window.APP_CONFIG.CHART_SETTINGS.ENABLE_GRIDLINES) {
             chartArea.append("g").attr("class", "grid y-grid").call(d3.axisLeft(y).ticks(5).tickSize(-innerWidth).tickFormat(""));
         }
         
@@ -197,9 +197,9 @@ const chartRenderer = (() => {
                 tooltip.transition().duration(200).style("opacity", 0);
                 d3.select(this).style("opacity", 0.9).style("stroke", "none");
             })
-            .transition().duration(APP_CONFIG.CHART_SETTINGS.ANIMATION_DURATION_MS).ease(d3.easeCubicOut).attr("y", d => y(d.value ?? 0)).attr("height", d => Math.max(0, innerHeight - y(d.value ?? 0)));
+            .transition().duration(window.APP_CONFIG.CHART_SETTINGS.ANIMATION_DURATION_MS).ease(d3.easeCubicOut).attr("y", d => y(d.value ?? 0)).attr("height", d => Math.max(0, innerHeight - y(d.value ?? 0)));
         
-        const legendGroup = svg.append("g").attr("class", "legend bar-legend").attr("font-size", APP_CONFIG.CHART_SETTINGS.LEGEND_FONT_SIZE).attr("text-anchor", "start");
+        const legendGroup = svg.append("g").attr("class", "legend bar-legend").attr("font-size", window.APP_CONFIG.CHART_SETTINGS.LEGEND_FONT_SIZE).attr("text-anchor", "start");
         const legendItems = legendGroup.selectAll("g.legend-item").data(subgroups).join("g").attr("class", "legend-item");
         let totalLegendWidth = 0; const legendSpacings = [];
         legendItems.append("rect").attr("x", 0).attr("y", -5).attr("width", 10).attr("height", 10).attr("fill", color);
@@ -223,7 +223,7 @@ const chartRenderer = (() => {
         const { svg, chartArea, innerWidth, innerHeight, margin } = containerSetup;
         const tooltip = createTooltip();
 
-        const performance = statisticsService.calculateDiagnosticPerformance(data, predictionKey, referenceKey);
+        const performance = window.statisticsService.calculateDiagnosticPerformance(data, predictionKey, referenceKey);
         if (!performance || !isFinite(performance.sens?.value) || !isFinite(performance.spec?.value)) {
             chartArea.append('text').attr('x', innerWidth / 2).attr('y', innerHeight / 2).attr('text-anchor', 'middle').attr('class', 'text-muted small').text('No valid data for ROC chart.');
             return;
@@ -237,18 +237,23 @@ const chartRenderer = (() => {
         const x = d3.scaleLinear().domain([0, 1]).range([0, innerWidth]);
         const y = d3.scaleLinear().domain([0, 1]).range([innerHeight, 0]);
 
-        chartArea.append("g").attr("class", "x-axis axis").attr("transform", `translate(0,${innerHeight})`).call(d3.axisBottom(x).ticks(5).tickFormat(d3.format(".1f"))).selectAll("text").style("font-size", APP_CONFIG.CHART_SETTINGS.TICK_LABEL_FONT_SIZE);
-        svg.append("text").attr("class", "axis-label x-axis-label").attr("text-anchor", "middle").attr("x", margin.left + innerWidth / 2).attr("y", innerHeight + margin.top + 30).style("font-size", APP_CONFIG.CHART_SETTINGS.AXIS_LABEL_FONT_SIZE).text(APP_CONFIG.UI_TEXTS.axisLabels.oneMinusSpecificity);
+        chartArea.append("g").attr("class", "x-axis axis").attr("transform", `translate(0,${innerHeight})`).call(d3.axisBottom(x).ticks(5).tickFormat(d3.format(".1f"))).selectAll("text").style("font-size", window.APP_CONFIG.CHART_SETTINGS.TICK_LABEL_FONT_SIZE);
+        svg.append("text").attr("class", "axis-label x-axis-label").attr("text-anchor", "middle").attr("x", margin.left + innerWidth / 2).attr("y", innerHeight + margin.top + 30).style("font-size", window.APP_CONFIG.CHART_SETTINGS.AXIS_LABEL_FONT_SIZE).text(window.APP_CONFIG.UI_TEXTS.axisLabels.oneMinusSpecificity);
 
-        chartArea.append("g").attr("class", "y-axis axis").call(d3.axisLeft(y).ticks(5).tickFormat(d3.format(".1f"))).selectAll("text").style("font-size", APP_CONFIG.CHART_SETTINGS.TICK_LABEL_FONT_SIZE);
-        svg.append("text").attr("class", "axis-label y-axis-label").attr("text-anchor", "middle").attr("transform", `translate(${margin.left / 2 - 10}, ${margin.top + innerHeight / 2}) rotate(-90)`).style("font-size", APP_CONFIG.CHART_SETTINGS.AXIS_LABEL_FONT_SIZE).text(APP_CONFIG.UI_TEXTS.axisLabels.sensitivity);
+        chartArea.append("g").attr("class", "y-axis axis").call(d3.axisLeft(y).ticks(5).tickFormat(d3.format(".1f"))).selectAll("text").style("font-size", window.APP_CONFIG.CHART_SETTINGS.TICK_LABEL_FONT_SIZE);
+        svg.append("text").attr("class", "axis-label y-axis-label").attr("text-anchor", "middle").attr("transform", `translate(${margin.left / 2 - 10}, ${margin.top + innerHeight / 2}) rotate(-90)`).style("font-size", window.APP_CONFIG.CHART_SETTINGS.AXIS_LABEL_FONT_SIZE).text(window.APP_CONFIG.UI_TEXTS.axisLabels.sensitivity);
 
-        if (APP_CONFIG.CHART_SETTINGS.ENABLE_GRIDLINES) {
+        if (window.APP_CONFIG.CHART_SETTINGS.ENABLE_GRIDLINES) {
             chartArea.append("g").attr("class", "grid x-grid").attr("transform", `translate(0,${innerHeight})`).call(d3.axisBottom(x).ticks(5).tickSize(-innerHeight).tickFormat(""));
             chartArea.append("g").attr("class", "grid y-grid").call(d3.axisLeft(y).ticks(5).tickSize(-innerWidth).tickFormat(""));
         }
 
-        chartArea.append("line").attr("class", "reference-line").attr("x1", x(0)).attr("y1", y(0)).attr("x2", x(1)).attr("y2", y(1));
+        chartArea.append("line")
+            .attr("class", "reference-line")
+            .attr("x1", x(0))
+            .attr("y1", y(0))
+            .attr("x2", x(1))
+            .attr("y2", y(1));
 
         const rocLine = d3.line()
             .x(d => x(d[0]))
@@ -265,7 +270,7 @@ const chartRenderer = (() => {
             .datum(dataPoints)
             .attr("class", "roc-curve")
             .attr("fill", "none")
-            .attr("stroke", APP_CONFIG.CHART_SETTINGS.AS_COLOR)
+            .attr("stroke", window.APP_CONFIG.CHART_SETTINGS.AS_COLOR)
             .attr("stroke-width", 2)
             .attr("d", rocLine);
 
@@ -273,7 +278,7 @@ const chartRenderer = (() => {
             .attr("cx", x(oneMinusSpecificity))
             .attr("cy", y(sensitivity))
             .attr("r", 5)
-            .attr("fill", APP_CONFIG.CHART_SETTINGS.AS_COLOR)
+            .attr("fill", window.APP_CONFIG.CHART_SETTINGS.AS_COLOR)
             .on("mouseover", (event) => {
                 tooltip.transition().duration(50).style("opacity", .95);
                 tooltip.html(`<strong>${methodName}</strong><br>Sensitivity: ${formatPercent(sensitivity, 1)}<br>1-Specificity: ${formatPercent(oneMinusSpecificity, 1)}<br>AUC: ${formatNumber(auc, 3)}`)
