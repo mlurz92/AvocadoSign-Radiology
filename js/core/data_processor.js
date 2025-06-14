@@ -1,4 +1,4 @@
-const dataProcessor = (() => {
+window.dataProcessor = (() => {
 
     function calculateAge(birthDateStr, examDateStr) {
         if (!birthDateStr || !examDateStr) return null;
@@ -57,18 +57,18 @@ const dataProcessor = (() => {
 
     function processAllData(rawData) {
         if (!Array.isArray(rawData)) return [];
-        if (typeof APP_CONFIG === 'undefined') return [];
+        if (typeof window.APP_CONFIG === 'undefined') return [];
         return rawData.map((patient, index) => processSinglePatient(patient, index));
     }
 
     function filterDataByCohort(data, cohortId) {
         if (!Array.isArray(data)) return [];
         
-        if (cohortId === APP_CONFIG.COHORTS.OVERALL.id) {
+        if (cohortId === window.APP_CONFIG.COHORTS.OVERALL.id) {
             return cloneDeep(data);
         }
 
-        const cohortConfig = Object.values(APP_CONFIG.COHORTS).find(c => c.id === cohortId);
+        const cohortConfig = Object.values(window.APP_CONFIG.COHORTS).find(c => c.id === cohortId);
         if (cohortConfig && cohortConfig.therapyValue) {
             return cloneDeep(data.filter(p => p && p.therapy === cohortConfig.therapyValue));
         }
