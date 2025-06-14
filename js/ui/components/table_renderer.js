@@ -1,4 +1,4 @@
-const tableRenderer = (() => {
+window.tableRenderer = (() => {
 
     function _createDataDetailRowContent(patient) {
         if (!Array.isArray(patient.t2Nodes) || patient.t2Nodes.length === 0) {
@@ -20,11 +20,11 @@ const tableRenderer = (() => {
             const signalIcon = getT2IconSVG('signal', lk.signal);
             const sizeIcon = getT2IconSVG('size', null);
 
-            const sizeTooltip = APP_CONFIG.UI_TEXTS.tooltips.t2Size?.description || 'Size (short axis)';
-            const shapeTooltip = APP_CONFIG.UI_TEXTS.tooltips.t2Shape?.description || 'Shape';
-            const borderTooltip = APP_CONFIG.UI_TEXTS.tooltips.t2Border?.description || 'Border';
-            const homogeneityTooltip = APP_CONFIG.UI_TEXTS.tooltips.t2Homogeneity?.description || 'Homogeneity';
-            const signalTooltip = APP_CONFIG.UI_TEXTS.tooltips.t2Signal?.description || 'Signal Intensity';
+            const sizeTooltip = window.APP_CONFIG.UI_TEXTS.tooltips.t2Size?.description || 'Size (short axis)';
+            const shapeTooltip = window.APP_CONFIG.UI_TEXTS.tooltips.t2Shape?.description || 'Shape';
+            const borderTooltip = window.APP_CONFIG.UI_TEXTS.tooltips.t2Border?.description || 'Border';
+            const homogeneityTooltip = window.APP_CONFIG.UI_TEXTS.tooltips.t2Homogeneity?.description || 'Homogeneity';
+            const signalTooltip = window.APP_CONFIG.UI_TEXTS.tooltips.t2Signal?.description || 'Signal Intensity';
 
             content += `<div class="sub-row-item border rounded mb-1 p-1 w-100 align-items-center small">
                            <strong class="me-2">LN ${index + 1}:</strong>
@@ -48,7 +48,7 @@ const tableRenderer = (() => {
         const naPlaceholder = '--';
         
         const notesText = escapeHTML(patient.notes || '');
-        const tooltipNotes = notesText ? notesText : (APP_CONFIG.UI_TEXTS.tooltips.dataTab?.notes || 'Additional notes');
+        const tooltipNotes = notesText ? notesText : (window.APP_CONFIG.UI_TEXTS.tooltips.dataTab?.notes || 'Additional notes');
 
         const t2StatusClass = patient.t2Status === '+' ? 'plus' : patient.t2Status === '-' ? 'minus' : 'unknown';
         
@@ -70,7 +70,7 @@ const tableRenderer = (() => {
                     <span class="status-${t2StatusClass}" id="status-t2-pat-${patient.id}" data-tippy-content="${t2Tooltip}">${patient.t2Status ?? '?'}</span>
                 </td>
                 <td data-label="Notes" class="text-truncate" style="max-width: 150px;" data-tippy-content="${tooltipNotes}">${notesText || naPlaceholder}</td>
-                <td class="text-center p-1" style="width: 30px;" data-tippy-content="${hasT2Nodes ? (APP_CONFIG.UI_TEXTS.tooltips.dataTab?.expandRow || 'Toggle Details') : 'No T2 lymph node details available'}">
+                <td class="text-center p-1" style="width: 30px;" data-tippy-content="${hasT2Nodes ? (window.APP_CONFIG.UI_TEXTS.tooltips.dataTab?.expandRow || 'Toggle Details') : 'No T2 lymph node details available'}">
                      ${hasT2Nodes ? '<button class="btn btn-sm btn-outline-secondary p-1 row-toggle-button" aria-label="Toggle Details"><i class="fas fa-chevron-down row-toggle-icon"></i></button>' : ''}
                 </td>
             </tr>
@@ -91,10 +91,10 @@ const tableRenderer = (() => {
         if (!Array.isArray(patient.t2NodesEvaluated) || patient.t2NodesEvaluated.length === 0) {
             return '<p class="m-0 p-2 text-muted small">No T2 lymph nodes available for evaluation or evaluation not performed.</p>';
         }
-        const criteriaFormatted = studyT2CriteriaManager.formatCriteriaForDisplay(appliedCriteria, appliedLogic, true);
+        const criteriaFormatted = window.studyT2CriteriaManager.formatCriteriaForDisplay(appliedCriteria, appliedLogic, true);
         const naPlaceholder = '--';
 
-        let content = `<h6 class="w-100 mb-2 ps-1" data-tippy-content="Shows the evaluation of each T2 lymph node based on the currently applied criteria. Fulfilled criteria contributing to a positive evaluation are highlighted.">T2 LN Evaluation (Logic: ${APP_CONFIG.UI_TEXTS.t2LogicDisplayNames[appliedLogic] || appliedLogic || 'N/A'}, Criteria: ${criteriaFormatted || 'N/A'})</h6>`;
+        let content = `<h6 class="w-100 mb-2 ps-1" data-tippy-content="Shows the evaluation of each T2 lymph node based on the currently applied criteria. Fulfilled criteria contributing to a positive evaluation are highlighted.">T2 LN Evaluation (Logic: ${window.APP_CONFIG.UI_TEXTS.t2LogicDisplayNames[appliedLogic] || appliedLogic || 'N/A'}, Criteria: ${criteriaFormatted || 'N/A'})</h6>`;
 
         patient.t2NodesEvaluated.forEach((lk, index) => {
             if (!lk || !lk.checkResult) {
@@ -122,7 +122,7 @@ const tableRenderer = (() => {
                 const text = key === 'size' ? `${formatNumber(originalValueInLK, 1, 'N/A')}mm` : (originalValueInLK || naPlaceholder);
                 
                 const tooltipKey = 't2' + key.charAt(0).toUpperCase() + key.slice(1);
-                const tooltipBase = APP_CONFIG.UI_TEXTS.tooltips[tooltipKey]?.description || `Feature ${key}`;
+                const tooltipBase = window.APP_CONFIG.UI_TEXTS.tooltips[tooltipKey]?.description || `Feature ${key}`;
                 const statusText = checkMet ? 'Fulfilled' : (checkResultForLK[checkResultKey] === false ? 'Not Fulfilled' : 'Not Applicable');
                 const tooltip = `${tooltipBase} | Status: ${statusText}`;
 
@@ -168,10 +168,10 @@ const tableRenderer = (() => {
                     <span class="status-${patient.asStatus === '+' ? 'plus' : 'minus'}" data-tippy-content="${asTooltip}">${patient.asStatus ?? '?'}</span> /
                     <span class="status-${t2StatusClass}" id="status-t2-analysis-${patient.id}" data-tippy-content="${t2Tooltip}">${patient.t2Status ?? '?'}</span>
                 </td>
-                <td data-label="N+/N total" class="text-center" data-tippy-content="${APP_CONFIG.UI_TEXTS.tooltips.analysisTab?.n_counts || 'Pathology Counts'}">${nCountsText}</td>
-                <td data-label="AS+/AS total" class="text-center" data-tippy-content="${APP_CONFIG.UI_TEXTS.tooltips.analysisTab?.as_counts || 'AS Counts'}">${asCountsText}</td>
-                <td data-label="T2+/T2 total" class="text-center" id="t2-counts-${patient.id}" data-tippy-content="${APP_CONFIG.UI_TEXTS.tooltips.analysisTab?.t2_counts || 'T2 Counts'}">${t2CountsText}</td>
-                <td class="text-center p-1" style="width: 30px;" data-tippy-content="${hasEvaluatedNodes ? (APP_CONFIG.UI_TEXTS.tooltips.analysisTab?.expandRow || 'Toggle Details') : 'No T2 node evaluation details available'}">
+                <td data-label="N+/N total" class="text-center" data-tippy-content="${window.APP_CONFIG.UI_TEXTS.tooltips.analysisTab?.n_counts || 'Pathology Counts'}">${nCountsText}</td>
+                <td data-label="AS+/AS total" class="text-center" data-tippy-content="${window.APP_CONFIG.UI_TEXTS.tooltips.analysisTab?.as_counts || 'AS Counts'}">${asCountsText}</td>
+                <td data-label="T2+/T2 total" class="text-center" id="t2-counts-${patient.id}" data-tippy-content="${window.APP_CONFIG.UI_TEXTS.tooltips.analysisTab?.t2_counts || 'T2 Counts'}">${t2CountsText}</td>
+                <td class="text-center p-1" style="width: 30px;" data-tippy-content="${hasEvaluatedNodes ? (window.APP_CONFIG.UI_TEXTS.tooltips.analysisTab?.expandRow || 'Toggle Details') : 'No T2 node evaluation details available'}">
                      ${hasEvaluatedNodes ? '<button class="btn btn-sm btn-outline-secondary p-1 row-toggle-button" aria-label="Toggle Details"><i class="fas fa-chevron-down row-toggle-icon"></i></button>' : ''}
                 </td>
             </tr>
