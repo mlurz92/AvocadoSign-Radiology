@@ -1,5 +1,5 @@
 function getCohortDisplayName(cohortId) {
-    const cohortConfig = Object.values(APP_CONFIG.COHORTS).find(c => c.id === cohortId);
+    const cohortConfig = Object.values(window.APP_CONFIG.COHORTS).find(c => c.id === cohortId);
     return cohortConfig ? cohortConfig.displayName : cohortId || 'Unknown';
 }
 
@@ -45,9 +45,9 @@ function formatCI(value, ciLower, ciUpper, digits = 1, isPercent = false, placeh
 
     if (formattedLower !== placeholder && formattedUpper !== placeholder) {
         const ciStr = `(95% CI: ${formattedLower}, ${formattedUpper})`;
-        return `${formattedValue}${isPercent ? '%' : ''} ${ciStr}`;
+        return `<span class="math-inline">\{formattedValue\}</span>{isPercent ? '%' : ''} ${ciStr}`;
     }
-    return `${formattedValue}${isPercent ? '%' : ''}`;
+    return `<span class="math-inline">\{formattedValue\}</span>{isPercent ? '%' : ''}`;
 }
 
 function getCurrentDateString(format = 'YYYY-MM-DD') {
@@ -57,9 +57,9 @@ function getCurrentDateString(format = 'YYYY-MM-DD') {
     const day = date.getDate().toString().padStart(2, '0');
 
     if (format === 'YYYYMMDD') {
-        return `${year}${month}${day}`;
+        return `<span class="math-inline">\{year\}</span>{month}${day}`;
     }
-    return `${year}-${month}-${day}`;
+    return `<span class="math-inline">\{year\}\-</span>{month}-${day}`;
 }
 
 function saveToLocalStorage(key, value) {
@@ -202,7 +202,7 @@ function getSortFunction(key, direction = 'asc', subKey = null) {
 
 function getStatisticalSignificanceSymbol(pValue) {
     if (pValue === null || pValue === undefined || isNaN(pValue) || !isFinite(pValue)) return '';
-    const significanceLevels = APP_CONFIG.STATISTICAL_CONSTANTS.SIGNIFICANCE_SYMBOLS;
+    const significanceLevels = window.APP_CONFIG.STATISTICAL_CONSTANTS.SIGNIFICANCE_SYMBOLS;
     for (const level of significanceLevels) {
         if (pValue < level.threshold) {
             return level.symbol;
@@ -216,14 +216,22 @@ function getPValueText(pValue, forPublication = false) {
     if (p === null || p === undefined || isNaN(p) || !isFinite(p)) return 'N/A';
 
     if (forPublication) {
-        const prefix = '*P*';
+        const prefix = '<em>P</em>';
         if (p < 0.001) return `${prefix} < .001`;
         if (p > 0.99) return `${prefix} > .99`;
-        if (p < 0.01) return `${prefix} = .${p.toFixed(3).substring(2)}`;
-        if (p.toFixed(2) === '0.05' && p < 0.05) {
-             return `${prefix} = .${p.toFixed(3).substring(2)}`;
+        
+        // Handle the specific case for 0.01 <= p < 0.05 where rounding might change significance.
+        // If p is, for example, 0.046, it should be P = .046 (3 digits). If 0.051, it's P = .05.
+        // The rule states: "unless p <.01 in which case the p-value should be expressed to 3 digits to the right of the decimal point. The exception to this rule is when rounding p from 3 digits to 2 digits would result in p appearing non-significant (such as p=.046)."
+        if (p < 0.05 && p >= 0.01 && (p * 100).toFixed(0) === '5') { // Check if p would round to 0.05 when formatted to 2 digits
+            return `<span class="math-inline">\{prefix\} \= \.</span>{p.toFixed(3).substring(2)}`;
         }
-        return `${prefix} = .${p.toFixed(2).substring(2)}`;
+        
+        if (p < 0.01) {
+            return `<span class="math-inline">\{prefix\} \= \.</span>{p.toFixed(3).substring(2)}`;
+        }
+        
+        return `<span class="math-inline">\{prefix\} \= \.</span>{p.toFixed(2).substring(2)}`;
     } else {
         const prefix = 'p';
         if (p < 0.001) return `${prefix} < 0.001`;
@@ -262,7 +270,7 @@ function clampNumber(num, min, max) {
 function getAUCInterpretation(aucValue) {
     const value = parseFloat(aucValue);
     if (isNaN(value) || value < 0 || value > 1) return 'undetermined';
-    const strengths = APP_CONFIG.UI_TEXTS.tooltips.interpretation.strength;
+    const strengths = window.APP_CONFIG.UI_TEXTS.tooltips.interpretation.strength;
     if (value >= 0.9) return strengths.very_strong;
     if (value >= 0.8) return strengths.strong;
     if (value >= 0.7) return strengths.moderate;
@@ -274,7 +282,7 @@ function getPhiInterpretation(phiValue) {
     const value = parseFloat(phiValue);
     if (isNaN(value)) return 'undetermined';
     const absPhi = Math.abs(value);
-    const strengths = APP_CONFIG.UI_TEXTS.tooltips.interpretation.strength;
+    const strengths = window.APP_CONFIG.UI_TEXTS.tooltips.interpretation.strength;
     if (absPhi >= 0.5) return strengths.strong;
     if (absPhi >= 0.3) return strengths.moderate;
     if (absPhi >= 0.1) return strengths.weak;
@@ -284,7 +292,7 @@ function getPhiInterpretation(phiValue) {
 function getORInterpretation(orValue) {
     const value = parseFloat(orValue);
     if (isNaN(value)) return 'undetermined';
-    const strengths = APP_CONFIG.UI_TEXTS.tooltips.interpretation.strength;
+    const strengths = window.APP_CONFIG.UI_TEXTS.tooltips.interpretation.strength;
     if (value >= 10 || value <= 0.1) return strengths.very_strong;
     if (value >= 3 || value <= 0.33) return strengths.strong;
     if (value >= 1.5 || value <= 0.67) return strengths.moderate;
@@ -298,15 +306,15 @@ function escapeHTML(text) {
 }
 
 function getDefinitionTooltip(metricKey) {
-    const definition = APP_CONFIG.UI_TEXTS.tooltips.definition[metricKey];
+    const definition = window.APP_CONFIG.UI_TEXTS.tooltips.definition[metricKey];
     if (!definition) return `Definition for '${metricKey}' not found.`;
-    return `<strong>${escapeHTML(definition.title)}</strong><hr class='my-1'>${definition.text}`;
+    return `<strong><span class="math-inline">\{escapeHTML\(definition\.title\)\}</strong\><hr class\='my\-1'\></span>{definition.text}`;
 }
 
 function getInterpretationTooltip(metricKey, data, context = {}) {
-    const templates = APP_CONFIG.UI_TEXTS.tooltips.interpretation;
-    const definition = APP_CONFIG.UI_TEXTS.tooltips.definition[metricKey];
-    const notAvailableText = `<strong>${escapeHTML(definition?.title || metricKey.toUpperCase())} Interpretation</strong><hr class='my-1'>${templates.notAvailable}`;
+    const templates = window.APP_CONFIG.UI_TEXTS.tooltips.interpretation;
+    const definition = window.APP_CONFIG.UI_TEXTS.tooltips.definition[metricKey];
+    const notAvailableText = `<strong><span class="math-inline">\{escapeHTML\(definition?\.title \|\| metricKey\.toUpperCase\(\)\)\} Interpretation</strong\><hr class\='my\-1'\></span>{templates.notAvailable}`;
 
     if (!data || data.value === null || data.value === undefined || isNaN(data.value)) {
         return notAvailableText;
@@ -344,7 +352,7 @@ function getInterpretationTooltip(metricKey, data, context = {}) {
 
         case 'pValue':
             const pValueFormatted = getPValueText(value, false);
-            const significance = value < APP_CONFIG.STATISTICAL_CONSTANTS.SIGNIFICANCE_LEVEL;
+            const significance = value < window.APP_CONFIG.STATISTICAL_CONSTANTS.SIGNIFICANCE_LEVEL;
             const significanceText = significance ? templates.significance.significant : templates.significance.not_significant;
             const pStrength = significance ? templates.strength.strong : templates.strength.very_weak;
             let pTemplate = template.default;
@@ -409,13 +417,13 @@ function getInterpretationTooltip(metricKey, data, context = {}) {
             return `Interpretation for '${metricKey}' not implemented.`;
     }
     
-    return `<strong>${escapeHTML(definition?.title || metricKey.toUpperCase())} Interpretation</strong><hr class='my-1'>${baseText}`;
+    return `<strong><span class="math-inline">\{escapeHTML\(definition?\.title \|\| metricKey\.toUpperCase\(\)\)\} Interpretation</strong\><hr class\='my\-1'\></span>{baseText}`;
 }
 
 function getT2IconSVG(type, value) {
-    const s = APP_CONFIG.UI_SETTINGS.ICON_SIZE;
-    const sw = APP_CONFIG.UI_SETTINGS.ICON_STROKE_WIDTH;
-    const iconColor = APP_CONFIG.UI_SETTINGS.ICON_COLOR;
+    const s = window.APP_CONFIG.UI_SETTINGS.ICON_SIZE;
+    const sw = window.APP_CONFIG.UI_SETTINGS.ICON_STROKE_WIDTH;
+    const iconColor = window.APP_CONFIG.UI_SETTINGS.ICON_COLOR;
     const c = s / 2;
     const r = (s - sw) / 2;
     const sq = s - sw * 1.5;
@@ -424,12 +432,12 @@ function getT2IconSVG(type, value) {
 
     const getSvgContentFromConfig = (key, val) => {
         const normalizedVal = String(val).toLowerCase();
-        const configKey = `${key.toUpperCase()}_${normalizedVal.toUpperCase()}`;
-        const svgFactory = APP_CONFIG.T2_ICON_SVGS[configKey];
+        const configKey = `<span class="math-inline">\{key\.toUpperCase\(\)\}\_</span>{normalizedVal.toUpperCase()}`;
+        const svgFactory = window.APP_CONFIG.T2_ICON_SVGS[configKey];
         if (svgFactory) {
             return svgFactory(s, sw, iconColor, c, r, sq, sqPos);
         }
-        return APP_CONFIG.T2_ICON_SVGS.UNKNOWN(s, sw, iconColor, c, r, sq, sqPos);
+        return window.APP_CONFIG.T2_ICON_SVGS.UNKNOWN(s, sw, iconColor, c, r, sq, sqPos);
     };
 
     switch (type) {
@@ -449,7 +457,7 @@ function getT2IconSVG(type, value) {
             svgContent = getSvgContentFromConfig('signal', value);
             break;
         default:
-            svgContent = APP_CONFIG.T2_ICON_SVGS.UNKNOWN(s, sw, iconColor, c, r, sq, sqPos);
+            svgContent = window.APP_CONFIG.T2_ICON_SVGS.UNKNOWN(s, sw, iconColor, c, r, sq, sqPos);
     }
-    return `<svg class="icon-t2 icon-${type}" width="${s}" height="${s}" viewBox="0 0 ${s} ${s}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${type}: ${value || 'unknown'}">${svgContent}</svg>`;
+    return `<svg class="icon-t2 icon-<span class="math-inline">\{type\}" width\="</span>{s}" height="${s}" viewBox="0 0 ${s} <span class="math-inline">\{s\}" xmlns\="http\://www\.w3\.org/2000/svg" role\="img" aria\-label\="</span>{type}: <span class="math-inline">\{value \|\| 'unknown'\}"\></span>{svgContent}</svg>`;
 }
