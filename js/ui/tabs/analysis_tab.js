@@ -1,8 +1,8 @@
-const analysisTab = (() => {
+window.analysisTab = (() => {
 
     function createAnalysisTableCardHTML(data, sortState, appliedCriteria, appliedLogic) {
         const tableId = 'analysis-table';
-        const columns = APP_CONFIG.TABLE_COLUMN_DEFINITIONS.ANALYSIS_TABLE_COLUMNS;
+        const columns = window.APP_CONFIG.TABLE_COLUMN_DEFINITIONS.ANALYSIS_TABLE_COLUMNS;
 
         let headerHTML = `<thead class="small sticky-top bg-light" id="${tableId}-header"><tr>`;
         columns.forEach(col => {
@@ -20,7 +20,7 @@ const analysisTab = (() => {
                 }
             }
             
-            const baseTooltipContent = APP_CONFIG.UI_TEXTS.tooltips.analysisTab[col.tooltipKey] || `Sort by ${col.label}`;
+            const baseTooltipContent = window.APP_CONFIG.UI_TEXTS.tooltips.analysisTab[col.tooltipKey] || `Sort by ${col.label}`;
             const subHeaders = col.subKeys ? col.subKeys.map(sk => {
                 const isActiveSubSort = activeSubKey === sk.key;
                 const style = isActiveSubSort ? 'font-weight: bold; text-decoration: underline; color: var(--primary-color);' : '';
@@ -39,12 +39,12 @@ const analysisTab = (() => {
             tableHTML += `<tr><td colspan="${columns.length}" class="text-center text-muted">No patients found in the selected cohort.</td></tr>`;
         } else {
             data.forEach(patient => {
-                tableHTML += tableRenderer.createAnalysisTableRow(patient, appliedCriteria, appliedLogic);
+                tableHTML += window.tableRenderer.createAnalysisTableRow(patient, appliedCriteria, appliedLogic);
             });
         }
         tableHTML += `</tbody></table>`;
         
-        const toggleButtonTooltip = APP_CONFIG.UI_TEXTS.tooltips.analysisTab.expandAll || 'Expand or collapse all details';
+        const toggleButtonTooltip = window.APP_CONFIG.UI_TEXTS.tooltips.analysisTab.expandAll || 'Expand or collapse all details';
         return `
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
@@ -64,54 +64,54 @@ const analysisTab = (() => {
     function renderDashboardCharts(stats) {
         const ids = ['chart-dash-age', 'chart-dash-gender', 'chart-dash-therapy', 'chart-dash-status-n', 'chart-dash-status-as', 'chart-dash-status-t2'];
         if (!stats || stats.patientCount === 0) {
-            ids.forEach(id => uiManager.updateElementHTML(id, '<p class="text-muted small text-center p-2">N/A</p>'));
+            ids.forEach(id => window.uiManager.updateElementHTML(id, '<p class="text-muted small text-center p-2">N/A</p>'));
             return;
         }
         const histOpts = { height: 130, margin: { top: 5, right: 10, bottom: 25, left: 35 }, useCompactMargins: true };
         const pieOpts = { height: 130, margin: { top: 5, right: 5, bottom: 35, left: 5 }, innerRadiusFactor: 0.45, fontSize: '8px', useCompactMargins: true, legendBelow: true };
         
-        const genderData = [{label: APP_CONFIG.UI_TEXTS.legendLabels.male, value: stats.sex?.m ?? 0}, {label: APP_CONFIG.UI_TEXTS.legendLabels.female, value: stats.sex?.f ?? 0}];
-        if(stats.sex?.unknown > 0) genderData.push({label: APP_CONFIG.UI_TEXTS.legendLabels.unknownGender, value: stats.sex.unknown });
+        const genderData = [{label: window.APP_CONFIG.UI_TEXTS.legendLabels.male, value: stats.sex?.m ?? 0}, {label: window.APP_CONFIG.UI_TEXTS.legendLabels.female, value: stats.sex?.f ?? 0}];
+        if(stats.sex?.unknown > 0) genderData.push({label: window.APP_CONFIG.UI_TEXTS.legendLabels.unknownGender, value: stats.sex.unknown });
         
         const therapyData = [
-            {label: APP_CONFIG.UI_TEXTS.legendLabels.surgeryAlone, value: stats.therapy?.surgeryAlone ?? 0}, 
-            {label: APP_CONFIG.UI_TEXTS.legendLabels.neoadjuvantTherapy, value: stats.therapy?.neoadjuvantTherapy ?? 0}
+            {label: window.APP_CONFIG.UI_TEXTS.legendLabels.surgeryAlone, value: stats.therapy?.surgeryAlone ?? 0}, 
+            {label: window.APP_CONFIG.UI_TEXTS.legendLabels.neoadjuvantTherapy, value: stats.therapy?.neoadjuvantTherapy ?? 0}
         ];
         
         try {
-            chartRenderer.renderAgeDistributionChart(stats.ageData || [], ids[0], histOpts);
-            chartRenderer.renderPieChart(genderData, ids[1], {...pieOpts, legendItemCount: genderData.length});
-            chartRenderer.renderPieChart(therapyData, ids[2], {...pieOpts, legendItemCount: therapyData.length});
-            chartRenderer.renderPieChart([{label: APP_CONFIG.UI_TEXTS.legendLabels.nPositive, value: stats.nStatus?.plus ?? 0}, {label: APP_CONFIG.UI_TEXTS.legendLabels.nNegative, value: stats.nStatus?.minus ?? 0}], ids[3], {...pieOpts, legendItemCount: 2});
-            chartRenderer.renderPieChart([{label: APP_CONFIG.UI_TEXTS.legendLabels.asPositive, value: stats.asStatus?.plus ?? 0}, {label: APP_CONFIG.UI_TEXTS.legendLabels.asNegative, value: stats.asStatus?.minus ?? 0}], ids[4], {...pieOpts, legendItemCount: 2});
-            chartRenderer.renderPieChart([{label: APP_CONFIG.UI_TEXTS.legendLabels.t2Positive, value: stats.t2Status?.plus ?? 0}, {label: APP_CONFIG.UI_TEXTS.legendLabels.t2Negative, value: stats.t2Status?.minus ?? 0}], ids[5], {...pieOpts, legendItemCount: 2});
+            window.chartRenderer.renderAgeDistributionChart(stats.ageData || [], ids[0], histOpts);
+            window.chartRenderer.renderPieChart(genderData, ids[1], {...pieOpts, legendItemCount: genderData.length});
+            window.chartRenderer.renderPieChart(therapyData, ids[2], {...pieOpts, legendItemCount: therapyData.length});
+            window.chartRenderer.renderPieChart([{label: window.APP_CONFIG.UI_TEXTS.legendLabels.nPositive, value: stats.nStatus?.plus ?? 0}, {label: window.APP_CONFIG.UI_TEXTS.legendLabels.nNegative, value: stats.nStatus?.minus ?? 0}], ids[3], {...pieOpts, legendItemCount: 2});
+            window.chartRenderer.renderPieChart([{label: window.APP_CONFIG.UI_TEXTS.legendLabels.asPositive, value: stats.asStatus?.plus ?? 0}, {label: window.APP_CONFIG.UI_TEXTS.legendLabels.asNegative, value: stats.asStatus?.minus ?? 0}], ids[4], {...pieOpts, legendItemCount: 2});
+            window.chartRenderer.renderPieChart([{label: window.APP_CONFIG.UI_TEXTS.legendLabels.t2Positive, value: stats.t2Status?.plus ?? 0}, {label: window.APP_CONFIG.UI_TEXTS.legendLabels.t2Negative, value: stats.t2Status?.minus ?? 0}], ids[5], {...pieOpts, legendItemCount: 2});
         }
-        catch(error) { ids.forEach(id => uiManager.updateElementHTML(id, '<p class="text-danger small text-center p-2">Chart Error</p>')); }
+        catch(error) { ids.forEach(id => window.uiManager.updateElementHTML(id, '<p class="text-danger small text-center p-2">Chart Error</p>')); }
     }
 
     function render(data, currentCriteria, currentLogic, sortState, currentCohort, bfWorkerAvailable, currentCohortStats, bruteForceResultForCohort) {
         if (!data || !currentCriteria || !currentLogic) throw new Error("Data or criteria for Analysis Tab not available.");
-        const criteriaControlsHTML = uiComponents.createT2CriteriaControls(currentCriteria, currentLogic);
+        const criteriaControlsHTML = window.uiComponents.createT2CriteriaControls(currentCriteria, currentLogic);
         const analysisTableCardHTML = createAnalysisTableCardHTML(data, sortState, currentCriteria, currentLogic);
 
         const dashboardContainerId = 'analysis-dashboard';
         const metricsOverviewContainerId = 't2-metrics-overview';
         const bruteForceCardContainerId = 'brute-force-card-container';
 
-        const stats = statisticsService.calculateDescriptiveStats(data);
+        const stats = window.statisticsService.calculateDescriptiveStats(data);
         const cohortDisplayName = getCohortDisplayName(currentCohort);
 
         let dashboardCardsHTML = '';
         if (stats && stats.patientCount > 0) {
-            const dlBtns = (baseId, titleKey) => [{id:`dl-${baseId}-png`, icon: 'fa-image', tooltip: `Download '${APP_CONFIG.UI_TEXTS.chartTitles[titleKey]}' as PNG`, format:'png', chartId: baseId, chartName: APP_CONFIG.UI_TEXTS.chartTitles[titleKey]}, {id:`dl-${baseId}-svg`, icon: 'fa-file-code', tooltip: `Download '${APP_CONFIG.UI_TEXTS.chartTitles[titleKey]}' as SVG`, format:'svg', chartId: baseId, chartName: APP_CONFIG.UI_TEXTS.chartTitles[titleKey]}];
+            const dlBtns = (baseId, titleKey) => [{id:`dl-${baseId}-png`, icon: 'fa-image', tooltip: `Download '${window.APP_CONFIG.UI_TEXTS.chartTitles[titleKey]}' as PNG`, format:'png', chartId: baseId, chartName: window.APP_CONFIG.UI_TEXTS.chartTitles[titleKey]}, {id:`dl-${baseId}-svg`, icon: 'fa-file-code', tooltip: `Download '${window.APP_CONFIG.UI_TEXTS.chartTitles[titleKey]}' as SVG`, format:'svg', chartId: baseId, chartName: window.APP_CONFIG.UI_TEXTS.chartTitles[titleKey]}];
             
             dashboardCardsHTML = `
-                ${uiComponents.createDashboardCard(APP_CONFIG.UI_TEXTS.chartTitles.ageDistribution, `<p class="mb-0 small">Median: ${formatNumber(stats.age?.median, 1)} (${formatNumber(stats.age?.min, 0)} - ${formatNumber(stats.age?.max, 0)})</p>`, 'chart-dash-age', '', '', 'p-1', dlBtns('chart-dash-age', 'ageDistribution'), cohortDisplayName)}
-                ${uiComponents.createDashboardCard(APP_CONFIG.UI_TEXTS.chartTitles.genderDistribution, `<p class="mb-0 small">M: ${stats.sex?.m ?? 0} F: ${stats.sex?.f ?? 0}</p>`, 'chart-dash-gender', '', '', 'p-1', dlBtns('chart-dash-gender', 'genderDistribution'), cohortDisplayName)}
-                ${uiComponents.createDashboardCard(APP_CONFIG.UI_TEXTS.chartTitles.therapyDistribution, `<p class="mb-0 small">Surgery alone: ${stats.therapy?.surgeryAlone ?? 0} Neoadjuvant therapy: ${stats.therapy?.neoadjuvantTherapy ?? 0}</p>`, 'chart-dash-therapy', '', '', 'p-1', dlBtns('chart-dash-therapy', 'therapyDistribution'), cohortDisplayName)}
-                ${uiComponents.createDashboardCard(APP_CONFIG.UI_TEXTS.chartTitles.statusN, `<p class="mb-0 small">N+: ${stats.nStatus?.plus ?? 0} N-: ${stats.nStatus?.minus ?? 0}</p>`, 'chart-dash-status-n', '', '', 'p-1', dlBtns('chart-dash-status-n', 'statusN'), cohortDisplayName)}
-                ${uiComponents.createDashboardCard(APP_CONFIG.UI_TEXTS.chartTitles.statusAS, `<p class="mb-0 small">AS+: ${stats.asStatus?.plus ?? 0} AS-: ${stats.asStatus?.minus ?? 0}</p>`, 'chart-dash-status-as', '', '', 'p-1', dlBtns('chart-dash-as', 'statusAS'), cohortDisplayName)}
-                ${uiComponents.createDashboardCard(APP_CONFIG.UI_TEXTS.chartTitles.statusT2, `<p class="mb-0 small">T2+: ${stats.t2Status?.plus ?? 0} T2-: ${stats.t2Status?.minus ?? 0}</p>`, 'chart-dash-status-t2', '', '', 'p-1', dlBtns('chart-dash-t2', 'statusT2'), cohortDisplayName)}
+                ${window.uiComponents.createDashboardCard(window.APP_CONFIG.UI_TEXTS.chartTitles.ageDistribution, `<p class="mb-0 small">Median: ${formatNumber(stats.age?.median, 1)} (${formatNumber(stats.age?.min, 0)} - ${formatNumber(stats.age?.max, 0)})</p>`, 'chart-dash-age', '', '', 'p-1', dlBtns('chart-dash-age', 'ageDistribution'), cohortDisplayName)}
+                ${window.uiComponents.createDashboardCard(window.APP_CONFIG.UI_TEXTS.chartTitles.genderDistribution, `<p class="mb-0 small">M: ${stats.sex?.m ?? 0} F: ${stats.sex?.f ?? 0}</p>`, 'chart-dash-gender', '', '', 'p-1', dlBtns('chart-dash-gender', 'genderDistribution'), cohortDisplayName)}
+                ${window.uiComponents.createDashboardCard(window.APP_CONFIG.UI_TEXTS.chartTitles.therapyDistribution, `<p class="mb-0 small">Surgery alone: ${stats.therapy?.surgeryAlone ?? 0} Neoadjuvant therapy: ${stats.therapy?.neoadjuvantTherapy ?? 0}</p>`, 'chart-dash-therapy', '', '', 'p-1', dlBtns('chart-dash-therapy', 'therapyDistribution'), cohortDisplayName)}
+                ${window.uiComponents.createDashboardCard(window.APP_CONFIG.UI_TEXTS.chartTitles.statusN, `<p class="mb-0 small">N+: ${stats.nStatus?.plus ?? 0} N-: ${stats.nStatus?.minus ?? 0}</p>`, 'chart-dash-status-n', '', '', 'p-1', dlBtns('chart-dash-status-n', 'statusN'), cohortDisplayName)}
+                ${window.uiComponents.createDashboardCard(window.APP_CONFIG.UI_TEXTS.chartTitles.statusAS, `<p class="mb-0 small">AS+: ${stats.asStatus?.plus ?? 0} AS-: ${stats.asStatus?.minus ?? 0}</p>`, 'chart-dash-status-as', '', '', 'p-1', dlBtns('chart-dash-as', 'statusAS'), cohortDisplayName)}
+                ${window.uiComponents.createDashboardCard(window.APP_CONFIG.UI_TEXTS.chartTitles.statusT2, `<p class="mb-0 small">T2+: ${stats.t2Status?.plus ?? 0} T2-: ${stats.t2Status?.minus ?? 0}</p>`, 'chart-dash-status-t2', '', '', 'p-1', dlBtns('chart-dash-t2', 'statusT2'), cohortDisplayName)}
             `;
         } else {
             dashboardCardsHTML = '<div class="col-12"><p class="text-muted text-center small p-3">No data for dashboard.</p></div>';
@@ -168,7 +168,7 @@ const analysisTab = (() => {
                             </table>
                         </div>
                     `;
-                    uiManager.updateElementHTML(metricsOverviewContainer.id, uiComponents.createStatisticsCard(
+                    window.uiManager.updateElementHTML(metricsOverviewContainer.id, window.uiComponents.createStatisticsCard(
                         't2-metrics-overview-card',
                         'Diagnostic Performance (Applied T2)',
                         metricsHtml,
@@ -178,27 +178,27 @@ const analysisTab = (() => {
                         't2-metrics-overview-card-content table'
                     ));
                 } else {
-                    uiManager.updateElementHTML(metricsOverviewContainer.id, `<div class="col-12"><div class="alert alert-info small p-2">No diagnostic performance data available for current T2 criteria in cohort '${getCohortDisplayName(currentCohort)}'. Apply criteria or check data.</div></div>`);
+                    window.uiManager.updateElementHTML(metricsOverviewContainer.id, `<div class="col-12"><div class="alert alert-info small p-2">No diagnostic performance data available for current T2 criteria in cohort '${getCohortDisplayName(currentCohort)}'. Apply criteria or check data.</div></div>`);
                 }
             }
             
             const bruteForceCardContainer = document.getElementById(bruteForceCardContainerId);
             if(bruteForceCardContainer) {
-                 uiManager.updateBruteForceUI(bruteForceManager.isRunning() ? 'progress' : 'initial', bruteForceResultForCohort, bfWorkerAvailable, currentCohort);
+                 window.uiManager.updateBruteForceUI(window.bruteForceManager.isRunning() ? 'progress' : 'initial', bruteForceResultForCohort, window.bruteForceManager.isWorkerAvailable(), currentCohort);
             }
 
             const tableBody = document.getElementById('analysis-table-body');
             const tableHeader = document.getElementById('analysis-table-header');
-            if (tableBody && data.length > 0) uiManager.attachRowCollapseListeners(tableBody.id);
-            if (tableHeader) uiManager.updateSortIcons(tableHeader.id, sortState);
-            uiManager.updateT2CriteriaControlsUI(currentCriteria, currentLogic);
-            uiManager.markCriteriaSavedIndicator(t2CriteriaManager.isUnsaved());
+            if (tableBody && data.length > 0) window.uiManager.attachRowCollapseListeners(tableBody.id);
+            if (tableHeader) window.uiManager.updateSortIcons(tableHeader.id, sortState);
+            window.uiManager.updateT2CriteriaControlsUI(currentCriteria, currentLogic);
+            window.uiManager.markCriteriaSavedIndicator(window.t2CriteriaManager.isUnsaved());
         }, 10);
 
         return finalHTML;
     }
 
-    return {
+    return Object.freeze({
         render
-    };
+    });
 })();
