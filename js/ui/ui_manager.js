@@ -1,12 +1,12 @@
-const uiManager = (() => {
+window.uiManager = (() => {
 
     let tippyInstances = [];
     let collapseEventListenersAttached = new Set();
     let quickGuideModalInstance = null;
 
     function showToast(message, type = 'info', duration = 3000) {
-        if (typeof APP_CONFIG !== 'undefined' && APP_CONFIG.UI_SETTINGS?.TOAST_DURATION_MS) {
-            duration = APP_CONFIG.UI_SETTINGS.TOAST_DURATION_MS;
+        if (typeof window.APP_CONFIG !== 'undefined' && window.APP_CONFIG.UI_SETTINGS?.TOAST_DURATION_MS) {
+            duration = window.APP_CONFIG.UI_SETTINGS.TOAST_DURATION_MS;
         }
         const toastContainer = document.getElementById('toast-container');
         if (!toastContainer) return;
@@ -47,7 +47,7 @@ const uiManager = (() => {
         const newInstances = tippy(scope.querySelectorAll('[data-tippy-content]'), {
             allowHTML: true, theme: 'glass', placement: 'top', animation: 'fade',
             interactive: false, appendTo: () => document.body,
-            delay: (APP_CONFIG && APP_CONFIG.UI_SETTINGS) ? APP_CONFIG.UI_SETTINGS.TOOLTIP_DELAY : [200, 100],
+            delay: (window.APP_CONFIG && window.APP_CONFIG.UI_SETTINGS) ? window.APP_CONFIG.UI_SETTINGS.TOOLTIP_DELAY : [200, 100],
             maxWidth: 400, duration: [150, 150], zIndex: 3050,
             onCreate(instance) { if (!instance.props.content || String(instance.props.content).trim() === '') { instance.disable(); } },
             onShow(instance) { const content = instance.reference.getAttribute('data-tippy-content'); return !!content && String(content).trim() !== ''; }
@@ -136,7 +136,7 @@ const uiManager = (() => {
         }
         let modalElement = document.getElementById('quick-guide-modal');
         if (!modalElement) {
-            const appVersion = (typeof APP_CONFIG !== 'undefined') ? APP_CONFIG.APP_VERSION : '3.1.0';
+            const appVersion = (typeof window.APP_CONFIG !== 'undefined') ? window.APP_CONFIG.APP_VERSION : '3.1.0';
             const quickGuideContent = `
                 <h2>1. Introduction</h2>
                 <p>The <strong>Nodal Staging: Avocado Sign vs. T2 Criteria</strong> analysis tool is a client-side web application designed for scientific research in the radiological diagnosis of rectal cancer. It enables in-depth analyses and detailed comparisons of diagnostic performance for various MRI-based criteria for assessing mesorectal lymph node status (N-status). The application focuses on evaluating the novel "Avocado Sign" (AS) against established T2-weighted (T2w) morphological criteria. It is intended solely as a <strong>research instrument</strong>. The results are <strong>not for clinical diagnosis or direct patient treatment decisions</strong>. </p>
@@ -235,7 +235,7 @@ const uiManager = (() => {
     }
 
     function updateCohortButtonsUI(currentCohort) {
-        Object.values(APP_CONFIG.COHORTS).forEach(cohort => {
+        Object.values(window.APP_CONFIG.COHORTS).forEach(cohort => {
             const button = document.getElementById(`btn-cohort-${cohort.id}`);
             if (button) {
                 button.classList.toggle('active', cohort.id === currentCohort);
@@ -334,7 +334,7 @@ const uiManager = (() => {
             }
         });
         if (logicSwitch) logicSwitch.checked = currentLogic === 'OR';
-        if (logicLabel) logicLabel.textContent = APP_CONFIG.UI_TEXTS.t2LogicDisplayNames[currentLogic] || currentLogic;
+        if (logicLabel) logicLabel.textContent = window.APP_CONFIG.UI_TEXTS.t2LogicDisplayNames[currentLogic] || currentLogic;
     }
 
     function updateBruteForceUI(status, payload = {}, isWorkerAvailable = false, currentCohort = null) {
@@ -360,10 +360,10 @@ const uiManager = (() => {
                 <p class="small text-muted mt-2 mb-0">${currentBestText}</p>
             `;
         } else {
-            const bfResult = bruteForceManager.getResultsForCohort(currentCohort);
+            const bfResult = window.bruteForceManager.getResultsForCohort(currentCohort);
             if (bfResult && bfResult.bestResult) {
                 const best = bfResult.bestResult;
-                const criteriaDisplay = studyT2CriteriaManager.formatCriteriaForDisplay(best.criteria, best.logic);
+                const criteriaDisplay = window.studyT2CriteriaManager.formatCriteriaForDisplay(best.criteria, best.logic);
                 let cohortStats = `(N=${bfResult.nTotal}, N+: ${bfResult.nPlus}, N-: ${bfResult.nMinus})`;
 
                 const resultTooltipTemplate = `Best result of the completed brute-force optimization for the selected cohort ([N_TOTAL] patients, including [N_PLUS] N+ and [N_MINUS] N-) and the target metric.`;
@@ -399,7 +399,7 @@ const uiManager = (() => {
                     <div class="d-flex align-items-center">
                         <label for="brute-force-metric" class="me-2 small text-muted" data-tippy-content="Select the target metric for the brute-force optimization.">Target:</label>
                         <select class="form-select form-select-sm me-2" id="brute-force-metric" ${isRunning ? 'disabled' : ''}>
-                            ${APP_CONFIG.AVAILABLE_BRUTE_FORCE_METRICS.map(metric => `<option value="${metric.value}" ${payload.metric === metric.value ? 'selected' : ''}>${metric.label}</option>`).join('')}
+                            ${window.APP_CONFIG.AVAILABLE_BRUTE_FORCE_METRICS.map(metric => `<option value="${metric.value}" ${payload.metric === metric.value ? 'selected' : ''}>${metric.label}</option>`).join('')}
                         </select>
                         <button class="btn btn-sm btn-success me-2" id="btn-start-brute-force" data-tippy-content="Starts the brute-force search." ${isRunning || !isWorkerAvailable ? 'disabled' : ''}><i class="fas fa-play me-1"></i> Start</button>
                         <button class="btn btn-sm btn-danger me-2" id="btn-cancel-brute-force" ${!isRunning ? 'disabled' : ''}><i class="fas fa-stop me-1"></i> Cancel</button>
@@ -419,7 +419,6 @@ const uiManager = (() => {
         const tableHeader = document.getElementById(tableHeaderId);
         if (!tableHeader) return;
         tableHeader.querySelectorAll('th[data-sort-key]').forEach(th => {
-            const sortKey = th.dataset.sortKey;
             const sortIcon = th.querySelector('.fa-sort, .fa-sort-up, .fa-sort-down');
             if (sortIcon) {
                 sortIcon.className = 'fas fa-sort text-muted opacity-50 ms-1';
