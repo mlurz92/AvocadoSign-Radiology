@@ -419,6 +419,8 @@ Upon receipt of the above material, the editorial board of *Radiology* will prom
 
 This Fast Track Pre-submission Program is developed to streamline the review and publication of practice-changing research. To participate in this program, the corresponding author should submit these documents to radiology@rsna.org.
 
+---
+
 # *Radiology* Scientific Style Guide: Original Article Manuscript Preparation
 
 This document consolidates the stylistic guidelines for preparing an Original Article manuscript for submission to *Radiology*, aiming for clarity, conciseness, and completeness.
