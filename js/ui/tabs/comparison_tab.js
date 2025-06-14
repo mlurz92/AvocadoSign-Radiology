@@ -2,7 +2,8 @@ window.comparisonTab = (() => {
 
     function _createASPerformanceViewHTML(comparisonData) {
         const { statsGesamt, statsSurgeryAlone, statsNeoadjuvantTherapy, cohort, statsCurrentCohort, patientCount } = comparisonData || {};
-        
+        const na = window.APP_CONFIG.NA_PLACEHOLDER;
+
         const cohortsData = [
             { id: window.APP_CONFIG.COHORTS.OVERALL.id, stats: statsGesamt },
             { id: window.APP_CONFIG.COHORTS.SURGERY_ALONE.id, stats: statsSurgeryAlone },
@@ -15,7 +16,6 @@ window.comparisonTab = (() => {
 
         const createPerfTableRow = (stats, cohortKey) => {
             const cohortDisplayName = getCohortDisplayName(cohortKey);
-            const na = '--';
             const fCI_p = (m, k) => { 
                 const d = (k === 'auc') ? 3 : ((k === 'f1' || k==='youden') ? 3 : 1); 
                 const p = !(k === 'auc' || k === 'f1' || k ==='youden'); 
@@ -76,7 +76,7 @@ window.comparisonTab = (() => {
     
     function _createASvsT2ComparisonViewHTML(comparisonData, selectedStudyId, currentGlobalCohort) {
         const { performanceAS, performanceT2, comparison, comparisonCriteriaSet, cohortForComparison, patientCountForComparison, t2ShortName } = comparisonData || {};
-        const displayCohortForComparison = getCohortDisplayName(cohortForComparison);
+        const na_stat = window.APP_CONFIG.NA_PLACEHOLDER;
         const isApplied = selectedStudyId === window.APP_CONFIG.SPECIAL_IDS.APPLIED_CRITERIA_STUDY_ID;
         const appliedName = window.APP_CONFIG.SPECIAL_IDS.APPLIED_CRITERIA_DISPLAY_NAME || "Applied Criteria";
         
@@ -85,7 +85,7 @@ window.comparisonTab = (() => {
             const studyInfo = comparisonCriteriaSet.studyInfo;
             comparisonBasisName = comparisonCriteriaSet.displayShortName || comparisonCriteriaSet.name || (isApplied ? appliedName : selectedStudyId);
             let criteriaHTML = comparisonCriteriaSet.logic === 'KOMBINIERT' ? (studyInfo?.keyCriteriaSummary || comparisonCriteriaSet.description) : window.studyT2CriteriaManager.formatCriteriaForDisplay(comparisonCriteriaSet.criteria, comparisonCriteriaSet.logic, false);
-            comparisonInfoHTML = `<dl class="row small mb-0"><dt class="col-sm-4">Reference:</dt><dd class="col-sm-8">${studyInfo?.reference || (isApplied ? 'User-defined (currently in Analysis Tab)' : 'N/A')}</dd><dt class="col-sm-4">Basis Cohort:</dt><dd class="col-sm-8">${studyInfo?.patientCohort || `Current: ${displayCohortForComparison} (N=${patientCountForComparison || '?'})`}</dd><dt class="col-sm-4">Criteria:</dt><dd class="col-sm-8">${criteriaHTML}</dd></dl>`;
+            comparisonInfoHTML = `<dl class="row small mb-0"><dt class="col-sm-4">Reference:</dt><dd class="col-sm-8">${studyInfo?.reference || (isApplied ? 'User-defined (currently in Analysis Tab)' : 'N/A')}</dd><dt class="col-sm-4">Basis Cohort:</dt><dd class="col-sm-8">${studyInfo?.patientCohort || `Current: ${getCohortDisplayName(cohortForComparison)} (N=${patientCountForComparison || '?'})`}</dd><dt class="col-sm-4">Criteria:</dt><dd class="col-sm-8">${criteriaHTML}</dd></dl>`;
         }
 
         const studySets = window.studyT2CriteriaManager.getAllStudyCriteriaSets();
