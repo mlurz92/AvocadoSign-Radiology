@@ -6,19 +6,12 @@ window.referencesGenerator = (() => {
             return '<p class="text-warning">References could not be loaded from configuration.</p>';
         }
 
-        const publicationReferences = Object.values(allReferences)
-            .filter(ref => typeof ref === 'object' && ref.id && !ref.isInternal)
-            .sort((a, b) => a.id - b.id);
+        // This function is effectively a placeholder.
+        // The final, correctly numbered reference list is generated dynamically
+        // in publication_tab.js to ensure proper citation order based on appearance in the text.
+        // This keeps the module structure intact without executing redundant code.
 
-        if (publicationReferences.length === 0) {
-            return '<p>No references to display.</p>';
-        }
-
-        const listItems = publicationReferences.map(ref => {
-            return `<li>${ref.text.replace(/(\d{4};\d{1,3}:\d{1,4}–\d{1,4})/, '<strong>$1</strong>')}</li>`;
-        }).join('');
-        
-        return `<h3 id="references_main">References</h3><ol>${listItems}</ol>`;
+        return `<h3 id="references_main">References</h3><p class="text-muted">[The numbered reference list will be generated here based on the order of citation in the text.]</p>`;
     }
 
     return Object.freeze({
