@@ -67,62 +67,59 @@ const statisticsTab = (() => {
     }
 
     function createCriteriaComparisonTableHTML(allStats, globalCoh) {
-        const availableSets = studyT2CriteriaManager.getAllStudyCriteriaSets().filter(s => s.applicableCohort === APP_CONFIG.COHORTS.OVERALL.id || s.applicableCohort === globalCoh);
-        const allTableResults = [];
         const na_stat = '--';
-
+        const results = [];
         const asPerf = allStats[globalCoh]?.performanceAS;
-        if (asPerf) {
-            allTableResults.push({
-                id: APP_CONFIG.SPECIAL_IDS.AVOCADO_SIGN_ID,
+        if(asPerf) {
+            results.push({
                 name: APP_CONFIG.SPECIAL_IDS.AVOCADO_SIGN_DISPLAY_NAME,
-                sens: asPerf.sens?.value,
-                spec: asPerf.spec?.value,
-                ppv: asPerf.ppv?.value,
-                npv: asPerf.npv?.value,
-                acc: asPerf.acc?.value,
-                auc: asPerf.auc?.value,
                 cohort: getCohortDisplayName(globalCoh),
-                n: allStats[globalCoh]?.descriptive?.patientCount || '?'
+                n: allStats[globalCoh]?.descriptive?.patientCount || '?',
+                ...asPerf
             });
         }
-
-        const appliedT2Perf = allStats[globalCoh]?.performanceT2Applied;
-        if (appliedT2Perf) {
-            allTableResults.push({
-                id: APP_CONFIG.SPECIAL_IDS.APPLIED_CRITERIA_STUDY_ID,
+        
+        const appliedPerf = allStats[globalCoh]?.performanceT2Applied;
+        const appliedComp = allStats[globalCoh]?.comparisonASvsT2Applied;
+        if(appliedPerf) {
+            results.push({
                 name: APP_CONFIG.SPECIAL_IDS.APPLIED_CRITERIA_DISPLAY_NAME,
-                sens: appliedT2Perf.sens?.value,
-                spec: appliedT2Perf.spec?.value,
-                ppv: appliedT2Perf.ppv?.value,
-                npv: appliedT2Perf.npv?.value,
-                acc: appliedT2Perf.acc?.value,
-                auc: appliedT2Perf.auc?.value,
                 cohort: getCohortDisplayName(globalCoh),
-                n: allStats[globalCoh]?.descriptive?.patientCount || '?'
+                n: allStats[globalCoh]?.descriptive?.patientCount || '?',
+                pValue: appliedComp?.delong?.pValue,
+                ...appliedPerf
             });
         }
 
-        availableSets.forEach(set => {
-            const cohortToUse = set.applicableCohort || APP_CONFIG.COHORTS.OVERALL.id;
-            const perf = allStats[cohortToUse]?.performanceT2Literature?.[set.id];
+        const bfPerf = allStats[globalCoh]?.performanceT2Bruteforce;
+        const bfComp = allStats[globalCoh]?.comparisonASvsT2Bruteforce;
+        if(bfPerf) {
+            results.push({
+                name: 'Cohort-Optimized T2 (BF)',
+                cohort: getCohortDisplayName(globalCoh),
+                n: allStats[globalCoh]?.descriptive?.patientCount || '?',
+                pValue: bfComp?.delong?.pValue,
+                ...bfPerf
+            });
+        }
+
+        const litSets = studyT2CriteriaManager.getAllStudyCriteriaSets();
+        litSets.forEach(set => {
+            const cohortForSet = set.applicableCohort || APP_CONFIG.COHORTS.OVERALL.id;
+            const perf = allStats[cohortForSet]?.performanceT2Literature?.[set.id];
+            const comp = allStats[cohortForSet]?.[`comparisonASvsT2_literature_${set.id}`];
             if (perf) {
-                allTableResults.push({
-                    id: set.id,
+                results.push({
                     name: set.name,
-                    sens: perf.sens?.value,
-                    spec: perf.spec?.value,
-                    ppv: perf.ppv?.value,
-                    npv: perf.npv?.value,
-                    acc: perf.acc?.value,
-                    auc: perf.auc?.value,
-                    cohort: getCohortDisplayName(cohortToUse),
-                    n: allStats[cohortToUse]?.descriptive?.patientCount || '?'
+                    cohort: getCohortDisplayName(cohortForSet),
+                    n: allStats[cohortForSet]?.descriptive?.patientCount || '?',
+                    pValue: comp?.delong?.pValue,
+                    ...perf
                 });
             }
         });
 
-        if (allTableResults.length === 0) return '<p class="text-muted small p-3">No criteria comparison data.</p>';
+        if (results.length === 0) return '<p class="text-muted small p-3">No criteria comparison data.</p>';
 
         let tableHtml = `<div class="table-responsive"><table class="table table-sm table-striped small mb-0"><thead><tr>
             <th data-tippy-content="Method or criteria set being evaluated.">Set</th>
@@ -132,18 +129,22 @@ const statisticsTab = (() => {
             <th data-tippy-content="${getDefinitionTooltip('npv')}">NPV</th>
             <th data-tippy-content="${getDefinitionTooltip('acc')}">Acc.</th>
             <th data-tippy-content="${getDefinitionTooltip('auc')}">AUC</th>
+            <th data-tippy-content="${getDefinitionTooltip('pValue')}">p-Value (vs AS)</th>
         </tr></thead><tbody>`;
 
-        allTableResults.forEach(r => {
-            const cohortInfo = (r.cohort !== getCohortDisplayName(globalCoh)) ? ` (${r.cohort} N=${r.n})` : ``;
+        results.forEach(r => {
+            const cohortInfo = (r.cohort !== getCohortDisplayName(globalCoh)) ? ` (${r.cohort}, n=${r.n})` : ``;
+            const pValueTooltip = r.pValue ? getInterpretationTooltip('pValue', {value: r.pValue}, {comparisonName: 'AUC', method1: 'AS', method2: r.name}) : 'Comparison not applicable';
+
             tableHtml += `<tr>
                 <td>${r.name}${cohortInfo}</td>
-                <td>${formatPercent(r.sens, 1, na_stat)}</td>
-                <td>${formatPercent(r.spec, 1, na_stat)}</td>
-                <td>${formatPercent(r.ppv, 1, na_stat)}</td>
-                <td>${formatPercent(r.npv, 1, na_stat)}</td>
-                <td>${formatPercent(r.acc, 1, na_stat)}</td>
-                <td>${formatNumber(r.auc, 2, na_stat, true)}</td>
+                <td>${formatPercent(r.sens?.value, 1, na_stat)}</td>
+                <td>${formatPercent(r.spec?.value, 1, na_stat)}</td>
+                <td>${formatPercent(r.ppv?.value, 1, na_stat)}</td>
+                <td>${formatPercent(r.npv?.value, 1, na_stat)}</td>
+                <td>${formatPercent(r.acc?.value, 1, na_stat)}</td>
+                <td>${formatNumber(r.auc?.value, 3, na_stat, true)}</td>
+                <td data-tippy-content="${pValueTooltip}">${r.pValue ? `${getPValueText(r.pValue, false)} ${getStatisticalSignificanceSymbol(r.pValue)}` : na_stat}</td>
             </tr>`;
         });
 
@@ -187,7 +188,7 @@ const statisticsTab = (() => {
                 };
                 innerContainer.innerHTML += uiComponents.createStatisticsCard(`descriptive-stats-${i}`, 'Descriptive Statistics', createDescriptiveStatsContentHTML({descriptive: stats.descriptive}, i, cohortId), true, null, [{id: `dl-desc-table-${i}-png`, icon: 'fa-image', format: 'png', tableId: `table-descriptive-demographics-${i}`, tableName: `Descriptive_Demographics_${cohortId.replace(/\s+/g, '_')}`}], `table-descriptive-demographics-${i}`);
 
-                const fCI_p_stat = (m, k) => { const d = (k === 'auc') ? 2 : ((k === 'f1') ? 3 : 1); const p = !(k === 'auc'||k==='f1'); return formatCI(m?.value, m?.ci?.lower, m?.ci?.upper, d, p, '--'); };
+                const fCI_p_stat = (m, k) => { const d = (k === 'auc') ? 3 : ((k === 'f1') ? 3 : 1); const p = !(k === 'auc'||k==='f1'); return formatCI(m?.value, m?.ci?.lower, m?.ci?.upper, d, p, '--'); };
                 const na_stat = '--';
                 const createPerfTableHTML = (perfStats) => {
                     if (!perfStats || typeof perfStats.matrix !== 'object') return '<p class="text-muted small p-2">No diagnostic performance data.</p>';
