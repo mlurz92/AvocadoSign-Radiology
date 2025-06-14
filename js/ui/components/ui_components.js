@@ -53,7 +53,7 @@ window.uiComponents = (() => {
         if (!initialCriteria || !initialLogic) return '<p class="text-danger">Error: Could not load initial criteria.</p>';
         const logicChecked = initialLogic === 'OR';
         const defaultCriteria = getDefaultT2Criteria();
-        const sizeThreshold = initialCriteria.size?.threshold ?? defaultCriteria?.size?.threshold ?? 5.0;
+        const sizeThreshold = initialCriteria.size?.threshold ?? defaultCriteria.size.threshold;
         const { min, max, step } = window.APP_CONFIG.T2_CRITERIA_SETTINGS.SIZE_RANGE;
         const formattedThresholdForInput = formatNumber(sizeThreshold, 1, '5.0', true);
 
@@ -141,9 +141,9 @@ window.uiComponents = (() => {
         return `
             <div class="col-12 stat-card" id="${id}-card-container">
                 <div class="card h-100">
-                    <div class="card-header" ${cardTooltipHtml}>
-                         ${title}
-                         <span class="float-end card-header-buttons">${headerButtonHtml}</span>
+                    <div class="card-header d-flex justify-content-between align-items-center" ${cardTooltipHtml}>
+                         <span>${title}</span>
+                         <span class="card-header-buttons">${headerButtonHtml}</span>
                      </div>
                     <div class="card-body ${addPadding ? '' : 'p-0'}" style="overflow-y: auto; overflow-x: hidden;">
                         <div id="${id}-content">${content}</div>
