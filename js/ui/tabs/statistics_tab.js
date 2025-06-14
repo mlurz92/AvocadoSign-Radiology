@@ -4,7 +4,7 @@ window.statisticsTab = (() => {
         if (!stats || !stats.descriptive || !stats.descriptive.patientCount) return '<p class="text-muted small p-3">No descriptive data available.</p>';
         const d = stats.descriptive;
         const total = d.patientCount;
-        const na = window.APP_CONFIG.NA_PLACEHOLDER; // Use global placeholder
+        const na = window.APP_CONFIG.NA_PLACEHOLDER;
         const fv = (val, dig = 1, useStd = true) => formatNumber(val, dig, na, useStd);
         const fP = (val, dig = 1) => formatPercent(val, dig, na);
         const fLK = (lkData) => `${fv(lkData?.median,1)} (${fv(lkData?.min,0)}–${fv(lkData?.max,0)}) [${fv(lkData?.mean,1)} ± ${fv(lkData?.sd,1)}]`;
@@ -67,7 +67,7 @@ window.statisticsTab = (() => {
     }
 
     function createCriteriaComparisonTableHTML(allStats, globalCoh) {
-        const na_stat = window.APP_CONFIG.NA_PLACEHOLDER; // Use global placeholder
+        const na_stat = window.APP_CONFIG.NA_PLACEHOLDER;
         const results = [];
         const asPerf = allStats[globalCoh]?.performanceAS;
         if(asPerf) {
@@ -134,7 +134,7 @@ window.statisticsTab = (() => {
 
         results.forEach(r => {
             const cohortInfo = (r.cohort !== getCohortDisplayName(globalCoh)) ? ` (${r.cohort}, n=${r.n})` : ``;
-            const pValueTooltip = r.pValue ? getInterpretationTooltip('pValue', {value: r.pValue}, {comparisonName: 'AUC', method1: 'AS', method2: r.name}) : 'Comparison not applicable';
+            const pValueTooltip = r.pValue ? getInterpretationTooltip('pValue', {value: r.pValue, testName: 'DeLong'}, {comparisonName: 'AUC', method1: 'AS', method2: r.name}) : 'Comparison not applicable';
 
             tableHtml += `<tr>
                 <td>${r.name}${cohortInfo}</td>
@@ -155,6 +155,7 @@ window.statisticsTab = (() => {
 
     function render(processedData, appliedCriteria, appliedLogic, layout, cohort1, cohort2, globalCohort) {
         if (!processedData) throw new Error("Statistics data not available.");
+        const na_stat = window.APP_CONFIG.NA_PLACEHOLDER;
         let datasets = [], cohortIds = [];
         let baseEvaluatedData = window.t2CriteriaManager.evaluateDataset(cloneDeep(processedData), appliedCriteria, appliedLogic);
         if (layout === 'einzel') {
@@ -190,8 +191,8 @@ window.statisticsTab = (() => {
                 allCohortStats[cohortId] = stats;
                 innerContainer.innerHTML += window.uiComponents.createStatisticsCard(`descriptive-stats-${i}`, 'Descriptive Statistics', createDescriptiveStatsContentHTML({descriptive: stats.descriptive}, i, cohortId), true, null, [{id: `dl-desc-table-${i}-png`, icon: 'fa-image', format: 'png', tableId: `table-descriptive-demographics-${i}`, tableName: `Descriptive_Demographics_${cohortId.replace(/\s+/g, '_')}`}], `table-descriptive-demographics-${i}`);
 
-                const fCI_p_stat = (m, k) => { const d = (k === 'auc') ? 3 : ((k === 'f1' || k==='youden') ? 3 : 1); const p = !(k === 'auc'||k==='f1'||k==='youden'); return formatCI(m?.value, m?.ci?.lower, m?.ci?.upper, d, p, window.APP_CONFIG.NA_PLACEHOLDER); }; // Use global placeholder
-                const na_stat = window.APP_CONFIG.NA_PLACEHOLDER; // Use global placeholder
+                const fCI_p_stat = (m, k) => { const d = (k === 'auc') ? 3 : ((k === 'f1' || k==='youden') ? 3 : 1); const p = !(k === 'auc'||k==='f1'||k==='youden'); return formatCI(m?.value, m?.ci?.lower, m?.ci?.upper, d, p, na_stat); };
+                
                 const createPerfTableHTML = (perfStats) => {
                     if (!perfStats || typeof perfStats.matrix !== 'object') return '<p class="text-muted small p-2">No diagnostic performance data.</p>';
                     return `<div class="table-responsive"><table class="table table-sm table-striped small mb-0"><thead><tr>
@@ -211,8 +212,8 @@ window.statisticsTab = (() => {
 
                 const createCompTableHTML = (compStats) => {
                     if (!compStats) return '<p class="text-muted small p-2">No comparison data.</p>';
-                    const mcnemarTooltip = getInterpretationTooltip('pValue', compStats.mcnemar, { method1: 'AS', method2: 'T2 (Applied)', metricName: 'Accuracy'});
-                    const delongTooltip = getInterpretationTooltip('pValue', compStats.delong, { method1: 'AS', method2: 'T2 (Applied)', metricName: 'AUC'});
+                    const mcnemarTooltip = getInterpretationTooltip('pValue', compStats.mcnemar, { method1: 'AS', method2: 'T2 (Applied)', metricName: 'Accuracy', testName: compStats.mcnemar?.method});
+                    const delongTooltip = getInterpretationTooltip('pValue', compStats.delong, { method1: 'AS', method2: 'T2 (Applied)', metricName: 'AUC', testName: compStats.delong?.method});
                     
                     return `<div class="table-responsive"><table class="table table-sm table-striped small mb-0"><thead><tr>
                         <th data-tippy-content="Statistical test used to compare the two methods.">Test</th>
@@ -239,18 +240,18 @@ window.statisticsTab = (() => {
                         <th data-tippy-content="The statistical test used to calculate the p-value.">Test</th></tr></thead><tbody>`;
 
                     const addRow = (key, name, obj) => {
-                        const pValueTooltip = getInterpretationTooltip('pValue', { ...obj, value: obj.pValue }, { comparisonName: `association of '${escapeHTML(name)}' with N-Status` });
+                        const pValueTooltip = getInterpretationTooltip('pValue', { ...obj, value: obj.pValue, testName: obj.testName }, { featureName: escapeHTML(name) });
                         html += `<tr><td>${escapeHTML(name)}</td>
-                            <td data-tippy-content="${getInterpretationTooltip('or', obj.or)}">${fORCI(obj.or)}</td>
-                            <td data-tippy-content="${getInterpretationTooltip('rd', obj.rd)}">${fRDCI(obj.rd)}</td>
-                            <td data-tippy-content="${getInterpretationTooltip('phi', obj.phi)}">${fPhi(obj.phi)}</td>
+                            <td data-tippy-content="${getInterpretationTooltip('or', {...obj.or, featureName: escapeHTML(name)})}">${fORCI(obj.or)}</td>
+                            <td data-tippy-content="${getInterpretationTooltip('rd', {...obj.rd, featureName: escapeHTML(name)})}">${fRDCI(obj.rd)}</td>
+                            <td data-tippy-content="${getInterpretationTooltip('phi', {...obj.phi, featureName: escapeHTML(name)})}">${fPhi(obj.phi)}</td>
                             <td data-tippy-content="${pValueTooltip}">${getPValueText(obj.pValue, false)} ${getStatisticalSignificanceSymbol(obj.pValue)}</td>
                             <td>${obj.testName || na_stat}</td></tr>`;
                     };
 
                     if (assocStats.as) addRow('as', 'AS Positive', assocStats.as);
                     if (assocStats.size_mwu) {
-                         const mwuTooltip = getInterpretationTooltip('pValue', { ...assocStats.size_mwu, value: assocStats.size_mwu.pValue }, { comparisonName: 'median LN size between N+ and N- groups' });
+                         const mwuTooltip = getInterpretationTooltip('pValue', { ...assocStats.size_mwu, value: assocStats.size_mwu.pValue, testName: assocStats.size_mwu.testName }, { comparisonName: 'median LN size between N+ and N- groups' });
                         html += `<tr><td>${assocStats.size_mwu.featureName}</td><td>${na_stat}</td><td>${na_stat}</td><td>${na_stat}</td><td data-tippy-content="${mwuTooltip}">${getPValueText(assocStats.size_mwu.pValue, false)} ${getStatisticalSignificanceSymbol(assocStats.size_mwu.pValue)}</td><td>${assocStats.size_mwu.testName || na_stat}</td></tr>`;
                     }
 
@@ -294,8 +295,8 @@ window.statisticsTab = (() => {
                         <th>p-Value (unpaired)</th>
                     </tr></thead>
                     <tbody>
-                        <tr><td>Avocado Sign</td><td>AUC</td><td>${formatNumber(c1Stats.performanceAS.auc.value, 3, window.APP_CONFIG.NA_PLACEHOLDER, true)}</td><td>${formatNumber(c2Stats.performanceAS.auc.value, 3, window.APP_CONFIG.NA_PLACEHOLDER, true)}</td><td>${getPValueText(aucCompAS.pValue, false)}</td></tr>
-                        <tr><td>T2 (Applied)</td><td>AUC</td><td>${formatNumber(c1Stats.performanceT2.auc.value, 3, window.APP_CONFIG.NA_PLACEHOLDER, true)}</td><td>${formatNumber(c2Stats.performanceT2.auc.value, 3, window.APP_CONFIG.NA_PLACEHOLDER, true)}</td><td>${getPValueText(aucCompT2.pValue, false)}</td></tr>
+                        <tr><td>Avocado Sign</td><td>AUC</td><td>${formatNumber(c1Stats.performanceAS.auc.value, 3, na_stat, true)}</td><td>${formatNumber(c2Stats.performanceAS.auc.value, 3, na_stat, true)}</td><td>${getPValueText(aucCompAS.pValue, false)}</td></tr>
+                        <tr><td>T2 (Applied)</td><td>AUC</td><td>${formatNumber(c1Stats.performanceT2.auc.value, 3, na_stat, true)}</td><td>${formatNumber(c2Stats.performanceT2.auc.value, 3, na_stat, true)}</td><td>${getPValueText(aucCompT2.pValue, false)}</td></tr>
                     </tbody>
                  </table></div>`;
              }
