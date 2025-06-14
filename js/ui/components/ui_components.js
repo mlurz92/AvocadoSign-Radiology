@@ -230,7 +230,7 @@ const uiComponents = (() => {
             html += `
                 <tr>
                     <td>${currentRank}</td>
-                    <td>${formatNumber(result.metricValue, 4, true)}</td>
+                    <td>${formatNumber(result.metricValue, 4, 'N/A', true)}</td>
                     <td>${result.logic.toUpperCase()}</td>
                     <td><code>${formatCriteriaFunc(result.criteria, result.logic)}</code></td>
                 </tr>
