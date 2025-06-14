@@ -22,7 +22,7 @@ window.comparisonTab = (() => {
                 return formatCI(m?.value, m?.ci?.lower, m?.ci?.upper, d, p, na); 
             };
             if (!stats || typeof stats.matrix !== 'object') {
-                const nPatients = stats?.descriptive?.patientCount || '?'; // Corrected to use descriptive.patientCount if available
+                const nPatients = stats?.descriptive?.patientCount || '?'; 
                 return `<tr><td class="fw-bold">${cohortDisplayName} (N=${nPatients})</td><td colspan="6" class="text-muted text-center">Data missing</td></tr>`;
             }
             const count = stats.matrix ? (stats.matrix.tp + stats.matrix.fp + stats.matrix.fn + stats.matrix.tn) : 0;
