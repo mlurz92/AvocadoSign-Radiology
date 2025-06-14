@@ -8,10 +8,6 @@ const publicationHelpers = (() => {
         if (p < 0.001) return `${prefix} < .001`;
         if (p > 0.99) return `${prefix} > .99`;
         
-        // Per Radiology Style Guide:
-        // - Use three digits if P < .01 (e.g., P = .005)
-        // - Use two digits for other P values
-        // - Exception: If rounding from 3 to 2 digits would make it appear non-significant (e.g., .046 rounds to .05), use three digits.
         if (p < 0.01) {
             return `${prefix} = .${p.toFixed(3).substring(2)}`;
         }
@@ -37,7 +33,7 @@ const publicationHelpers = (() => {
         }
 
         let isPercent = false;
-        let digits = 2; // Default to 2 digits for many stats
+        let digits = 2;
 
         switch (name.toLowerCase()) {
             case 'sens':
@@ -45,7 +41,7 @@ const publicationHelpers = (() => {
             case 'ppv':
             case 'npv':
             case 'acc':
-                digits = 0; // Per guide "Sensitivity 85%" not "85.0%"
+                digits = 1;
                 isPercent = true;
                 break;
             case 'auc':
@@ -58,7 +54,7 @@ const publicationHelpers = (() => {
                 isPercent = false;
                 break;
             case 'or':
-            case 'rd': // Risk Difference
+            case 'rd':
             case 'phi':
             case 'z':
             case 'statistic':
@@ -74,7 +70,6 @@ const publicationHelpers = (() => {
         const valueStr = formatValueForPublication(metric.value, digits, isPercent);
         let valueWithUnit = isPercent ? `${valueStr}%` : valueStr;
         
-        // For values like AUC, ensure no leading zero (e.g., .82)
         if (!isPercent && valueStr.startsWith('0.')) {
             valueWithUnit = `.${valueStr.substring(2)}`;
         }
@@ -90,7 +85,6 @@ const publicationHelpers = (() => {
         if (isPercent) {
              ciStr = `${lowerStr}%, ${upperStr}%`;
         } else {
-            // Ensure no leading zeros for CI values if they are decimals
             const formattedLower = lowerStr.startsWith('0.') ? `.${lowerStr.substring(2)}` : lowerStr;
             const formattedUpper = upperStr.startsWith('0.') ? `.${upperStr.substring(2)}` : upperStr;
             ciStr = `${formattedLower}, ${formattedUpper}`;
