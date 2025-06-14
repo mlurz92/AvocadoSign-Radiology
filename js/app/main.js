@@ -47,7 +47,7 @@ class App {
             statisticsService, bruteForceManager, exportService,
             publicationHelpers, abstractGenerator, introductionGenerator, methodsGenerator,
             resultsGenerator, discussionGenerator, referencesGenerator, publicationService,
-            uiManager, uiComponents, tableRenderer, chartRenderer, 
+            uiManager, uiComponents, tableRenderer, chartRenderer, flowchartRenderer,
             dataTab, analysisTab, statisticsTab, presentationTab, publicationTab, exportTab,
             eventManager, APP_CONFIG, PUBLICATION_CONFIG
         };
