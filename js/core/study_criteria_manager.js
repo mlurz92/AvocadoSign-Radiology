@@ -1,4 +1,4 @@
-const studyT2CriteriaManager = (() => {
+window.studyT2CriteriaManager = (() => {
 
     function formatCriteriaForDisplay(criteria, logic = null, shortFormat = false) {
         if (!criteria || typeof criteria !== 'object') return 'N/A';
@@ -48,7 +48,7 @@ const studyT2CriteriaManager = (() => {
 
         const effectiveLogic = logic || criteria.logic || 'OR';
         if (effectiveLogic === 'KOMBINIERT') {
-             const studySet = PUBLICATION_CONFIG.literatureCriteriaSets.find(s => s.logic === 'KOMBINIERT' && s.id === 'rutegard_et_al_esgar');
+             const studySet = window.PUBLICATION_CONFIG.literatureCriteriaSets.find(s => s.logic === 'KOMBINIERT' && s.id === 'rutegard_et_al_esgar');
              if (studySet?.studyInfo?.keyCriteriaSummary) {
                  return shortFormat ? (studySet.displayShortName || studySet.name) : studySet.studyInfo.keyCriteriaSummary;
              }
@@ -67,12 +67,12 @@ const studyT2CriteriaManager = (() => {
     }
 
     function getAllStudyCriteriaSets() {
-        return cloneDeep(PUBLICATION_CONFIG.literatureCriteriaSets);
+        return cloneDeep(window.PUBLICATION_CONFIG.literatureCriteriaSets);
     }
 
     function getStudyCriteriaSetById(id) {
         if (typeof id !== 'string') return null;
-        const foundSet = PUBLICATION_CONFIG.literatureCriteriaSets.find(set => set.id === id);
+        const foundSet = window.PUBLICATION_CONFIG.literatureCriteriaSets.find(set => set.id === id);
         return foundSet ? cloneDeep(foundSet) : null;
     }
 
