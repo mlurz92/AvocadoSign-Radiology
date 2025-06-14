@@ -1,4 +1,4 @@
-const referencesGenerator = (() => {
+window.referencesGenerator = (() => {
 
     function generateReferencesHTML(stats, commonData) {
         const allReferences = commonData?.references;
