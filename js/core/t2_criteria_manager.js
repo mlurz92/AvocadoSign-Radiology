@@ -34,7 +34,7 @@ const t2CriteriaManager = (() => {
         return appliedLogic;
     }
 
-    function getIsUnsaved() {
+    function isUnsaved() {
         return isUnsaved;
     }
 
@@ -199,7 +199,7 @@ const t2CriteriaManager = (() => {
         getAppliedCriteria,
         getCurrentLogic,
         getAppliedLogic,
-        isUnsaved: getIsUnsaved,
+        isUnsaved,
         updateCriterionValue,
         updateCriterionThreshold,
         toggleCriterionActive,
