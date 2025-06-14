@@ -43,9 +43,9 @@ const dataTab = (() => {
     function createDataTableHTML(data, sortState) {
         if (!Array.isArray(data)) return '<p class="text-danger">Error: Invalid data for table.</p>';
         const tableId = 'data-table';
-        const columns = APP_CONFIG.TABLE_COLUMN_DEFINITIONS.DATA_TABLE_COLUMNS; // Get columns from central config
+        const columns = APP_CONFIG.TABLE_COLUMN_DEFINITIONS.DATA_TABLE_COLUMNS;
         let tableHTML = `<table class="table table-sm table-hover table-striped data-table" id="${tableId}">`;
-        tableHTML += createTableHeaderHTML(columns, sortState); // Pass columns to header renderer
+        tableHTML += createTableHeaderHTML(columns, sortState);
         tableHTML += `<tbody id="${tableId}-body">`;
         if (data.length === 0) {
             tableHTML += `<tr><td colspan="${columns.length}" class="text-center text-muted">No data found in the selected cohort.</td></tr>`;
