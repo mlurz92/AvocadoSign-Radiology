@@ -155,23 +155,24 @@ const statisticsTab = (() => {
 
     function render(processedData, appliedCriteria, appliedLogic, layout, cohort1, cohort2, globalCohort) {
         if (!processedData) throw new Error("Statistics data not available.");
-        let datasets = [], cohortNames = [];
+        let datasets = [], cohortIds = [];
         let baseEvaluatedData = t2CriteriaManager.evaluateDataset(cloneDeep(processedData), appliedCriteria, appliedLogic);
         if (layout === 'einzel') {
             datasets.push(dataProcessor.filterDataByCohort(baseEvaluatedData, globalCohort));
-            cohortNames.push(globalCohort);
+            cohortIds.push(globalCohort);
         } else {
             datasets.push(dataProcessor.filterDataByCohort(baseEvaluatedData, cohort1));
             datasets.push(dataProcessor.filterDataByCohort(baseEvaluatedData, cohort2));
-            cohortNames.push(cohort1, cohort2);
+            cohortIds.push(cohort1, cohort2);
         }
         if (datasets.length === 0 || datasets.every(d => !Array.isArray(d) || d.length === 0)) {
             return '<div class="col-12"><div class="alert alert-warning">No data available for the selected statistics cohort(s).</div></div>';
         }
+        const allCohortStats = {};
         const outerRow = document.createElement('div');
         outerRow.className = 'row g-4';
         datasets.forEach((data, i) => {
-            const cohortId = cohortNames[i];
+            const cohortId = cohortIds[i];
             const col = document.createElement('div');
             col.className = layout === 'vergleich' ? 'col-xl-6' : 'col-12';
             const innerRowId = `inner-stat-row-${i}`;
@@ -186,9 +187,10 @@ const statisticsTab = (() => {
                     comparisonASvsT2: statisticsService.compareDiagnosticMethods(data, 'asStatus', 't2Status', 'nStatus'),
                     associations: statisticsService.calculateAssociations(data, appliedCriteria)
                 };
+                allCohortStats[cohortId] = stats;
                 innerContainer.innerHTML += uiComponents.createStatisticsCard(`descriptive-stats-${i}`, 'Descriptive Statistics', createDescriptiveStatsContentHTML({descriptive: stats.descriptive}, i, cohortId), true, null, [{id: `dl-desc-table-${i}-png`, icon: 'fa-image', format: 'png', tableId: `table-descriptive-demographics-${i}`, tableName: `Descriptive_Demographics_${cohortId.replace(/\s+/g, '_')}`}], `table-descriptive-demographics-${i}`);
 
-                const fCI_p_stat = (m, k) => { const d = (k === 'auc') ? 3 : ((k === 'f1') ? 3 : 1); const p = !(k === 'auc'||k==='f1'); return formatCI(m?.value, m?.ci?.lower, m?.ci?.upper, d, p, '--'); };
+                const fCI_p_stat = (m, k) => { const d = (k === 'auc') ? 3 : ((k === 'f1' || k==='youden') ? 3 : 1); const p = !(k === 'auc'||k==='f1'||k==='youden'); return formatCI(m?.value, m?.ci?.lower, m?.ci?.upper, d, p, '--'); };
                 const na_stat = '--';
                 const createPerfTableHTML = (perfStats) => {
                     if (!perfStats || typeof perfStats.matrix !== 'object') return '<p class="text-muted small p-2">No diagnostic performance data.</p>';
@@ -271,6 +273,36 @@ const statisticsTab = (() => {
                 innerContainer.innerHTML = '<div class="col-12"><div class="alert alert-warning small p-2">No data for this cohort.</div></div>';
             }
         });
+
+        if (layout === 'vergleich' && allCohortStats[cohort1] && allCohortStats[cohort2]) {
+             const compCard = document.createElement('div');
+             compCard.className = 'col-12';
+             const c1Stats = allCohortStats[cohort1];
+             const c2Stats = allCohortStats[cohort2];
+             
+             let compContent = '<p class="text-muted small p-2">Not enough data for cohort comparison.</p>';
+             const aucCompAS = statisticsService.calculateZTestForAUCComparison(c1Stats.performanceAS.auc.value, c1Stats.performanceAS.auc.se, c1Stats.descriptive.patientCount, c2Stats.performanceAS.auc.value, c2Stats.performanceAS.auc.se, c2Stats.descriptive.patientCount);
+             const aucCompT2 = statisticsService.calculateZTestForAUCComparison(c1Stats.performanceT2.auc.value, c1Stats.performanceT2.auc.se, c1Stats.descriptive.patientCount, c2Stats.performanceT2.auc.value, c2Stats.performanceT2.auc.se, c2Stats.descriptive.patientCount);
+
+             if(aucCompAS && aucCompT2) {
+                 compContent = `<div class="table-responsive"><table class="table table-sm table-striped small mb-0">
+                    <thead><tr>
+                        <th>Method</th>
+                        <th>Metric</th>
+                        <th>${getCohortDisplayName(cohort1)}</th>
+                        <th>${getCohortDisplayName(cohort2)}</th>
+                        <th>p-Value (unpaired)</th>
+                    </tr></thead>
+                    <tbody>
+                        <tr><td>Avocado Sign</td><td>AUC</td><td>${formatNumber(c1Stats.performanceAS.auc.value, 3, '--', true)}</td><td>${formatNumber(c2Stats.performanceAS.auc.value, 3, '--', true)}</td><td>${getPValueText(aucCompAS.pValue, false)}</td></tr>
+                        <tr><td>T2 (Applied)</td><td>AUC</td><td>${formatNumber(c1Stats.performanceT2.auc.value, 3, '--', true)}</td><td>${formatNumber(c2Stats.performanceT2.auc.value, 3, '--', true)}</td><td>${getPValueText(aucCompT2.pValue, false)}</td></tr>
+                    </tbody>
+                 </table></div>`;
+             }
+             compCard.innerHTML = uiComponents.createStatisticsCard('cohort-comparison', `Cohort Comparison: ${getCohortDisplayName(cohort1)} vs. ${getCohortDisplayName(cohort2)}`, compContent, false, null, [{id: 'dl-cohort-comp-table-png', icon: 'fa-image', format: 'png', tableId: 'cohort-comparison-content table', tableName: `Cohort_Comparison_${cohort1}_vs_${cohort2}`}], 'cohort-comparison-content table');
+             outerRow.appendChild(compCard);
+        }
+
         if (layout === 'einzel') {
             const criteriaComparisonCard = document.createElement('div');
             criteriaComparisonCard.className = 'col-12';
