@@ -2,7 +2,7 @@ const analysisTab = (() => {
 
     function createAnalysisTableCardHTML(data, sortState, appliedCriteria, appliedLogic) {
         const tableId = 'analysis-table';
-        const columns = APP_CONFIG.TABLE_COLUMN_DEFINITIONS.ANALYSIS_TABLE_COLUMNS; // Get columns from central config
+        const columns = APP_CONFIG.TABLE_COLUMN_DEFINITIONS.ANALYSIS_TABLE_COLUMNS;
 
         let headerHTML = `<thead class="small sticky-top bg-light" id="${tableId}-header"><tr>`;
         columns.forEach(col => {
@@ -137,7 +137,7 @@ const analysisTab = (() => {
                 if (currentCohortStats && currentCohortStats.performanceT2Applied) {
                     const statsT2 = currentCohortStats.performanceT2Applied;
                     const fCI = (m, d=1, p=true) => {
-                        const digits = (m?.name === 'auc') ? 2 : ((m?.name === 'f1') ? 3 : d);
+                        const digits = (m?.name === 'auc') ? 3 : ((m?.name === 'f1') ? 3 : d);
                         return formatCI(m?.value, m?.ci?.lower, m?.ci?.upper, digits, p, '--');
                     };
                     const na = '--';
@@ -147,20 +147,23 @@ const analysisTab = (() => {
                             <table class="table table-sm small mb-0 table-striped">
                                 <thead>
                                     <tr>
-                                        <th data-tippy-content="The diagnostic metric being evaluated.">Metric</th>
-                                        <th data-tippy-content="The calculated value for the metric, with its 95% Confidence Interval in parentheses.">Value (95% CI)</th>
-                                        <th data-tippy-content="The statistical method used to calculate the confidence interval.">CI Method</th>
+                                        <th data-tippy-content="${getDefinitionTooltip('sens')}">Sensitivity</th>
+                                        <th data-tippy-content="${getDefinitionTooltip('spec')}">Specificity</th>
+                                        <th data-tippy-content="${getDefinitionTooltip('ppv')}">PPV</th>
+                                        <th data-tippy-content="${getDefinitionTooltip('npv')}">NPV</th>
+                                        <th data-tippy-content="${getDefinitionTooltip('acc')}">Accuracy</th>
+                                        <th data-tippy-content="${getDefinitionTooltip('auc')}">AUC</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr><td data-tippy-content="${getDefinitionTooltip('sens')}">Sensitivity</td><td data-tippy-content="${getInterpretationTooltip('sens', statsT2.sens)}">${fCI(statsT2.sens, 1, true)}</td><td>${statsT2.sens?.method || na}</td></tr>
-                                    <tr><td data-tippy-content="${getDefinitionTooltip('spec')}">Specificity</td><td data-tippy-content="${getInterpretationTooltip('spec', statsT2.spec)}">${fCI(statsT2.spec, 1, true)}</td><td>${statsT2.spec?.method || na}</td></tr>
-                                    <tr><td data-tippy-content="${getDefinitionTooltip('ppv')}">PPV</td><td data-tippy-content="${getInterpretationTooltip('ppv', statsT2.ppv)}">${fCI(statsT2.ppv, 1, true)}</td><td>${statsT2.ppv?.method || na}</td></tr>
-                                    <tr><td data-tippy-content="${getDefinitionTooltip('npv')}">NPV</td><td data-tippy-content="${getInterpretationTooltip('npv', statsT2.npv)}">${fCI(statsT2.npv, 1, true)}</td><td>${statsT2.npv?.method || na}</td></tr>
-                                    <tr><td data-tippy-content="${getDefinitionTooltip('acc')}">Accuracy</td><td data-tippy-content="${getInterpretationTooltip('acc', statsT2.acc)}">${fCI(statsT2.acc, 1, true)}</td><td>${statsT2.acc?.method || na}</td></tr>
-                                    <tr><td data-tippy-content="${getDefinitionTooltip('balAcc')}">Balanced Accuracy</td><td data-tippy-content="${getInterpretationTooltip('balAcc', statsT2.balAcc)}">${fCI(statsT2.balAcc, 1, true)}</td><td>${statsT2.balAcc?.method || na}</td></tr>
-                                    <tr><td data-tippy-content="${getDefinitionTooltip('f1')}">F1-Score</td><td data-tippy-content="${getInterpretationTooltip('f1', statsT2.f1)}">${fCI(statsT2.f1, 3, false)}</td><td>${statsT2.f1?.method || na}</td></tr>
-                                    <tr><td data-tippy-content="${getDefinitionTooltip('auc')}">AUC</td><td data-tippy-content="${getInterpretationTooltip('auc', statsT2.auc)}">${fCI(statsT2.auc, 2, false)}</td><td>${statsT2.auc?.method || na}</td></tr>
+                                    <tr>
+                                        <td data-tippy-content="${getInterpretationTooltip('sens', statsT2.sens)}">${fCI(statsT2.sens, 1, true)}</td>
+                                        <td data-tippy-content="${getInterpretationTooltip('spec', statsT2.spec)}">${fCI(statsT2.spec, 1, true)}</td>
+                                        <td data-tippy-content="${getInterpretationTooltip('ppv', statsT2.ppv)}">${fCI(statsT2.ppv, 1, true)}</td>
+                                        <td data-tippy-content="${getInterpretationTooltip('npv', statsT2.npv)}">${fCI(statsT2.npv, 1, true)}</td>
+                                        <td data-tippy-content="${getInterpretationTooltip('acc', statsT2.acc)}">${fCI(statsT2.acc, 1, true)}</td>
+                                        <td data-tippy-content="${getInterpretationTooltip('auc', statsT2.auc)}">${fCI(statsT2.auc, 3, false)}</td>
+                                    </tr>
                                 </tbody>
                             </table>
                         </div>
