@@ -5,10 +5,12 @@ window.publicationHelpers = (() => {
         if (p === null || p === undefined || isNaN(p) || !isFinite(p)) return 'N/A';
 
         const prefix = '<em>P</em>';
+
         if (p < 0.001) return `${prefix} < .001`;
         if (p > 0.99) return `${prefix} > .99`;
         
-        if (p < 0.05 && p >= 0.01 && (Math.round(p * 100) / 100).toFixed(2) === '0.05') {
+        const pRoundedTo2 = Math.round(p * 100) / 100;
+        if (p < 0.05 && pRoundedTo2 === 0.05) {
             return `${prefix} = .${p.toFixed(3).substring(2)}`;
         }
         
@@ -24,8 +26,15 @@ window.publicationHelpers = (() => {
         if (num === null || num === undefined || isNaN(num) || !isFinite(num)) {
             return 'N/A';
         }
+
         const finalValue = isPercent ? num * 100 : num;
-        return finalValue.toFixed(digits);
+        let formattedString = finalValue.toFixed(digits);
+
+        if (!isPercent && Math.abs(parseFloat(formattedString)) < 1 && formattedString.startsWith('0.')) {
+            return `.${formattedString.substring(2)}`;
+        }
+        
+        return formattedString;
     }
 
     function formatMetricForPublication(metric, name, showValueOnly = false) {
@@ -33,53 +42,51 @@ window.publicationHelpers = (() => {
             return 'N/A';
         }
 
-        let isPercent = false;
-        let digits = 2;
+        let isPercent, digits;
+        const metricLower = name.toLowerCase();
 
-        switch (name.toLowerCase()) {
+        switch (metricLower) {
             case 'sens':
             case 'spec':
             case 'ppv':
             case 'npv':
             case 'acc':
-                digits = 1;
                 isPercent = true;
+                digits = 0; // Per Radiology Style Guide for percentages in text
                 break;
             case 'auc':
             case 'kappa':
-            case 'balacc':
+            case 'icc':
+                isPercent = false;
                 digits = 2;
-                isPercent = false;
-                break;
-            case 'f1':
-                digits = 3;
-                isPercent = false;
                 break;
             case 'or':
-            case 'rd':
-            case 'phi':
-            case 'z':
-            case 'statistic':
-                digits = 2;
+            case 'hr':
+            case 'rr':
                 isPercent = false;
+                digits = 2;
                 break;
             default:
-                digits = 2;
                 isPercent = false;
+                digits = 2;
                 break;
         }
 
         const valueStr = formatValueForPublication(metric.value, digits, isPercent);
         let valueWithUnit = isPercent ? `${valueStr}%` : valueStr;
-        
-        if (!isPercent && valueStr.startsWith('0.')) {
-            valueWithUnit = `.${valueStr.substring(2)}`;
-        }
 
-        if (showValueOnly || !metric.ci || typeof metric.ci.lower !== 'number' || typeof metric.ci.upper !== 'number' || isNaN(metric.ci.lower) || isNaN(metric.ci.upper)) {
+        if (showValueOnly) {
             return valueWithUnit;
         }
 
+        if (!metric.ci || typeof metric.ci.lower !== 'number' || typeof metric.ci.upper !== 'number' || isNaN(metric.ci.lower) || isNaN(metric.ci.upper)) {
+            let numeratorInfo = '';
+            if (metric.n_success !== undefined && metric.n_trials !== undefined) {
+                 numeratorInfo = ` (${metric.n_success} of ${metric.n_trials})`;
+            }
+            return `${valueWithUnit}${numeratorInfo}`;
+        }
+        
         const lowerStr = formatValueForPublication(metric.ci.lower, digits, isPercent);
         const upperStr = formatValueForPublication(metric.ci.upper, digits, isPercent);
         
@@ -87,12 +94,15 @@ window.publicationHelpers = (() => {
         if (isPercent) {
              ciStr = `${lowerStr}%, ${upperStr}%`;
         } else {
-            const formattedLower = lowerStr.startsWith('0.') ? `.${lowerStr.substring(2)}` : lowerStr;
-            const formattedUpper = upperStr.startsWith('0.') ? `.${upperStr.substring(2)}` : upperStr;
-            ciStr = `${formattedLower}, ${formattedUpper}`;
+             ciStr = `${lowerStr}, ${upperStr}`;
         }
 
-        return `${valueWithUnit} (95% CI: ${ciStr})`;
+        let numeratorInfo = '';
+        if (metric.n_success !== undefined && metric.n_trials !== undefined) {
+            numeratorInfo = ` (${metric.n_success} of ${metric.n_trials})`;
+        }
+
+        return `${valueWithUnit}${numeratorInfo} (95% CI: ${ciStr})`;
     }
 
     function createPublicationTableHTML(config) {
