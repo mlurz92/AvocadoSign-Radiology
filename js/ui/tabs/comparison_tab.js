@@ -17,12 +17,12 @@ window.comparisonTab = (() => {
             const cohortDisplayName = getCohortDisplayName(cohortKey);
             const na = '--';
             const fCI_p = (m, k) => { 
-                const d = (k === 'auc' || k ==='youden') ? 3 : 1; 
+                const d = (k === 'auc') ? 3 : ((k === 'f1' || k==='youden') ? 3 : 1); 
                 const p = !(k === 'auc' || k === 'f1' || k ==='youden'); 
                 return formatCI(m?.value, m?.ci?.lower, m?.ci?.upper, d, p, na); 
             };
             if (!stats || typeof stats.matrix !== 'object') {
-                const nPatients = stats?.patientCount || '?';
+                const nPatients = stats?.descriptive?.patientCount || '?'; // Corrected to use descriptive.patientCount if available
                 return `<tr><td class="fw-bold">${cohortDisplayName} (N=${nPatients})</td><td colspan="6" class="text-muted text-center">Data missing</td></tr>`;
             }
             const count = stats.matrix ? (stats.matrix.tp + stats.matrix.fp + stats.matrix.fn + stats.matrix.tn) : 0;
@@ -114,8 +114,8 @@ window.comparisonTab = (() => {
             const delongTooltip = getInterpretationTooltip('pValue', comparison.delong, { method1: 'AS', method2: t2ShortNameEffective, metricName: 'AUC'});
 
             let testsTableHTML = `<table class="table table-sm table-striped small mb-0" id="comp-as-vs-t2-test-table"><thead class="small visually-hidden"><tr><th>Test</th><th>Statistic</th><th>p-Value</th><th>Method</th></tr></thead><tbody>`;
-            testsTableHTML += `<tr><td data-tippy-content="${getDefinitionTooltip('mcnemar')}">McNemar (Acc)</td><td>${formatNumber(comparison?.mcnemar?.statistic, 3, '--', true)} (df=${comparison?.mcnemar?.df || '--'})</td><td data-tippy-content="${mcnemarTooltip}">${getPValueText(comparison?.mcnemar?.pValue, false)} ${getStatisticalSignificanceSymbol(comparison?.mcnemar?.pValue)}</td><td class="text-muted">${comparison?.mcnemar?.method || '--'}</td></tr>`;
-            testsTableHTML += `<tr><td data-tippy-content="${getDefinitionTooltip('delong')}">DeLong (AUC)</td><td>Z=${formatNumber(comparison?.delong?.Z, 3, '--', true)}</td><td data-tippy-content="${delongTooltip}">${getPValueText(comparison?.delong?.pValue, false)} ${getStatisticalSignificanceSymbol(comparison?.delong?.pValue)}</td><td class="text-muted">${comparison?.delong?.method || '--'}</td></tr>`;
+            testsTableHTML += `<tr><td data-tippy-content="${getDefinitionTooltip('mcnemar')}">McNemar (Acc)</td><td>${formatNumber(comparison?.mcnemar?.statistic, 3, na_stat, true)} (df=${comparison?.mcnemar?.df || na_stat})</td><td data-tippy-content="${mcnemarTooltip}">${getPValueText(comparison?.mcnemar?.pValue, false)} ${getStatisticalSignificanceSymbol(comparison?.mcnemar?.pValue)}</td><td>${comparison?.mcnemar?.method || na_stat}</td></tr>`;
+            testsTableHTML += `<tr><td data-tippy-content="${getDefinitionTooltip('delong')}">DeLong (AUC)</td><td>Z=${formatNumber(comparison?.delong?.Z, 3, na_stat, true)}</td><td data-tippy-content="${delongTooltip}">${getPValueText(comparison?.delong?.pValue, false)} ${getStatisticalSignificanceSymbol(comparison?.delong?.pValue)}</td><td>${comparison?.delong?.method || na_stat}</td></tr>`;
             testsTableHTML += `</tbody></table>`;
             const testsCardHTML = window.uiComponents.createStatisticsCard('comp-as-vs-t2-test-table_card', `Statistical Comparison (AS vs. ${t2ShortNameEffective})`, testsTableHTML, false, null, [{id: `dl-comp-as-vs-t2-test-table-png`, icon: 'fa-image', format: 'png', tableId: 'comp-as-vs-t2-test-table', tableName: `Comp_ASvsT2_Tests_${comparisonCriteriaSet?.id || 'T2'}`}]);
             
