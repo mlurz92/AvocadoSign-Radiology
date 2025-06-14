@@ -1,13 +1,13 @@
-const DEFAULT_T2_CRITERIA = Object.freeze({
+window.DEFAULT_T2_CRITERIA = Object.freeze({
     logic: 'AND',
     size: { active: true, threshold: 5.0, condition: '>=' },
     shape: { active: false, value: 'round' },
     border: { active: false, value: 'irregular' },
     homogeneity: { active: false, value: 'heterogeneous' },
-    signal: { active: false, value: 'highSignal' }
+    signal: { active: false, value: 'lowSignal' }
 });
 
-const APP_CONFIG = Object.freeze({
+window.APP_CONFIG = Object.freeze({
     APP_NAME: "Nodal Staging: Avocado Sign vs. T2 Criteria",
     APP_VERSION: "3.1.0",
     COHORTS: Object.freeze({
@@ -220,8 +220,7 @@ const APP_CONFIG = Object.freeze({
             asPositive: 'AS+',
             asNegative: 'AS-',
             t2Positive: 'T2+',
-            t2Negative: 'T2-',
-            avocadoSign: 'Avocado Sign'
+            t2Negative: 'T2-'
         },
         tooltips: Object.freeze({
             definition: {
@@ -410,7 +409,7 @@ const APP_CONFIG = Object.freeze({
     })
 });
 
-const PUBLICATION_CONFIG = Object.freeze({
+window.PUBLICATION_CONFIG = Object.freeze({
     sections: [
         { id: 'abstract_main', labelKey: 'abstract_main', subSections: [{ id: 'abstract_main', label: 'Abstract' }] },
         { id: 'introduction_main', labelKey: 'introduction_main', subSections: [{ id: 'introduction_main', label: 'Introduction' }] },
@@ -501,5 +500,5 @@ const PUBLICATION_CONFIG = Object.freeze({
 });
 
 function getDefaultT2Criteria() {
-    return cloneDeep(DEFAULT_T2_CRITERIA);
+    return cloneDeep(window.DEFAULT_T2_CRITERIA);
 }
