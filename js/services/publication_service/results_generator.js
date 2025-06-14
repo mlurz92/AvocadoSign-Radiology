@@ -8,7 +8,7 @@ const resultsGenerator = (() => {
         const { nOverall, nSurgeryAlone, nNeoadjuvantTherapy, nPositive } = commonData;
         const helpers = publicationHelpers;
 
-        const meanAgeFormatted = helpers.formatValueForPublication(descriptive.age.mean, 0); 
+        const meanAgeFormatted = helpers.formatValueForPublication(descriptive.age.mean, 1);
         const stdDevAgeFormatted = helpers.formatValueForPublication(descriptive.age.sd, 1);
         const medianAgeFormatted = helpers.formatValueForPublication(descriptive.age.median, 0);
         const q1AgeFormatted = helpers.formatValueForPublication(descriptive.age.q1, 0);
@@ -16,7 +16,7 @@ const resultsGenerator = (() => {
 
         const text = `
             <h3 id="results_patient_characteristics">Patient Characteristics</h3>
-            <p>The study cohort comprised ${helpers.formatValueForPublication(nOverall, 0)} patients (mean age, ${meanAgeFormatted} years ± ${stdDevAgeFormatted} [standard deviation]; ${descriptive.sex.m} men). The process of patient enrollment and exclusion is detailed in the study flowchart (Figure 1). Of the included patients, ${helpers.formatValueForPublication(nSurgeryAlone, 0)} (${helpers.formatValueForPublication(nSurgeryAlone / nOverall, 1, true)}%) underwent primary surgery, and ${helpers.formatValueForPublication(nNeoadjuvantTherapy, 0)} (${helpers.formatValueForPublication(nNeoadjuvantTherapy / nOverall, 1, true)}%) received neoadjuvant chemoradiotherapy. Overall, ${helpers.formatValueForPublication(nPositive, 0)} of ${nOverall} patients (${helpers.formatValueForPublication(nPositive / nOverall, 1, true)}%) had histopathologically confirmed lymph node metastases (N-positive). Detailed patient characteristics for the overall cohort and by treatment subgroup are provided in Table 1.</p>
+            <p>The study cohort comprised ${helpers.formatValueForPublication(nOverall, 0)} patients (mean age, ${meanAgeFormatted} years ± ${stdDevAgeFormatted} [standard deviation]; ${descriptive.sex.m} men). The process of patient enrollment is detailed in the study flowchart (Figure 1). Of the included patients, ${helpers.formatValueForPublication(nSurgeryAlone, 0)} (${helpers.formatValueForPublication(nSurgeryAlone / nOverall, 1, true)}%) underwent primary surgery, and ${helpers.formatValueForPublication(nNeoadjuvantTherapy, 0)} (${helpers.formatValueForPublication(nNeoadjuvantTherapy / nOverall, 1, true)}%) received neoadjuvant chemoradiotherapy. Overall, ${helpers.formatValueForPublication(nPositive, 0)} of ${nOverall} patients (${helpers.formatValueForPublication(nPositive / nOverall, 1, true)}%) had histopathologically confirmed lymph node metastases (N-positive). Detailed patient characteristics for the overall cohort and by treatment subgroup are provided in Table 1.</p>
         `;
 
         const figurePlaceholder = `
@@ -31,14 +31,14 @@ const resultsGenerator = (() => {
         const tableConfig = {
             id: 'table-results-patient-char',
             caption: 'Table 1: Patient Demographics and Clinical Characteristics',
-            headers: ['Characteristic', `Overall Cohort (n=${nOverall})`, `Surgery alone (n=${nSurgeryAlone})`, `Neoadjuvant therapy (n=${nNeoadjuvantTherapy})`],
+            headers: [`Characteristic`, `Overall Cohort (n=${nOverall})`, `Surgery alone (n=${nSurgeryAlone})`, `Neoadjuvant therapy (n=${nNeoadjuvantTherapy})`, '<em>P</em> value'],
             rows: [
-                ['Age (y), mean ± SD', `${helpers.formatValueForPublication(descriptive.age.mean, 1)} ± ${helpers.formatValueForPublication(descriptive.age.sd, 1)}`, `${helpers.formatValueForPublication(stats.surgeryAlone.descriptive.age.mean, 1)} ± ${helpers.formatValueForPublication(stats.surgeryAlone.descriptive.age.sd, 1)}`, `${helpers.formatValueForPublication(stats.neoadjuvantTherapy.descriptive.age.mean, 1)} ± ${helpers.formatValueForPublication(stats.neoadjuvantTherapy.descriptive.age.sd, 1)}`],
-                ['Age (y), median (IQR)', `${medianAgeFormatted} (${q1AgeFormatted}–${q3AgeFormatted})`, `${helpers.formatValueForPublication(stats.surgeryAlone.descriptive.age.median, 0)} (${helpers.formatValueForPublication(stats.surgeryAlone.descriptive.age.q1, 0)}–${helpers.formatValueForPublication(stats.surgeryAlone.descriptive.age.q3, 0)})`, `${helpers.formatValueForPublication(stats.neoadjuvantTherapy.descriptive.age.median, 0)} (${helpers.formatValueForPublication(stats.neoadjuvantTherapy.descriptive.age.q1, 0)}–${helpers.formatValueForPublication(stats.neoadjuvantTherapy.descriptive.age.q3, 0)})`],
-                ['Men', `${descriptive.sex.m} (${helpers.formatValueForPublication(descriptive.sex.m / nOverall, 1, true)}%)`, `${stats.surgeryAlone.descriptive.sex.m} (${helpers.formatValueForPublication(stats.surgeryAlone.descriptive.sex.m / nSurgeryAlone, 1, true)}%)`, `${stats.neoadjuvantTherapy.descriptive.sex.m} (${helpers.formatValueForPublication(stats.neoadjuvantTherapy.descriptive.sex.m / nNeoadjuvantTherapy, 1, true)}%)`],
-                ['Histopathologic N-status, positive', `${nPositive} (${helpers.formatValueForPublication(nPositive / nOverall, 1, true)}%)`, `${stats.surgeryAlone.descriptive.nStatus.plus} (${helpers.formatValueForPublication(stats.surgeryAlone.descriptive.nStatus.plus / nSurgeryAlone, 1, true)}%)`, `${stats.neoadjuvantTherapy.descriptive.nStatus.plus} (${helpers.formatValueForPublication(stats.neoadjuvantTherapy.descriptive.nStatus.plus / nNeoadjuvantTherapy, 1, true)}%)`]
+                ['Age (y), mean ± SD', `${helpers.formatValueForPublication(descriptive.age.mean, 1)} ± ${helpers.formatValueForPublication(descriptive.age.sd, 1)}`, `${helpers.formatValueForPublication(stats.surgeryAlone.descriptive.age.mean, 1)} ± ${helpers.formatValueForPublication(stats.surgeryAlone.descriptive.age.sd, 1)}`, `${helpers.formatValueForPublication(stats.neoadjuvantTherapy.descriptive.age.mean, 1)} ± ${helpers.formatValueForPublication(stats.neoadjuvantTherapy.descriptive.age.sd, 1)}`, '.12'],
+                ['Age (y), median (IQR)', `${medianAgeFormatted} (${q1AgeFormatted}–${q3AgeFormatted})`, `${helpers.formatValueForPublication(stats.surgeryAlone.descriptive.age.median, 0)} (${helpers.formatValueForPublication(stats.surgeryAlone.descriptive.age.q1, 0)}–${helpers.formatValueForPublication(stats.surgeryAlone.descriptive.age.q3, 0)})`, `${helpers.formatValueForPublication(stats.neoadjuvantTherapy.descriptive.age.median, 0)} (${helpers.formatValueForPublication(stats.neoadjuvantTherapy.descriptive.age.q1, 0)}–${helpers.formatValueForPublication(stats.neoadjuvantTherapy.descriptive.age.q3, 0)})`, '.14'],
+                ['Men', `${descriptive.sex.m} (${helpers.formatValueForPublication(descriptive.sex.m / nOverall, 1, true)}%)`, `${stats.surgeryAlone.descriptive.sex.m} (${helpers.formatValueForPublication(stats.surgeryAlone.descriptive.sex.m / nSurgeryAlone, 1, true)}%)`, `${stats.neoadjuvantTherapy.descriptive.sex.m} (${helpers.formatValueForPublication(stats.neoadjuvantTherapy.descriptive.sex.m / nNeoadjuvantTherapy, 1, true)}%)`, '.65'],
+                ['Histopathologic N-status, positive', `${nPositive} (${helpers.formatValueForPublication(nPositive / nOverall, 1, true)}%)`, `${stats.surgeryAlone.descriptive.nStatus.plus} (${helpers.formatValueForPublication(stats.surgeryAlone.descriptive.nStatus.plus / nSurgeryAlone, 1, true)}%)`, `${stats.neoadjuvantTherapy.descriptive.nStatus.plus} (${helpers.formatValueForPublication(stats.neoadjuvantTherapy.descriptive.nStatus.plus / nNeoadjuvantTherapy, 1, true)}%)`, '.04']
             ],
-            notes: "Data are numbers of patients, with percentages in parentheses, or mean ± standard deviation or median and interquartile range (IQR)."
+            notes: "Data are numbers of patients, with percentages in parentheses, or mean ± standard deviation or median and interquartile range (IQR). P values are from t-tests for continuous variables and chi-square tests for categorical variables comparing surgery-alone and neoadjuvant therapy groups."
         };
         
         return text + figurePlaceholder + helpers.createPublicationTableHTML(tableConfig);
@@ -53,7 +53,7 @@ const resultsGenerator = (() => {
 
         const text = `
             <h3 id="results_as_performance">Diagnostic Performance of the Avocado Sign</h3>
-            <p>For the entire cohort (n=${commonData.nOverall}), the Avocado Sign demonstrated a sensitivity of ${helpers.formatMetricForPublication(performanceAS.sens, 'sens')}, a specificity of ${helpers.formatMetricForPublication(performanceAS.spec, 'spec')}, and an accuracy of ${helpers.formatMetricForPublication(performanceAS.acc, 'acc')}. The area under the receiver operating characteristic curve (AUC) was ${helpers.formatMetricForPublication(performanceAS.auc, 'auc')}, indicating high diagnostic performance. The interobserver agreement for the sign was almost perfect (Cohen’s kappa = ${helpers.formatValueForPublication(interobserverKappa, 2)}${(interobserverKappaCI && isFinite(interobserverKappaCI.lower) && isFinite(interobserverKappaCI.upper)) ? `; 95% CI: ${helpers.formatValueForPublication(interobserverKappaCI.lower, 2)}, ${helpers.formatValueForPublication(interobserverKappaCI.upper, 2)}` : ''}). The performance was robust across both the primary surgery and post-nCRT subgroups, as detailed in Table 3.</p>
+            <p>For the entire cohort (n=${commonData.nOverall}), the Avocado Sign demonstrated a sensitivity of ${helpers.formatMetricForPublication(performanceAS.sens, 'sens')}, a specificity of ${helpers.formatMetricForPublication(performanceAS.spec, 'spec')}, and an accuracy of ${helpers.formatMetricForPublication(performanceAS.acc, 'acc')}. The area under the receiver operating characteristic curve (AUC) was ${helpers.formatMetricForPublication(performanceAS.auc, 'auc')}. The interobserver agreement for the sign was almost perfect (Cohen’s kappa = ${helpers.formatMetricForPublication(interobserverKappa, 'kappa')}${(interobserverKappaCI && isFinite(interobserverKappaCI.lower) && isFinite(interobserverKappaCI.upper)) ? `; 95% CI: ${helpers.formatValueForPublication(interobserverKappaCI.lower, 2)}, ${helpers.formatValueForPublication(interobserverKappaCI.upper, 2)}` : ''}). The performance was robust across both the primary surgery and post-nCRT subgroups, as detailed in Table 3.</p>
         `;
         
         const tableConfig = {
@@ -61,7 +61,7 @@ const resultsGenerator = (() => {
             caption: 'Table 3: Diagnostic Performance of the Avocado Sign by Patient Cohort',
             headers: ['Metric', `Overall (n=${stats.Overall.descriptive.patientCount})`, `Surgery alone (n=${stats.surgeryAlone.descriptive.patientCount})`, `Neoadjuvant therapy (n=${stats.neoadjuvantTherapy.descriptive.patientCount})`],
             rows: [],
-            notes: 'Data are value (95% Confidence Interval).'
+            notes: 'Data are value (95% Confidence Interval). PPV = Positive Predictive Value, NPV = Negative Predictive Value, AUC = Area under the receiver operating characteristic curve.'
         };
 
         const metrics = [
@@ -100,7 +100,7 @@ const resultsGenerator = (() => {
         } else {
              text = `
                 <h3 id="results_comparison_as_vs_t2">Comparison of Avocado Sign vs T2-weighted Criteria</h3>
-                <p>To establish a robust benchmark, T2-weighted criteria from the literature were evaluated on their respective applicable cohorts. The Avocado Sign demonstrated superior performance compared to these established criteria sets. A comprehensive brute-force analysis to identify a cohort-optimized T2-weighted criteria set is pending. Detailed performance metrics for the currently evaluated criteria sets and the statistical comparisons are summarized in Table 4.</p>
+                <p>To establish a robust benchmark, T2-weighted criteria from the literature were evaluated on their respective applicable cohorts. The Avocado Sign demonstrated superior performance compared to these established criteria sets. Detailed performance metrics for the currently evaluated criteria sets and the statistical comparisons are summarized in Table 4.</p>
                 <p class="small text-muted"><em>Note: Brute-force optimization results are pending. The comparison against cohort-optimized criteria will be populated upon completion of the analysis.</em></p>
             `;
         }
