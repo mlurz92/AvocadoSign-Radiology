@@ -53,7 +53,7 @@ window.resultsGenerator = (() => {
 
         const text = `
             <h3 id="results_as_performance">Diagnostic Performance of the Avocado Sign</h3>
-            <p>For the entire cohort (n=${commonData.nOverall}), the Avocado Sign demonstrated a sensitivity of ${helpers.formatMetricForPublication(performanceAS.sens, 'sens')}, a specificity of ${helpers.formatMetricForPublication(performanceAS.spec, 'spec')}, and an accuracy of ${helpers.formatMetricForPublication(performanceAS.acc, 'acc')}. The area under the receiver operating characteristic curve (AUC) was ${helpers.formatMetricForPublication(performanceAS.auc, 'auc')}. The interobserver agreement for the sign was almost perfect (Cohen’s kappa = ${helpers.formatMetricForPublication(interobserverKappa, 'kappa')}${(interobserverKappaCI && isFinite(interobserverKappaCI.lower) && isFinite(interobserverKappaCI.upper)) ? `; 95% CI: ${helpers.formatValueForPublication(interobserverKappaCI.lower, 2)}, ${helpers.formatValueForPublication(interobserverKappaCI.upper, 2)}` : ''}). The performance was robust across both the primary surgery and post-nCRT subgroups, as detailed in Table 3.</p>
+            <p>For the entire cohort (n=${commonData.nOverall}), the Avocado Sign demonstrated a sensitivity of ${helpers.formatMetricForPublication(performanceAS.sens, 'sens')}, a specificity of ${helpers.formatMetricForPublication(performanceAS.spec, 'spec')}, and an accuracy of ${helpers.formatMetricForPublication(performanceAS.acc, 'acc')}. The area under the receiver operating characteristic curve (AUC) was ${helpers.formatMetricForPublication(performanceAS.auc, 'auc')}. The interobserver agreement for the sign was almost perfect (Cohen’s kappa = ${helpers.formatMetricForPublication({value: interobserverKappa}, 'kappa')}${(interobserverKappaCI && isFinite(interobserverKappaCI.lower) && isFinite(interobserverKappaCI.upper)) ? `; 95% CI: ${helpers.formatValueForPublication(interobserverKappaCI.lower, 2)}, ${helpers.formatValueForPublication(interobserverKappaCI.upper, 2)}` : ''}). The performance was robust across both the primary surgery and post-nCRT subgroups, as detailed in Table 3.</p>
         `;
         
         const tableConfig = {
@@ -142,9 +142,9 @@ window.resultsGenerator = (() => {
             table4Config.rows.push(['Cohort-Optimized T2w (BF)', `Overall (${stats.Overall?.descriptive?.patientCount || '?'})`, 'Pending', 'Pending', 'Pending', 'Pending', 'Pending']);
         }
         
-        table4Config.rows.push(addCompRow('ESGAR 2016 (Rutegård et al)', 'surgeryAlone', 'performanceT2Literature.rutegard_et_al_esgar', 'comparisonASvsT2_literature_rutegard_et_al_esgar'));
-        table4Config.rows.push(addCompRow('Koh et al (2008)', 'Overall', 'performanceT2Literature.koh_2008', 'comparisonASvsT2_literature_koh_2008'));
-        table4Config.rows.push(addCompRow('Barbaro et al (2024)', 'neoadjuvantTherapy', 'performanceT2Literature.barbaro_2024', 'comparisonASvsT2_literature_barbaro_2024'));
+        table4Config.rows.push(addCompRow('ESGAR 2016 (Rutegård et al.)', 'surgeryAlone', 'performanceT2Literature.rutegard_et_al_esgar', 'comparisonASvsT2_literature_rutegard_et_al_esgar'));
+        table4Config.rows.push(addCompRow('Koh et al. (2008)', 'Overall', 'performanceT2Literature.koh_2008', 'comparisonASvsT2_literature_koh_2008'));
+        table4Config.rows.push(addCompRow('Barbaro et al. (2024)', 'neoadjuvantTherapy', 'performanceT2Literature.barbaro_2024', 'comparisonASvsT2_literature_barbaro_2024'));
 
         return text + helpers.createPublicationTableHTML(table4Config);
     }
