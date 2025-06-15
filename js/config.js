@@ -178,6 +178,7 @@ window.APP_CONFIG = Object.freeze({
         publicationTab: {
             bfMetricSelectLabel: 'BF Optimization Metric for Publication:',
             sectionLabels: {
+                title_main: 'Title Page', // NEU: Label für die Titelseite
                 abstract_main: 'Abstract',
                 introduction_main: 'Introduction',
                 methoden_main: 'Materials and Methods',
@@ -343,6 +344,10 @@ window.APP_CONFIG = Object.freeze({
                 mdzip: { description: "All available Markdown files (Descriptive, Data, Analysis, Publication Texts) in one ZIP archive.", type: 'MD_ZIP', ext: "md"},
                 pngzip: { description: "All currently visible charts (Statistics, Analysis, Comparison) and selected tables as individual PNG files (ZIP archive).", type: 'PNG_ZIP', ext: "zip" },
                 svgzip: { description: "All currently visible charts (Statistics, Analysis, Comparison) as individual SVG files (ZIP archive).", type: 'SVG_ZIP', ext: "zip"}
+            },
+            labels: { // NEU: Allgemeine Labels für dynamische Texte
+                appliedT2Short: 'Applied T2', // Platzhalter für short
+                appliedT2Full: 'Applied T2 Criteria: [CRITERIA]' // Platzhalter für full
             }
         })
     }),
@@ -391,12 +396,13 @@ window.APP_CONFIG = Object.freeze({
 
 window.PUBLICATION_CONFIG = Object.freeze({
     sections: [
+        { id: 'title_main', labelKey: 'title_main', subSections: [{ id: 'title_main', label: 'Title Page' }] }, // NEU: Titelseite als eigener Abschnitt
         { id: 'abstract_main', labelKey: 'abstract_main', subSections: [{ id: 'abstract_main', label: 'Abstract' }] },
         { id: 'introduction_main', labelKey: 'introduction_main', subSections: [{ id: 'introduction_main', label: 'Introduction' }] },
         {
             id: 'methoden_main', labelKey: 'methoden_main', subSections: [
                 { id: 'methoden_studienanlage_ethik', label: 'Study Design and Patients' },
-                { id: 'methoden_mrt_protokoll_akquisition', label: 'MRI Protocol and Image Analysis' },
+                { id: 'methoden_mri_protocol_akquisition', label: 'MRI Protocol and Image Analysis' },
                 { id: 'methoden_vergleichskriterien_t2', label: 'Comparative T2w Criteria Sets' },
                 { id: 'methoden_referenzstandard_histopathologie', label: 'Reference Standard' },
                 { id: 'methoden_statistische_analyse_methoden', label: 'Statistical Analysis' }
