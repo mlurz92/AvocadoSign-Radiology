@@ -45,7 +45,7 @@ window.flowchartRenderer = (() => {
 
         const nodes = [
             { id: 'start', x: (width - boxWidth) / 2, y: 20, text: [`Patients with rectal cancer`, `assessed for eligibility`, `(n = ${nOverall})`] },
-            { id: 'exclusion', x: (width + hSpacing) / 2, y: 120, width: 180, height: 40, text: [`Excluded (n = 0)`] },
+            { id: 'exclusion', x: (width + hSpacing) / 2, y: 125, width: 180, height: 40, text: [`Excluded (n = 0)`] },
             { id: 'included', x: (width - boxWidth) / 2, y: 125, text: [`Included in final analysis`, `(n = ${nOverall})`] },
             { id: 'surgeryAlone', x: (width - hSpacing - boxWidth) / 2, y: 250, text: [`Underwent primary surgery`, `(n = ${nSurgeryAlone})`] },
             { id: 'neoadjuvant', x: (width + hSpacing - boxWidth) / 2, y: 250, text: [`Received neoadjuvant therapy`, `(n = ${nNeoadjuvantTherapy})`] }
@@ -93,8 +93,8 @@ window.flowchartRenderer = (() => {
 
         textElements.each(function(d) {
             const el = d3.select(this);
-            const lineHeight = 1.1;
-            const startY = -((d.text.length - 1) * lineHeight) / 2;
+            const lineHeight = 1.2;
+            const startY = -((d.text.length - 1) * lineHeight) / 2.2;
             d.text.forEach((line, i) => {
                 el.append('tspan')
                     .attr('x', (d.width || boxWidth) / 2)
