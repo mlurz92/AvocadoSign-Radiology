@@ -27,7 +27,7 @@ window.uiComponents = (() => {
     }
 
     function createDashboardCard(title, content, chartId = null, cardClasses = '', headerClasses = '', bodyClasses = '', downloadButtons = [], cohortDisplayName = '') {
-        const headerButtonHtml = createHeaderButtonHTML(downloadButtons, chartId || title.replace(/[^a-z0-9]/gi, '_'), title);
+        const headerButtonHtml = createHeaderButtonHTML(downloadButtons, chartId || title.replace(/[^a-zA-Z0-9_-]/gi, '_'), title);
         const tooltipKey = chartId ? chartId.replace(/^chart-dash-/, '') : title.toLowerCase().replace(/\s+/g, '');
         let tooltipContent = window.APP_CONFIG.UI_TEXTS.tooltips.descriptiveStatistics[tooltipKey]?.description || title || '';
         if (cohortDisplayName) {
@@ -128,7 +128,8 @@ window.uiComponents = (() => {
             </div>`;
     }
 
-    function createStatisticsCard(id, title, content = '', addPadding = true, tooltipKey = null, downloadButtons = [], tableId = null, cohortId = '') {
+    // Angepasste Funktion createStatisticsCard
+    function createStatisticsCard(id, title, content = '', addPadding = true, tooltipKey = null, downloadButtons = [], tableId = null, cohortId = '', appliedCriteriaDisplayString = '') {
         let cardTooltipHtml = `data-tippy-content="${title}"`;
         if (tooltipKey && window.APP_CONFIG.UI_TEXTS.tooltips[tooltipKey]?.cardTitle) {
             let tooltipTemplate = window.APP_CONFIG.UI_TEXTS.tooltips[tooltipKey].cardTitle;
@@ -136,13 +137,29 @@ window.uiComponents = (() => {
             let finalTooltip = tooltipTemplate.replace('[COHORT]', `<strong>${cohortName}</strong>`);
             cardTooltipHtml = `data-tippy-content="${finalTooltip}"`;
         }
+
+        let dynamicTitle = title;
+        // Spezifische Anpassungen für die Titel, die "Applied T2" enthalten
+        if (title.includes('Applied T2') && appliedCriteriaDisplayString) {
+            const shortName = window.APP_CONFIG.UI_TEXTS.labels.appliedT2Short;
+            const fullNameTemplate = window.APP_CONFIG.UI_TEXTS.labels.appliedT2Full;
+            
+            if (title.includes(`(${shortName})`)) { // Fall für "Diagnostic Performance (Applied T2)"
+                dynamicTitle = title.replace(`(${shortName})`, `(${appliedCriteriaDisplayString})`);
+            } else if (title.includes(`: ${shortName}`)) { // Fall für "Diagnostic Performance: T2 (Applied Criteria)"
+                dynamicTitle = title.replace(`: ${shortName}`, `: ${appliedCriteriaDisplayString}`);
+            } else if (title.includes(fullNameTemplate.replace('[CRITERIA]', ''))) { // Für den Fall, dass der Platzhalter schon im Titel ist, aber nur die Kriterien fehlen
+                dynamicTitle = fullNameTemplate.replace('[CRITERIA]', appliedCriteriaDisplayString);
+            }
+        }
         
-        const headerButtonHtml = createHeaderButtonHTML(downloadButtons, id + '-content', title);
+        const headerButtonHtml = createHeaderButtonHTML(downloadButtons, id + '-content', dynamicTitle); // Verwende dynamicTitle hier
+
         return `
             <div class="col-12 stat-card" id="${id}-card-container">
                 <div class="card h-100">
                     <div class="card-header d-flex justify-content-between align-items-center" ${cardTooltipHtml}>
-                         <span>${title}</span>
+                         <span>${dynamicTitle}</span>
                          <span class="card-header-buttons">${headerButtonHtml}</span>
                      </div>
                     <div class="card-body ${addPadding ? '' : 'p-0'}" style="overflow-y: auto; overflow-x: hidden;">
@@ -156,6 +173,7 @@ window.uiComponents = (() => {
         const navItems = window.PUBLICATION_CONFIG.sections.map(mainSection => {
             const sectionLabel = window.APP_CONFIG.UI_TEXTS.publicationTab.sectionLabels[mainSection.labelKey] || mainSection.labelKey;
             
+            // Überprüfe, ob die Hauptsektion oder eine ihrer Untersektionen aktiv ist
             const isMainActive = mainSection.id === currentSectionId || (mainSection.subSections && mainSection.subSections.some(sub => sub.id === currentSectionId));
             
             return `
