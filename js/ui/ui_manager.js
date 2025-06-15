@@ -346,7 +346,7 @@ window.uiManager = (() => {
         let contentHTML = '';
         let showResultControls = false;
         const cohortDisplayName = getCohortDisplayName(currentCohort);
-        const selectedMetric = document.getElementById('brute-force-metric')?.value || payload.metric || window.APP_CONFIG.DEFAULT_SETTINGS.PUBLICATION_BRUTE_FORCE_METRIC;
+        const selectedMetric = document.getElementById('brute-force-metric')?.value || payload?.metric || window.APP_CONFIG.DEFAULT_SETTINGS.PUBLICATION_BRUTE_FORCE_METRIC;
 
         if (!isWorkerAvailable) {
             contentHTML = `<p class="text-danger small p-3">Web Workers are not supported. Brute-force optimization is unavailable.</p>`;
