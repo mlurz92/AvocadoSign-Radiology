@@ -92,7 +92,7 @@ window.analysisTab = (() => {
     function render(data, currentCriteria, currentLogic, sortState, currentCohort, bfWorkerAvailable, currentCohortStats, allBruteForceResults) {
         if (!data || !currentCriteria || !currentLogic) throw new Error("Data or criteria for Analysis Tab not available.");
         const criteriaControlsHTML = window.uiComponents.createT2CriteriaControls(currentCriteria, currentLogic);
-        const analysisTableCardHTML = createAnalysisTableCardHTML(data, sortState, currentCriteria, currentLogic);
+        const analysisTableCardHTML = createAnalysisTableCardHTML(data, sortState, currentCriteria, appliedLogic);
 
         const dashboardContainerId = 'analysis-dashboard';
         const metricsOverviewContainerId = 't2-metrics-overview';
@@ -101,7 +101,9 @@ window.analysisTab = (() => {
         
         const stats = window.statisticsService.calculateDescriptiveStats(data);
         const cohortDisplayName = getCohortDisplayName(currentCohort);
-        const bruteForceResultForCurrentCohort = allBruteForceResults[currentCohort] ? allBruteForceResults[currentCohort][document.getElementById('brute-force-metric')?.value] : null;
+        
+        const metricSelectValue = document.getElementById('brute-force-metric')?.value || window.APP_CONFIG.DEFAULT_SETTINGS.PUBLICATION_BRUTE_FORCE_METRIC;
+        const bruteForceResultForCurrentCohortAndMetric = allBruteForceResults[currentCohort] ? allBruteForceResults[currentCohort][metricSelectValue] : null;
 
         let dashboardCardsHTML = '';
         if (stats && stats.patientCount > 0) {
@@ -192,7 +194,7 @@ window.analysisTab = (() => {
             
             const bruteForceRunnerCardContainer = document.getElementById(bruteForceRunnerCardContainerId);
             if(bruteForceRunnerCardContainer) {
-                 window.uiManager.updateBruteForceUI(window.bruteForceManager.isRunning() ? 'progress' : 'initial', bruteForceResultForCurrentCohort, bfWorkerAvailable, currentCohort);
+                 window.uiManager.updateBruteForceUI(window.bruteForceManager.isRunning() ? 'progress' : 'initial', bruteForceResultForCurrentCohortAndMetric, bfWorkerAvailable, currentCohort);
             }
 
             const tableBody = document.getElementById('analysis-table-body');
