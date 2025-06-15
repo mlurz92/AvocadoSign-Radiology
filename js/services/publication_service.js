@@ -85,7 +85,7 @@ window.publicationService = (() => {
         let rawContentHTML = window.titlePageGenerator.generateTitlePageHTML(allCohortStats, commonData);
 
         window.PUBLICATION_CONFIG.sections.forEach(section => {
-            if (section.id === 'references_main') return;
+            if (section.id === 'references_main' || section.id === 'title_main') return;
 
             const sectionLabel = window.APP_CONFIG.UI_TEXTS.publicationTab.sectionLabels[section.labelKey] || section.labelKey;
             
