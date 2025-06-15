@@ -64,13 +64,7 @@ window.publicationTab = (() => {
                 const contentArea = document.getElementById('publication-content-area');
                 if(contentArea) window.uiManager.initializeTooltips(contentArea);
             }
-            
-            // Scroll to the current section after rendering
-            const elementToScroll = document.getElementById(currentSectionId);
-            if (elementToScroll) {
-                elementToScroll.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }
-        }, 50); // Kleiner Delay, um sicherzustellen, dass das DOM aktualisiert ist
+        }, 50);
             
         return finalHTML;
     }

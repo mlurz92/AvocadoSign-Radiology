@@ -56,7 +56,7 @@ window.resultsGenerator = (() => {
     
     function generateComparisonHTML(stats, commonData) {
         const overallStats = stats?.[window.APP_CONFIG.COHORTS.OVERALL.id];
-        const { bruteForceMetricForPublication, appliedT2CriteriaDisplayShort } = commonData; // NEU: appliedT2CriteriaDisplayShort
+        const { bruteForceMetricForPublication } = commonData;
         const helpers = window.publicationHelpers;
 
         if (!overallStats) {
@@ -95,7 +95,6 @@ window.resultsGenerator = (() => {
         };
 
         table3Config.rows.push(addCompRowOverall('<strong>Avocado Sign</strong>', 'performanceAS', null));
-        table3Config.rows.push(addCompRowOverall(appliedT2CriteriaDisplayShort, 'performanceT2Applied', 'comparisonASvsT2Applied')); // NEU: Dynamische Beschriftung für Applied T2
         table3Config.rows.push(addCompRowOverall('Cohort-Optimized T2w (BF)', `performanceT2Bruteforce.${bruteForceMetricForPublication}`, `comparisonASvsT2Bruteforce.${bruteForceMetricForPublication}`));
         table3Config.rows.push(addCompRowOverall('Koh et al. (2008)', 'performanceT2Literature.koh_2008', 'comparisonASvsT2Literature.koh_2008'));
 

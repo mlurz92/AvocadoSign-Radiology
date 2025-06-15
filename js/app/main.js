@@ -32,6 +32,11 @@ class App {
             this.updateUI();
             this.renderCurrentTab();
             
+            if (!loadFromLocalStorage(window.APP_CONFIG.STORAGE_KEYS.FIRST_APP_START)) {
+                window.uiManager.showQuickGuide();
+                saveToLocalStorage(window.APP_CONFIG.STORAGE_KEYS.FIRST_APP_START, true);
+            }
+            
             window.uiManager.initializeTooltips(document.body);
             window.uiManager.markCriteriaSavedIndicator(window.t2CriteriaManager.isUnsaved());
             window.uiManager.showToast('Application initialized.', 'success', 2500);
@@ -143,14 +148,13 @@ class App {
             const appliedLogic = window.t2CriteriaManager.getAppliedLogic();
             comparisonCriteriaSet = {
                 id: window.APP_CONFIG.SPECIAL_IDS.APPLIED_CRITERIA_STUDY_ID, name: window.APP_CONFIG.SPECIAL_IDS.APPLIED_CRITERIA_DISPLAY_NAME,
-                displayShortName: getAppliedCriteriaDisplayString(true), // NEU: Kurzform für Applied T2
-                criteria: appliedCriteria, logic: appliedLogic,
+                displayShortName: window.APP_CONFIG.SPECIAL_IDS.APPLIED_CRITERIA_DISPLAY_NAME, criteria: appliedCriteria, logic: appliedLogic,
                 studyInfo: {
                     reference: 'User-defined criteria', patientCohort: `Current: ${getCohortDisplayName(cohortForComparisonTab)} (N=${filteredDataForComparisonTab.length})`,
                     keyCriteriaSummary: window.studyT2CriteriaManager.formatCriteriaForDisplay(appliedCriteria, appliedLogic, false)
                 }
             };
-            t2ShortName = getAppliedCriteriaDisplayString(true); // NEU: Kurzform für Applied T2
+            t2ShortName = window.APP_CONFIG.SPECIAL_IDS.APPLIED_CRITERIA_DISPLAY_NAME;
             comparisonASvsT2 = statsCurrentCohort?.comparisonASvsT2Applied;
         } else if (selectedStudyId) {
             const studySet = window.studyT2CriteriaManager.getStudyCriteriaSetById(selectedStudyId);
@@ -201,19 +205,13 @@ class App {
     renderCurrentTab() {
         const tabId = window.state.getActiveTabId();
         const cohort = window.state.getCurrentCohort();
-        const criteria = window.t2CriteriaManager.getCurrentCriteria();
-        const logic = window.t2CriteriaManager.getCurrentLogic();
-        
-        const appliedT2DisplayShort = getAppliedCriteriaDisplayString(true);
-        const appliedT2DisplayFull = getAppliedCriteriaDisplayString(false);
+        const criteria = window.t2CriteriaManager.getAppliedCriteria();
+        const logic = window.t2CriteriaManager.getAppliedLogic();
+        const allBruteForceResults = window.bruteForceManager.getAllResults();
         
         const publicationData = {
-            rawData: this.rawData, allCohortStats: this.allPublicationStats, bruteForceResults: window.bruteForceManager.getAllResults(),
-            currentLanguage: window.state.getCurrentPublikationLang(),
-            appliedCriteria: window.t2CriteriaManager.getAppliedCriteria(),
-            appliedLogic: window.t2CriteriaManager.getAppliedLogic(),
-            appliedT2CriteriaDisplayShort: appliedT2DisplayShort,
-            appliedT2CriteriaDisplayFull: appliedT2DisplayFull
+            rawData: this.rawData, allCohortStats: this.allPublicationStats, bruteForceResults: allBruteForceResults,
+            currentLanguage: window.state.getCurrentPublikationLang()
         };
 
         let currentComparisonData = null;
@@ -224,12 +222,9 @@ class App {
 
         switch (tabId) {
             case 'data': window.uiManager.renderTabContent(tabId, () => window.dataTab.render(this.currentCohortData, window.state.getDataTableSort())); break;
-            // Übergabe der dynamischen Strings an analysisTab
-            case 'analysis': window.uiManager.renderTabContent(tabId, () => window.analysisTab.render(this.currentCohortData, criteria, logic, window.state.getAnalysisTableSort(), cohort, window.bruteForceManager.isWorkerAvailable(), this.allPublicationStats[cohort], window.bruteForceManager.getAllResults(), appliedT2DisplayShort)); break;
-            // Übergabe der dynamischen Strings an statisticsTab
-            case 'statistics': window.uiManager.renderTabContent(tabId, () => window.statisticsTab.render(this.processedData, window.t2CriteriaManager.getAppliedCriteria(), window.t2CriteriaManager.getAppliedLogic(), window.state.getStatsLayout(), window.state.getStatsCohort1(), window.state.getStatsCohort2(), cohort, appliedT2DisplayShort)); break;
-            // Übergabe der dynamischen Strings an comparisonTab
-            case 'comparison': window.uiManager.renderTabContent(tabId, () => window.comparisonTab.render(window.state.getComparisonView(), currentComparisonData, window.state.getComparisonStudyId(), cohort, this.processedData, window.t2CriteriaManager.getAppliedCriteria(), window.t2CriteriaManager.getAppliedLogic(), appliedT2DisplayShort)); break;
+            case 'analysis': window.uiManager.renderTabContent(tabId, () => window.analysisTab.render(this.currentCohortData, window.t2CriteriaManager.getCurrentCriteria(), window.t2CriteriaManager.getAppliedLogic(), window.state.getAnalysisTableSort(), cohort, window.bruteForceManager.isWorkerAvailable(), this.allPublicationStats[cohort], allBruteForceResults)); break;
+            case 'statistics': window.uiManager.renderTabContent(tabId, () => window.statisticsTab.render(this.processedData, criteria, logic, window.state.getStatsLayout(), window.state.getStatsCohort1(), window.state.getStatsCohort2(), cohort)); break;
+            case 'comparison': window.uiManager.renderTabContent(tabId, () => window.comparisonTab.render(window.state.getComparisonView(), currentComparisonData, window.state.getComparisonStudyId(), cohort, this.processedData, criteria, logic)); break;
             case 'publication': window.uiManager.renderTabContent(tabId, () => window.publicationTab.render(publicationData, window.state.getPublicationSection())); break;
             case 'export': window.uiManager.renderTabContent(tabId, () => window.exportTab.render(cohort)); break;
         }

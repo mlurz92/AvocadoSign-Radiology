@@ -5,7 +5,7 @@ window.publicationService = (() => {
         'abstract_main': window.abstractGenerator.generateAbstractHTML,
         'introduction_main': window.introductionGenerator.generateIntroductionHTML,
         'methoden_studienanlage_ethik': window.methodsGenerator.generateStudyDesignHTML,
-        'methoden_mri_protocol_akquisition': window.methodsGenerator.generateMriProtocolAndImageAnalysisHTML,
+        'methoden_mrt_protokoll_akquisition': window.methodsGenerator.generateMriProtocolAndImageAnalysisHTML,
         'methoden_vergleichskriterien_t2': window.methodsGenerator.generateComparativeCriteriaHTML,
         'methoden_referenzstandard_histopathologie': window.methodsGenerator.generateReferenceStandardHTML,
         'methoden_statistische_analyse_methoden': window.methodsGenerator.generateStatisticalAnalysisHTML,
@@ -82,34 +82,18 @@ window.publicationService = (() => {
             return '<div class="alert alert-warning">Statistical data or common configuration is missing for publication generation.</div>';
         }
 
-        // Neue Logik zum Hinzufügen der angewandten Kriterien zu commonData
-        const appliedCriteria = window.t2CriteriaManager.getAppliedCriteria();
-        const appliedLogic = window.t2CriteriaManager.getAppliedLogic();
-        
-        const appliedT2CriteriaDisplayShort = window.studyT2CriteriaManager.formatCriteriaForDisplay(appliedCriteria, appliedLogic, true);
-        const appliedT2CriteriaDisplayFull = window.studyT2CriteriaManager.formatCriteriaForDisplay(appliedCriteria, appliedLogic, false);
-
-        const updatedCommonData = {
-            ...commonData,
-            appliedCriteria: appliedCriteria,
-            appliedLogic: appliedLogic,
-            appliedT2CriteriaDisplayShort: appliedT2CriteriaDisplayShort,
-            appliedT2CriteriaDisplayFull: appliedT2CriteriaDisplayFull
-        };
-
-        let rawContentHTML = window.titlePageGenerator.generateTitlePageHTML(allCohortStats, updatedCommonData);
+        let rawContentHTML = window.titlePageGenerator.generateTitlePageHTML(allCohortStats, commonData);
 
         window.PUBLICATION_CONFIG.sections.forEach(section => {
-            // Die Titelseite (title_main) wird bereits explizit gerendert, daher hier überspringen.
-            if (section.id === 'references_main' || section.id === 'title_main') return;
+            if (section.id === 'references_main') return;
 
             const sectionLabel = window.APP_CONFIG.UI_TEXTS.publicationTab.sectionLabels[section.labelKey] || section.labelKey;
             
             rawContentHTML += `<h2 id="${section.id}">${sectionLabel}</h2>`;
-            rawContentHTML += generateSectionHTML(section.id, allCohortStats, updatedCommonData);
+            rawContentHTML += generateSectionHTML(section.id, allCohortStats, commonData);
         });
         
-        const allReferences = updatedCommonData?.references || {};
+        const allReferences = commonData?.references || {};
         const { processedHtml, referencesHtml } = _processAndNumberReferences(rawContentHTML, allReferences);
         
         return processedHtml + referencesHtml;

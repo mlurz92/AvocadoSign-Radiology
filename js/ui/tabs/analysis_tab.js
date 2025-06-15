@@ -89,8 +89,7 @@ window.analysisTab = (() => {
         catch(error) { ids.forEach(id => window.uiManager.updateElementHTML(id, '<p class="text-danger small text-center p-2">Chart Error</p>')); }
     }
 
-    // Angepasste render Funktion
-    function render(data, currentCriteria, currentLogic, sortState, currentCohort, bfWorkerAvailable, currentCohortStats, allBruteForceResults, appliedT2DisplayString) {
+    function render(data, currentCriteria, currentLogic, sortState, currentCohort, bfWorkerAvailable, currentCohortStats, allBruteForceResults) {
         if (!data || !currentCriteria || !currentLogic) throw new Error("Data or criteria for Analysis Tab not available.");
         
         const criteriaControlsHTML = window.uiComponents.createT2CriteriaControls(currentCriteria, currentLogic);
@@ -104,14 +103,8 @@ window.analysisTab = (() => {
         const stats = window.statisticsService.calculateDescriptiveStats(data);
         const cohortDisplayName = getCohortDisplayName(currentCohort);
         
-        const metricSelectValue = document.getElementById('brute-force-metric')?.value || payload?.metric || window.APP_CONFIG.DEFAULT_SETTINGS.PUBLICATION_BRUTE_FORCE_METRIC;
+        const metricSelectValue = document.getElementById('brute-force-metric')?.value || window.APP_CONFIG.DEFAULT_SETTINGS.PUBLICATION_BRUTE_FORCE_METRIC;
         const bruteForceResultForCurrentCohortAndMetric = allBruteForceResults[currentCohort] ? allBruteForceResults[currentCohort][metricSelectValue] : null;
-
-        // appliedT2DisplayString wird nun direkt als Argument übergeben, anstatt hier abgerufen zu werden.
-        // const appliedCriteria = window.t2CriteriaManager.getAppliedCriteria();
-        // const appliedLogic = window.t2CriteriaManager.getAppliedLogic();
-        // const appliedT2DisplayString = window.studyT2CriteriaManager.formatCriteriaForDisplay(appliedCriteria, appliedLogic, true);
-
 
         let dashboardCardsHTML = '';
         if (stats && stats.patientCount > 0) {
@@ -132,7 +125,8 @@ window.analysisTab = (() => {
         const bruteForceOverviewHTML = window.uiComponents.createStatisticsCard(
             'bf-overview-card',
             'Brute-Force Optima (Saved Results)',
-            window.uiComponents.createBruteForceOverviewTableHTML(allBruteForceResults)
+            window.uiComponents.createBruteForceOverviewTableHTML(allBruteForceResults),
+            false
         );
 
         let finalHTML = `
@@ -187,14 +181,12 @@ window.analysisTab = (() => {
                     `;
                     window.uiManager.updateElementHTML(metricsOverviewContainer.id, window.uiComponents.createStatisticsCard(
                         't2-metrics-overview-card',
-                        `Diagnostic Performance (${window.APP_CONFIG.UI_TEXTS.labels?.appliedT2Short || 'Applied T2'}: ${appliedT2DisplayString})`, // NEU: Dynamischer Titel mit Safe-Navigation
+                        'Diagnostic Performance (Applied T2)',
                         metricsHtml,
                         false,
                         null,
                         [{id: 'dl-t2-metrics-overview-png', icon: 'fa-image', format: 'png', tableId: 't2-metrics-overview-card-content table', tableName: `T2_Metrics_Overview_${getCohortDisplayName(currentCohort).replace(/\s+/g, '_')}`}],
-                        't2-metrics-overview-card-content table',
-                        currentCohort, // cohortId
-                        appliedT2DisplayString // appliedCriteriaDisplayString
+                        't2-metrics-overview-card-content table'
                     ));
                 } else {
                     window.uiManager.updateElementHTML(metricsOverviewContainer.id, `<div class="col-12"><div class="alert alert-info small p-2">No diagnostic performance data available for current T2 criteria in cohort '${getCohortDisplayName(currentCohort)}'. Apply criteria or check data.</div></div>`);

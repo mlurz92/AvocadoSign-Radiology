@@ -74,7 +74,7 @@ window.uiManager = (() => {
 
     function toggleElementClass(elementId, className, add) {
         const element = document.getElementById(elementId);
-        if (element) {
+        if (element && className) {
             element.classList.toggle(className, add);
         }
     }
@@ -347,31 +347,6 @@ window.uiManager = (() => {
         let showResultControls = false;
         const cohortDisplayName = getCohortDisplayName(currentCohort);
         const selectedMetric = document.getElementById('brute-force-metric')?.value || payload?.metric || window.APP_CONFIG.DEFAULT_SETTINGS.PUBLICATION_BRUTE_FORCE_METRIC;
-        
-        // Bestimmen der disabled-Zustände direkt für den controlsHtml String
-        const startButtonDisabled = (status === 'started' || status === 'progress' || !isWorkerAvailable) ? 'disabled' : '';
-        const cancelButtonDisabled = (!(status === 'started' || status === 'progress')) ? 'disabled' : '';
-        const metricSelectDisabled = (status === 'started' || status === 'progress') ? 'disabled' : '';
-
-        // Prüfen, ob Ergebnisse vorhanden sind, um Apply Best / Top 10 zu aktivieren
-        const bfResult = window.bruteForceManager.getResultsForCohortAndMetric(currentCohort, selectedMetric);
-        showResultControls = (bfResult && bfResult.bestResult);
-        const applyBestDisabled = (!showResultControls || status === 'started' || status === 'progress') ? 'disabled' : '';
-        const showDetailsDisabled = (!showResultControls) ? 'disabled' : '';
-
-
-        const controlsHtml = `
-            <div class="d-flex align-items-center">
-                <label for="brute-force-metric" class="me-2 small text-muted" data-tippy-content="Select the target metric for the brute-force optimization.">Target:</label>
-                <select class="form-select form-select-sm me-2" id="brute-force-metric" ${metricSelectDisabled}>
-                    ${window.APP_CONFIG.AVAILABLE_BRUTE_FORCE_METRICS.map(metric => `<option value="${metric.value}" ${selectedMetric === metric.value ? 'selected' : ''}>${metric.label}</option>`).join('')}
-                </select>
-                <button class="btn btn-sm btn-success me-2" id="btn-start-brute-force" data-tippy-content="Starts the brute-force search." ${startButtonDisabled}><i class="fas fa-play me-1"></i> Start</button>
-                <button class="btn btn-sm btn-danger me-2" id="btn-cancel-brute-force" ${cancelButtonDisabled}><i class="fas fa-stop me-1"></i> Cancel</button>
-                <button class="btn btn-sm btn-primary" id="btn-apply-best-bf-criteria" ${applyBestDisabled}><i class="fas fa-magic me-1"></i> Apply Best</button>
-                <button class="btn btn-sm btn-outline-info ms-2" id="btn-show-bf-details" ${showDetailsDisabled} data-tippy-content="Opens a window with the top 10 results."><i class="fas fa-info-circle"></i> Top 10</button>
-            </div>
-        `;
 
         if (!isWorkerAvailable) {
             contentHTML = `<p class="text-danger small p-3">Web Workers are not supported. Brute-force optimization is unavailable.</p>`;
@@ -388,9 +363,8 @@ window.uiManager = (() => {
                 </div>
                 <p class="small text-muted mt-2 mb-0">${currentBestText}</p>
             `;
-            // showResultControls ist hier bereits oben durch bfResult gesetzt oder durch den status = started/progress erzwungen, damit die Buttons korrekt angezeigt werden
         } else {
-             // bfResult wird hier oben schon abgerufen
+             const bfResult = window.bruteForceManager.getResultsForCohortAndMetric(currentCohort, selectedMetric);
              if (bfResult && bfResult.bestResult) {
                 const best = bfResult.bestResult;
                 const criteriaDisplay = window.studyT2CriteriaManager.formatCriteriaForDisplay(best.criteria, best.logic);
@@ -403,29 +377,38 @@ window.uiManager = (() => {
                         Criteria: <code>${criteriaDisplay}</code>
                     </p>
                 `;
+                showResultControls = true;
             } else if (status === 'cancelled') {
                  contentHTML = `<p class="text-warning small p-3">Brute-force optimization was cancelled for cohort '${cohortDisplayName}'.</p>`;
-            } else { // 'initial' oder kein Ergebnis
+            } else {
                 contentHTML = `<p class="text-muted small p-3">No brute-force optimization has been performed yet for cohort '${cohortDisplayName}' and metric '${selectedMetric}'.</p>`;
             }
         }
 
         const infoTooltipTemplate = `Shows the status of the optimization worker and the currently analyzed patient cohort: [COHORT_NAME].`;
         const cardTitleTooltip = infoTooltipTemplate.replace('[COHORT_NAME]', `<strong>${cohortDisplayName}</strong>`);
-        
+        const isRunning = status === 'started' || status === 'progress';
 
         container.innerHTML = `
             <div class="card h-100" id="brute-force-card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <span data-tippy-content="${cardTitleTooltip}">Criteria Optimization (Brute-Force)</span>
-                    ${controlsHtml}
+                    <div class="d-flex align-items-center">
+                        <label for="brute-force-metric" class="me-2 small text-muted" data-tippy-content="Select the target metric for the brute-force optimization.">Target:</label>
+                        <select class="form-select form-select-sm me-2" id="brute-force-metric" ${isRunning ? 'disabled' : ''}>
+                            ${window.APP_CONFIG.AVAILABLE_BRUTE_FORCE_METRICS.map(metric => `<option value="${metric.value}" ${selectedMetric === metric.value ? 'selected' : ''}>${metric.label}</option>`).join('')}
+                        </select>
+                        <button class="btn btn-sm btn-success me-2" id="btn-start-brute-force" data-tippy-content="Starts the brute-force search." ${isRunning || !isWorkerAvailable ? 'disabled' : ''}><i class="fas fa-play me-1"></i> Start</button>
+                        <button class="btn btn-sm btn-danger me-2" id="btn-cancel-brute-force" ${!isRunning ? 'disabled' : ''}><i class="fas fa-stop me-1"></i> Cancel</button>
+                        <button class="btn btn-sm btn-primary" id="btn-apply-best-bf-criteria" ${!showResultControls || isRunning ? 'disabled' : ''}><i class="fas fa-magic me-1"></i> Apply Best</button>
+                        <button class="btn btn-sm btn-outline-info ms-2" id="btn-show-bf-details" ${!showResultControls ? 'disabled' : ''} data-tippy-content="Opens a window with the top 10 results."><i class="fas fa-info-circle"></i> Top 10</button>
+                    </div>
                 </div>
                 <div class="card-body">
                     ${contentHTML}
                 </div>
             </div>
         `;
-        
         initializeTooltips(container);
     }
 

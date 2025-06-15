@@ -74,24 +74,23 @@ window.comparisonTab = (() => {
         return `<div class="row g-3"><div class="col-12"><h3 class="text-center mb-3">Diagnostic Performance - Avocado Sign</h3></div>${tableHTML}${chartHTML}</div>`;
     }
     
-    // Angepasste Funktion _createASvsT2ComparisonViewHTML
-    function _createASvsT2ComparisonViewHTML(comparisonData, selectedStudyId, currentGlobalCohort, appliedT2DisplayShort) {
+    function _createASvsT2ComparisonViewHTML(comparisonData, selectedStudyId, currentGlobalCohort) {
         const { performanceAS, performanceT2, comparison, comparisonCriteriaSet, cohortForComparison, patientCountForComparison, t2ShortName } = comparisonData || {};
         const na_stat = window.APP_CONFIG.NA_PLACEHOLDER;
         const displayCohortForComparison = getCohortDisplayName(cohortForComparison);
         const isApplied = selectedStudyId === window.APP_CONFIG.SPECIAL_IDS.APPLIED_CRITERIA_STUDY_ID;
-        // const appliedName = window.APP_CONFIG.SPECIAL_IDS.APPLIED_CRITERIA_DISPLAY_NAME || "Applied Criteria"; // Original: wird ersetzt
+        const appliedName = window.APP_CONFIG.SPECIAL_IDS.APPLIED_CRITERIA_DISPLAY_NAME || "Applied Criteria";
         
         let comparisonBasisName = "N/A", comparisonInfoHTML = '<p class="text-muted small">Please select a T2 criteria basis for comparison.</p>';
         if (selectedStudyId && comparisonCriteriaSet) {
             const studyInfo = comparisonCriteriaSet.studyInfo;
-            comparisonBasisName = isApplied ? appliedT2DisplayShort : (comparisonCriteriaSet.displayShortName || comparisonCriteriaSet.name || selectedStudyId); // NEU
+            comparisonBasisName = comparisonCriteriaSet.displayShortName || comparisonCriteriaSet.name || (isApplied ? appliedName : selectedStudyId);
             let criteriaHTML = comparisonCriteriaSet.logic === 'KOMBINIERT' ? (studyInfo?.keyCriteriaSummary || comparisonCriteriaSet.description) : window.studyT2CriteriaManager.formatCriteriaForDisplay(comparisonCriteriaSet.criteria, comparisonCriteriaSet.logic, false);
             comparisonInfoHTML = `<dl class="row small mb-0"><dt class="col-sm-4">Reference:</dt><dd class="col-sm-8">${studyInfo?.reference || (isApplied ? 'User-defined (currently in Analysis Tab)' : 'N/A')}</dd><dt class="col-sm-4">Basis Cohort:</dt><dd class="col-sm-8">${studyInfo?.patientCohort || `Current: ${displayCohortForComparison} (N=${patientCountForComparison || '?'})`}</dd><dt class="col-sm-4">Criteria:</dt><dd class="col-sm-8">${criteriaHTML}</dd></dl>`;
         }
 
         const studySets = window.studyT2CriteriaManager.getAllStudyCriteriaSets();
-        const appliedOptionHTML = `<option value="${window.APP_CONFIG.SPECIAL_IDS.APPLIED_CRITERIA_STUDY_ID}" ${isApplied ? 'selected' : ''}>-- ${appliedT2DisplayShort} --</option>`; // NEU
+        const appliedOptionHTML = `<option value="${window.APP_CONFIG.SPECIAL_IDS.APPLIED_CRITERIA_STUDY_ID}" ${isApplied ? 'selected' : ''}>-- ${appliedName} --</option>`;
         const studyOptionsHTML = studySets.map(set => `<option value="${set.id}" ${selectedStudyId === set.id ? 'selected' : ''}>${set.name || set.id}</option>`).join('');
 
         let resultsHTML = '';
@@ -110,8 +109,8 @@ window.comparisonTab = (() => {
                 comparisonTableHTML += `<tr><td data-tippy-content="${getDefinitionTooltip(key)}">${metricNames[key]}</td><td data-tippy-content="${getInterpretationTooltip(key, performanceAS[key])}">${valAS}</td><td data-tippy-content="${getInterpretationTooltip(key, performanceT2[key])}">${valT2}</td></tr>`;
             });
             comparisonTableHTML += `</tbody></table></div>`;
-            const comparisonTableCardHTML = window.uiComponents.createStatisticsCard('comp-as-vs-t2-comp-table_card', `Performance Metrics (AS vs. ${t2ShortNameEffective})`, comparisonTableHTML, false, null, [{id: 'dl-comp-as-vs-t2-comp-table-png', icon: 'fa-image', format: 'png', tableId: 'comp-as-vs-t2-comp-table', tableName: `Comp_ASvsT2_Metrics_${comparisonCriteriaSet?.id || 'T2'}`}], null, null, t2ShortNameEffective); // Pass t2ShortNameEffective for display string
-
+            const comparisonTableCardHTML = window.uiComponents.createStatisticsCard('comp-as-vs-t2-comp-table_card', `Performance Metrics (AS vs. ${t2ShortNameEffective})`, comparisonTableHTML, false, null, [{id: 'dl-comp-as-vs-t2-comp-table-png', icon: 'fa-image', format: 'png', tableId: 'comp-as-vs-t2-comp-table', tableName: `Comp_ASvsT2_Metrics_${comparisonCriteriaSet?.id || 'T2'}`}]);
+            
             const mcnemarTooltip = getInterpretationTooltip('pValue', comparison.mcnemar, { method1: 'AS', method2: t2ShortNameEffective, metricName: 'Accuracy'});
             const delongTooltip = getInterpretationTooltip('pValue', comparison.delong, { method1: 'AS', method2: t2ShortNameEffective, metricName: 'AUC'});
 
@@ -119,8 +118,8 @@ window.comparisonTab = (() => {
             testsTableHTML += `<tr><td data-tippy-content="${getDefinitionTooltip('mcnemar')}">McNemar (Acc)</td><td>${formatNumber(comparison?.mcnemar?.statistic, 3, na_stat, true)} (df=${comparison?.mcnemar?.df || na_stat})</td><td data-tippy-content="${mcnemarTooltip}">${getPValueText(comparison?.mcnemar?.pValue, false)} ${getStatisticalSignificanceSymbol(comparison?.mcnemar?.pValue)}</td><td>${comparison?.mcnemar?.method || na_stat}</td></tr>`;
             testsTableHTML += `<tr><td data-tippy-content="${getDefinitionTooltip('delong')}">DeLong (AUC)</td><td>Z=${formatNumber(comparison?.delong?.Z, 3, na_stat, true)}</td><td data-tippy-content="${delongTooltip}">${getPValueText(comparison?.delong?.pValue, false)} ${getStatisticalSignificanceSymbol(comparison?.delong?.pValue)}</td><td>${comparison?.delong?.method || na_stat}</td></tr>`;
             testsTableHTML += `</tbody></table>`;
-            const testsCardHTML = window.uiComponents.createStatisticsCard('comp-as-vs-t2-test-table_card', `Statistical Comparison (AS vs. ${t2ShortNameEffective})`, testsTableHTML, false, null, [{id: `dl-comp-as-vs-t2-test-table-png`, icon: 'fa-image', format: 'png', tableId: 'comp-as-vs-t2-test-table', tableName: `Comp_ASvsT2_Tests_${comparisonCriteriaSet?.id || 'T2'}`}], null, null, t2ShortNameEffective); // Pass t2ShortNameEffective
-
+            const testsCardHTML = window.uiComponents.createStatisticsCard('comp-as-vs-t2-test-table_card', `Statistical Comparison (AS vs. ${t2ShortNameEffective})`, testsTableHTML, false, null, [{id: `dl-comp-as-vs-t2-test-table-png`, icon: 'fa-image', format: 'png', tableId: 'comp-as-vs-t2-test-table', tableName: `Comp_ASvsT2_Tests_${comparisonCriteriaSet?.id || 'T2'}`}]);
+            
             const chartContainerId = "comp-chart-container";
             const chartBaseName = `AS_vs_${(comparisonCriteriaSet?.displayShortName || selectedStudyId || 'T2').replace(/\s+/g, '_')}_Cohort_${displayCohortForComparison.replace(/\s+/g, '_')}`;
 
@@ -152,18 +151,14 @@ window.comparisonTab = (() => {
         return `<div class="row mb-4"><div class="col-12"><h4 class="text-center mb-1">Comparison: Avocado Sign vs. T2 Criteria</h4><p class="text-center text-muted small mb-3">Current comparison cohort: <strong>${displayCohortForComparison}</strong> ${cohortNotice}</p><div class="row justify-content-center"><div class="col-md-9 col-lg-7"><div class="input-group input-group-sm"><label class="input-group-text" for="comp-study-select">T2 Comparison Basis:</label><select class="form-select" id="comp-study-select"><option value="" ${!selectedStudyId ? 'selected' : ''} disabled>-- Please select --</option>${appliedOptionHTML}<option value="" disabled>--- Published Criteria ---</option>${studyOptionsHTML}</select></div></div></div></div></div><div id="comparison-as-vs-t2-results">${resultsHTML}</div>`;
     }
 
-    // Angepasste render Funktion
     function render(view, comparisonData, selectedStudyIdFromState, currentGlobalCohort, processedData, criteria, logic) {
         let chartDataForComparison = [];
         let t2ShortNameEffectiveForChart = "T2";
 
-        // NEU: Abrufen des formatierten Strings für Applied T2 Criteria
-        const appliedT2DisplayShort = window.studyT2CriteriaManager.formatCriteriaForDisplay(criteria, logic, true);
-
         if (comparisonData && comparisonData.performanceAS && comparisonData.performanceT2) {
             const performanceAS = comparisonData.performanceAS;
             const performanceT2 = comparisonData.performanceT2;
-            t2ShortNameEffectiveForChart = comparisonData.t2ShortName || (comparisonData.comparisonCriteriaSet?.displayShortName || appliedT2DisplayShort); // NEU: Fallback auf appliedT2DisplayShort
+            t2ShortNameEffectiveForChart = comparisonData.t2ShortName || (comparisonData.comparisonCriteriaSet?.displayShortName || 'T2');
 
             chartDataForComparison = [
                 { metric: 'Sens.', AS: performanceAS.sens?.value || 0, T2: performanceT2.sens?.value || 0 },
@@ -187,7 +182,7 @@ window.comparisonTab = (() => {
 
         let contentHTML = (view === 'as-pur') 
             ? _createASPerformanceViewHTML(comparisonData)
-            : _createASvsT2ComparisonViewHTML(comparisonData, selectedStudyIdFromState, currentGlobalCohort, appliedT2DisplayShort); // NEU: appliedT2DisplayShort übergeben
+            : _createASvsT2ComparisonViewHTML(comparisonData, selectedStudyIdFromState, currentGlobalCohort);
         
         setTimeout(() => {
             window.uiManager.initializeTooltips(document.getElementById('comparison-content-area'));

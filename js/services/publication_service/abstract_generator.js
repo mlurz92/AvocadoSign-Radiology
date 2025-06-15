@@ -8,7 +8,7 @@ window.abstractGenerator = (() => {
         }
 
         const { descriptive, performanceAS } = overallStats;
-        const { nOverall, nPositive, bruteForceMetricForPublication, appliedT2CriteriaDisplayShort } = commonData; // NEU: appliedT2CriteriaDisplayShort
+        const { nOverall, nPositive, bruteForceMetricForPublication } = commonData;
         const helpers = window.publicationHelpers;
         
         const bfResultForPub = overallStats.performanceT2Bruteforce?.[bruteForceMetricForPublication];

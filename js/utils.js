@@ -443,20 +443,3 @@ function getT2IconSVG(type, value) {
     }
     return `<svg class="icon-t2 icon-${type}" width="${s}" height="${s}" viewBox="0 0 ${s} ${s}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${type}: ${value || 'unknown'}">${svgContent}</svg>`;
 }
-
-// NEU: Hilfsfunktion zur Formatierung der angewandten Kriterien als String
-function getAppliedCriteriaDisplayString(shortFormat = true) {
-    const appliedCriteria = window.t2CriteriaManager.getAppliedCriteria();
-    const appliedLogic = window.t2CriteriaManager.getAppliedLogic();
-    if (!appliedCriteria || typeof window.studyT2CriteriaManager === 'undefined') {
-        return window.APP_CONFIG.UI_TEXTS.labels.appliedT2Short || 'Applied T2'; // Fallback
-    }
-    const formattedString = window.studyT2CriteriaManager.formatCriteriaForDisplay(appliedCriteria, appliedLogic, shortFormat);
-    
-    // Sicherstellen, dass ein leerer String bei "No active criteria" durch den Standard-Platzhalter ersetzt wird, wenn kurzformat gewünscht
-    if (shortFormat && formattedString === 'No active criteria') {
-        return window.APP_CONFIG.UI_TEXTS.labels.appliedT2Short || 'Applied T2';
-    }
-    
-    return formattedString;
-}
