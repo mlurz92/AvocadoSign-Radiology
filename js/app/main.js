@@ -201,17 +201,16 @@ class App {
     renderCurrentTab() {
         const tabId = window.state.getActiveTabId();
         const cohort = window.state.getCurrentCohort();
-        const criteria = window.t2CriteriaManager.getCurrentCriteria(); // Hole aktuelle Kriterien, nicht nur angewandte
-        const logic = window.t2CriteriaManager.getCurrentLogic(); // Hole aktuelle Logik
-
-        // Dynamische Strings für Applied T2 Criteria
+        const criteria = window.t2CriteriaManager.getCurrentCriteria();
+        const logic = window.t2CriteriaManager.getCurrentLogic();
+        
         const appliedT2DisplayShort = getAppliedCriteriaDisplayString(true);
         const appliedT2DisplayFull = getAppliedCriteriaDisplayString(false);
         
         const publicationData = {
             rawData: this.rawData, allCohortStats: this.allPublicationStats, bruteForceResults: window.bruteForceManager.getAllResults(),
             currentLanguage: window.state.getCurrentPublikationLang(),
-            appliedCriteria: window.t2CriteriaManager.getAppliedCriteria(), // Sicherstellen, dass die tats. angewandten Kriterien übergeben werden
+            appliedCriteria: window.t2CriteriaManager.getAppliedCriteria(),
             appliedLogic: window.t2CriteriaManager.getAppliedLogic(),
             appliedT2CriteriaDisplayShort: appliedT2DisplayShort,
             appliedT2CriteriaDisplayFull: appliedT2DisplayFull
