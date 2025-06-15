@@ -1,6 +1,7 @@
 window.publicationService = (() => {
 
     const contentGenerators = {
+        'title_main': window.titlePageGenerator.generateTitlePageHTML,
         'abstract_main': window.abstractGenerator.generateAbstractHTML,
         'introduction_main': window.introductionGenerator.generateIntroductionHTML,
         'methoden_studienanlage_ethik': window.methodsGenerator.generateStudyDesignHTML,
