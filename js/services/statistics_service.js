@@ -572,19 +572,20 @@ window.statisticsService = (() => {
         };
     }
 
-    function calculateAllPublicationStats(data, appliedT2Criteria, appliedT2Logic, bruteForceResultsPerCohort) {
+    function calculateAllPublicationStats(data, appliedT2Criteria, appliedT2Logic, allBruteForceResults) {
         if (!data || !Array.isArray(data)) return null;
         const results = {};
         const cohorts = Object.values(window.APP_CONFIG.COHORTS).map(c => c.id);
+        const allLiteratureSets = window.studyT2CriteriaManager.getAllStudyCriteriaSets();
 
         cohorts.forEach(cohortId => {
-            const cohortData = dataProcessor.filterDataByCohort(data, cohortId);
+            const cohortData = window.dataProcessor.filterDataByCohort(data, cohortId);
             if (cohortData.length === 0) {
                 results[cohortId] = null;
                 return;
             }
 
-            const evaluatedDataApplied = t2CriteriaManager.evaluateDataset(cloneDeep(cohortData), appliedT2Criteria, appliedT2Logic);
+            const evaluatedDataApplied = window.t2CriteriaManager.evaluateDataset(cloneDeep(cohortData), appliedT2Criteria, appliedT2Logic);
             
             results[cohortId] = {
                 descriptive: calculateDescriptiveStats(evaluatedDataApplied),
@@ -593,35 +594,36 @@ window.statisticsService = (() => {
                 comparisonASvsT2Applied: compareDiagnosticMethods(evaluatedDataApplied, 'asStatus', 't2Status', 'nStatus'),
                 associationsApplied: calculateAssociations(evaluatedDataApplied, appliedT2Criteria),
                 performanceT2Literature: {},
-                performanceT2Bruteforce: null,
-                comparisonASvsT2Bruteforce: null,
-                bruteforceDefinition: null
+                comparisonASvsT2Literature: {},
+                performanceT2Bruteforce: {},
+                comparisonASvsT2Bruteforce: {},
+                bruteforceDefinitions: {}
             };
 
-            window.PUBLICATION_CONFIG.literatureCriteriaSets.forEach(studySetConf => {
-                const studySet = studyT2CriteriaManager.getStudyCriteriaSetById(studySetConf.id);
-                if (studySet) {
-                    const cohortForStudy = studySet.applicableCohort || window.APP_CONFIG.COHORTS.OVERALL.id;
-                    const dataForStudy = dataProcessor.filterDataByCohort(data, cohortForStudy);
-                    if(dataForStudy.length > 0) {
-                        const evaluatedDataStudy = studyT2CriteriaManager.evaluateDatasetWithStudyCriteria(cloneDeep(dataForStudy), studySet);
-                        const perfKey = `performanceT2Literature_${studySet.id}`;
-                        const compKey = `comparisonASvsT2_literature_${studySet.id}`;
-                        
-                        results[cohortForStudy] = results[cohortForStudy] || {};
-                        results[cohortForStudy].performanceT2Literature = results[cohortForStudy].performanceT2Literature || {};
-                        results[cohortForStudy].performanceT2Literature[studySet.id] = calculateDiagnosticPerformance(evaluatedDataStudy, 't2Status', 'nStatus');
-                        results[cohortForStudy][compKey] = compareDiagnosticMethods(evaluatedDataStudy, 'asStatus', 't2Status', 'nStatus');
-                    }
+            allLiteratureSets.forEach(studySet => {
+                if (studySet.applicableCohort === cohortId) {
+                    const evaluatedDataStudy = window.studyT2CriteriaManager.evaluateDatasetWithStudyCriteria(cloneDeep(cohortData), studySet);
+                    results[cohortId].performanceT2Literature[studySet.id] = calculateDiagnosticPerformance(evaluatedDataStudy, 't2Status', 'nStatus');
+                    results[cohortId].comparisonASvsT2Literature[studySet.id] = compareDiagnosticMethods(evaluatedDataStudy, 'asStatus', 't2Status', 'nStatus');
                 }
             });
             
-            const bfResult = bruteForceResultsPerCohort?.[cohortId];
-            if (bfResult && bfResult.bestResult?.criteria) {
-                const evaluatedDataBF = t2CriteriaManager.evaluateDataset(cloneDeep(cohortData), bfResult.bestResult.criteria, bfResult.bestResult.logic);
-                results[cohortId].performanceT2Bruteforce = calculateDiagnosticPerformance(evaluatedDataBF, 't2Status', 'nStatus');
-                results[cohortId].comparisonASvsT2Bruteforce = compareDiagnosticMethods(evaluatedDataBF, 'asStatus', 't2Status', 'nStatus');
-                results[cohortId].bruteforceDefinition = { criteria: bfResult.bestResult.criteria, logic: bfResult.bestResult.logic, metricValue: bfResult.bestResult.metricValue, metricName: bfResult.metric };
+            const cohortBfResults = allBruteForceResults?.[cohortId];
+            if (cohortBfResults) {
+                Object.keys(cohortBfResults).forEach(metricName => {
+                    const bfResult = cohortBfResults[metricName];
+                    if (bfResult && bfResult.bestResult?.criteria) {
+                        const evaluatedDataBF = window.t2CriteriaManager.evaluateDataset(cloneDeep(cohortData), bfResult.bestResult.criteria, bfResult.bestResult.logic);
+                        results[cohortId].performanceT2Bruteforce[metricName] = calculateDiagnosticPerformance(evaluatedDataBF, 't2Status', 'nStatus');
+                        results[cohortId].comparisonASvsT2Bruteforce[metricName] = compareDiagnosticMethods(evaluatedDataBF, 'asStatus', 't2Status', 'nStatus');
+                        results[cohortId].bruteforceDefinitions[metricName] = { 
+                            criteria: bfResult.bestResult.criteria, 
+                            logic: bfResult.bestResult.logic, 
+                            metricValue: bfResult.bestResult.metricValue, 
+                            metricName: bfResult.metric 
+                        };
+                    }
+                });
             }
         });
 
@@ -632,7 +634,6 @@ window.statisticsService = (() => {
 
         return results;
     }
-
 
     function calculateAssociations(data, t2Criteria) {
         if (!Array.isArray(data) || data.length === 0 || !t2Criteria) return {};
@@ -651,8 +652,8 @@ window.statisticsService = (() => {
             };
         }
 
-        const sizesNplus = data.filter(p => p.nStatus === '+').flatMap(p => p.t2Nodes.map(lk => lk.size).filter(s => s !== null && !isNaN(s) && isFinite(s)));
-        const sizesNminus = data.filter(p => p.nStatus === '-').flatMap(p => p.t2Nodes.map(lk => lk.size).filter(s => s !== null && !isNaN(s) && isFinite(s)));
+        const sizesNplus = data.filter(p => p.nStatus === '+').flatMap(p => (p.t2Nodes || []).map(lk => lk.size).filter(s => s !== null && !isNaN(s) && isFinite(s)));
+        const sizesNminus = data.filter(p => p.nStatus === '-').flatMap(p => (p.t2Nodes || []).map(lk => lk.size).filter(s => s !== null && !isNaN(s) && isFinite(s)));
         if (sizesNplus.length > 0 && sizesNminus.length > 0) {
             const mwuResult = calculateMannWhitneyUTest(sizesNplus, sizesNminus);
             results.size_mwu = { pValue: mwuResult.pValue, Z: mwuResult.Z, testName: mwuResult.testName, featureName: 'LN Size (Median Comp.)' };
