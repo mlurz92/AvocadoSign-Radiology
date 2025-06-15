@@ -32,12 +32,6 @@ class App {
             this.updateUI();
             this.renderCurrentTab();
             
-            // Entfernen des Quick Guide Modals beim ersten Start
-            // if (!loadFromLocalStorage(window.APP_CONFIG.STORAGE_KEYS.FIRST_APP_START)) {
-            //     window.uiManager.showQuickGuide();
-            //     saveToLocalStorage(window.APP_CONFIG.STORAGE_KEYS.FIRST_APP_START, true);
-            // }
-            
             window.uiManager.initializeTooltips(document.body);
             window.uiManager.markCriteriaSavedIndicator(window.t2CriteriaManager.isUnsaved());
             window.uiManager.showToast('Application initialized.', 'success', 2500);
