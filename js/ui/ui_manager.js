@@ -74,7 +74,7 @@ window.uiManager = (() => {
 
     function toggleElementClass(elementId, className, add) {
         const element = document.getElementById(elementId);
-        if (element && className) {
+        if (element) {
             element.classList.toggle(className, add);
         }
     }
@@ -347,6 +347,20 @@ window.uiManager = (() => {
         let showResultControls = false;
         const cohortDisplayName = getCohortDisplayName(currentCohort);
         const selectedMetric = document.getElementById('brute-force-metric')?.value || payload?.metric || window.APP_CONFIG.DEFAULT_SETTINGS.PUBLICATION_BRUTE_FORCE_METRIC;
+        
+        // Buttons und Dropdown-Menü, die immer sichtbar sein sollen, wenn der Worker verfügbar ist
+        const controlsHtml = `
+            <div class="d-flex align-items-center">
+                <label for="brute-force-metric" class="me-2 small text-muted" data-tippy-content="Select the target metric for the brute-force optimization.">Target:</label>
+                <select class="form-select form-select-sm me-2" id="brute-force-metric" ${status === 'started' || status === 'progress' ? 'disabled' : ''}>
+                    ${window.APP_CONFIG.AVAILABLE_BRUTE_FORCE_METRICS.map(metric => `<option value="${metric.value}" ${selectedMetric === metric.value ? 'selected' : ''}>${metric.label}</option>`).join('')}
+                </select>
+                <button class="btn btn-sm btn-success me-2" id="btn-start-brute-force" data-tippy-content="Starts the brute-force search." ${status === 'started' || status === 'progress' || !isWorkerAvailable ? 'disabled' : ''}><i class="fas fa-play me-1"></i> Start</button>
+                <button class="btn btn-sm btn-danger me-2" id="btn-cancel-brute-force" ${!(status === 'started' || status === 'progress') ? 'disabled' : ''}><i class="fas fa-stop me-1"></i> Cancel</button>
+                <button class="btn btn-sm btn-primary" id="btn-apply-best-bf-criteria" ${!showResultControls || status === 'started' || status === 'progress' ? 'disabled' : ''}><i class="fas fa-magic me-1"></i> Apply Best</button>
+                <button class="btn btn-sm btn-outline-info ms-2" id="btn-show-bf-details" ${!showResultControls ? 'disabled' : ''} data-tippy-content="Opens a window with the top 10 results."><i class="fas fa-info-circle"></i> Top 10</button>
+            </div>
+        `;
 
         if (!isWorkerAvailable) {
             contentHTML = `<p class="text-danger small p-3">Web Workers are not supported. Brute-force optimization is unavailable.</p>`;
@@ -363,6 +377,7 @@ window.uiManager = (() => {
                 </div>
                 <p class="small text-muted mt-2 mb-0">${currentBestText}</p>
             `;
+            showResultControls = true; // Buttons sollten sichtbar sein, wenn BF läuft
         } else {
              const bfResult = window.bruteForceManager.getResultsForCohortAndMetric(currentCohort, selectedMetric);
              if (bfResult && bfResult.bestResult) {
@@ -380,35 +395,36 @@ window.uiManager = (() => {
                 showResultControls = true;
             } else if (status === 'cancelled') {
                  contentHTML = `<p class="text-warning small p-3">Brute-force optimization was cancelled for cohort '${cohortDisplayName}'.</p>`;
-            } else {
+            } else { // 'initial' oder kein Ergebnis
                 contentHTML = `<p class="text-muted small p-3">No brute-force optimization has been performed yet for cohort '${cohortDisplayName}' and metric '${selectedMetric}'.</p>`;
+                // showResultControls bleibt false, außer für den Start-Button, der immer anzeigbar sein soll
             }
         }
 
         const infoTooltipTemplate = `Shows the status of the optimization worker and the currently analyzed patient cohort: [COHORT_NAME].`;
         const cardTitleTooltip = infoTooltipTemplate.replace('[COHORT_NAME]', `<strong>${cohortDisplayName}</strong>`);
-        const isRunning = status === 'started' || status === 'progress';
+        // isRunning wird nicht mehr direkt für die Sichtbarkeit der Start/Cancel Buttons verwendet, sondern deren disabled-Status
+        // const isRunning = status === 'started' || status === 'progress'; // Nicht mehr direkt zur Steuerung der Sichtbarkeit der Buttons
 
         container.innerHTML = `
             <div class="card h-100" id="brute-force-card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <span data-tippy-content="${cardTitleTooltip}">Criteria Optimization (Brute-Force)</span>
-                    <div class="d-flex align-items-center">
-                        <label for="brute-force-metric" class="me-2 small text-muted" data-tippy-content="Select the target metric for the brute-force optimization.">Target:</label>
-                        <select class="form-select form-select-sm me-2" id="brute-force-metric" ${isRunning ? 'disabled' : ''}>
-                            ${window.APP_CONFIG.AVAILABLE_BRUTE_FORCE_METRICS.map(metric => `<option value="${metric.value}" ${selectedMetric === metric.value ? 'selected' : ''}>${metric.label}</option>`).join('')}
-                        </select>
-                        <button class="btn btn-sm btn-success me-2" id="btn-start-brute-force" data-tippy-content="Starts the brute-force search." ${isRunning || !isWorkerAvailable ? 'disabled' : ''}><i class="fas fa-play me-1"></i> Start</button>
-                        <button class="btn btn-sm btn-danger me-2" id="btn-cancel-brute-force" ${!isRunning ? 'disabled' : ''}><i class="fas fa-stop me-1"></i> Cancel</button>
-                        <button class="btn btn-sm btn-primary" id="btn-apply-best-bf-criteria" ${!showResultControls || isRunning ? 'disabled' : ''}><i class="fas fa-magic me-1"></i> Apply Best</button>
-                        <button class="btn btn-sm btn-outline-info ms-2" id="btn-show-bf-details" ${!showResultControls ? 'disabled' : ''} data-tippy-content="Opens a window with the top 10 results."><i class="fas fa-info-circle"></i> Top 10</button>
-                    </div>
-                </div>
+                    ${controlsHtml} </div>
                 <div class="card-body">
                     ${contentHTML}
                 </div>
             </div>
         `;
+        // Die Buttons und Select müssen nach dem Rendern erneut ihre disabled-Zustände erhalten,
+        // da der controlsHtml-String die Initialwerte setzt.
+        setElementDisabled('btn-start-brute-force', status === 'started' || status === 'progress' || !isWorkerAvailable);
+        setElementDisabled('btn-cancel-brute-force', !(status === 'started' || status === 'progress'));
+        setElementDisabled('btn-apply-best-bf-criteria', !showResultControls || status === 'started' || status === 'progress');
+        setElementDisabled('btn-show-bf-details', !showResultControls);
+        setElementDisabled('brute-force-metric', status === 'started' || status === 'progress');
+
+
         initializeTooltips(container);
     }
 
