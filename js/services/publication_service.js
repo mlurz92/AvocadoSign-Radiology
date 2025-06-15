@@ -87,6 +87,7 @@ window.publicationService = (() => {
             if (section.id === 'references_main') return;
 
             const sectionLabel = window.APP_CONFIG.UI_TEXTS.publicationTab.sectionLabels[section.labelKey] || section.labelKey;
+            
             rawContentHTML += `<h2 id="${section.id}">${sectionLabel}</h2>`;
             rawContentHTML += generateSectionHTML(section.id, allCohortStats, commonData);
         });
