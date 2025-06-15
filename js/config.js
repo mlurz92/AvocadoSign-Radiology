@@ -26,7 +26,7 @@ window.APP_CONFIG = Object.freeze({
         STATS_COHORT2: 'neoadjuvantTherapy',
         COMPARISON_VIEW: 'as-vs-t2',
         COMPARISON_STUDY_ID: 'rutegard_et_al_esgar',
-        PUBLICATION_SECTION: 'abstract_main',
+        PUBLICATION_SECTION: 'title_main',
         PUBLICATION_BRUTE_FORCE_METRIC: 'Balanced Accuracy',
         PUBLICATION_LANG: 'en'
     }),
@@ -154,7 +154,7 @@ window.APP_CONFIG = Object.freeze({
     }),
     SPECIAL_IDS: Object.freeze({
         APPLIED_CRITERIA_STUDY_ID: 'applied_criteria',
-        APPLIED_CRITERIA_DISPLAY_NAME: 'Applied T2 Criteria',
+        APPLIED_CRITERIA_DISPLAY_NAME: 'Applied T2',
         AVOCADO_SIGN_ID: 'avocado_sign',
         AVOCADO_SIGN_DISPLAY_NAME: 'Avocado Sign'
     }),
@@ -178,6 +178,7 @@ window.APP_CONFIG = Object.freeze({
         publicationTab: {
             bfMetricSelectLabel: 'BF Optimization Metric for Publication:',
             sectionLabels: {
+                title_main: 'Title Page',
                 abstract_main: 'Abstract',
                 introduction_main: 'Introduction',
                 methoden_main: 'Materials and Methods',
@@ -197,7 +198,7 @@ window.APP_CONFIG = Object.freeze({
             therapyDistribution: 'Therapy',
             statusN: 'N-Status (Pathology)',
             statusAS: 'AS-Status',
-            statusT2: 'T2-Status (Applied)'
+            statusT2: 'T2-Status'
         },
         axisLabels: {
             age: 'Age (Years)',
@@ -219,7 +220,8 @@ window.APP_CONFIG = Object.freeze({
             asPositive: 'AS+',
             asNegative: 'AS-',
             t2Positive: 'T2+',
-            t2Negative: 'T2-'
+            t2Negative: 'T2-',
+            avocadoSign: 'Avocado Sign'
         },
         tooltips: Object.freeze({
             definition: {
@@ -391,6 +393,7 @@ window.APP_CONFIG = Object.freeze({
 
 window.PUBLICATION_CONFIG = Object.freeze({
     sections: [
+        { id: 'title_main', labelKey: 'title_main', subSections: [] },
         { id: 'abstract_main', labelKey: 'abstract_main', subSections: [{ id: 'abstract_main', label: 'Abstract' }] },
         { id: 'introduction_main', labelKey: 'introduction_main', subSections: [{ id: 'introduction_main', label: 'Introduction' }] },
         {
