@@ -137,7 +137,7 @@ window.uiManager = (() => {
         }
         let modalElement = document.getElementById('quick-guide-modal');
         if (!modalElement) {
-            const appVersion = (typeof window.APP_CONFIG !== 'undefined') ? window.APP_CONFIG.APP_VERSION : '3.1.0';
+            const appVersion = (typeof window.APP_CONFIG !== 'undefined') ? window.APP_CONFIG.APP_VERSION : '?.?.?';
             const lastUpdatedDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
             const quickGuideContent = `
                 <h2>1. Introduction</h2>
@@ -157,14 +157,14 @@ window.uiManager = (() => {
                 <h2>2. Global UI Elements</h2>
                 <ul>
                     <li><strong>Application Title:</strong> "Nodal Staging: Avocado Sign vs. T2".</li>
-                    <li><strong>Global Cohort Selection:</strong> Buttons ("Overall", "Upfront Surgery", "nRCT") to select the patient cohort, affecting all analyses and displays.</li>
+                    <li><strong>Global Cohort Selection:</strong> Buttons ("Overall", "Surgery alone", "Neoadjuvant therapy") to select the patient cohort, affecting all analyses and displays.</li>
                     <li><strong>Dynamic Meta-Statistics:</strong> Displays key metrics for the current cohort (total patients, N+, AS+, T2+ percentages).</li>
                     <li><strong>Main Navigation (Tab Bar):</strong> Switches between Data, Analysis, Statistics, Comparison, Publication, and Export tabs.</li>
                     <li><strong>Quick Guide Button:</strong> Opens this modal.</li>
                 </ul>
                 <h2>3. Core Concepts</h2>
                 <ul>
-                    <li><strong>Patient Cohort Selection:</strong> Filters data globally based on "Overall" (all 106 patients), "Upfront Surgery" (primary surgery), or "nRCT" (neoadjuvant chemoradiotherapy).</li>
+                    <li><strong>Patient Cohort Selection:</strong> Filters data globally based on "Overall" (all 106 patients), "Surgery alone" (primary surgery), or "Neoadjuvant therapy" (neoadjuvant chemoradiotherapy).</li>
                     <li><strong>Interactive Tooltips:</strong> Hover over UI elements for explanations.</li>
                 </ul>
                 <h2>4. Tab Descriptions</h2>
@@ -300,9 +300,26 @@ window.uiManager = (() => {
     function updatePublicationUI(currentSectionId, currentBruteForceMetric) {
         document.querySelectorAll('#publication-sections-nav .nav-link').forEach(link => {
             if (link) {
-                link.classList.toggle('active', link.dataset.sectionId === currentSectionId);
+                const isSublink = link.classList.contains('nav-link-sub');
+                const mainSectionId = isSublink ? link.closest('ul').previousElementSibling.dataset.sectionId : link.dataset.sectionId;
+                const mainSection = window.PUBLICATION_CONFIG.sections.find(s => s.id === mainSectionId);
+                const isActive = mainSection?.subSections.some(s => s.id === currentSectionId) || mainSectionId === currentSectionId;
+                
+                if (isSublink) {
+                    link.classList.toggle('active', link.dataset.sectionId === currentSectionId);
+                } else if (!link.classList.contains('nav-link-main')) {
+                    link.classList.toggle('active', isActive);
+                }
             }
         });
+
+        document.querySelectorAll('#publication-sections-nav .nav-link-main').forEach(link => {
+            const mainSectionId = link.dataset.sectionId;
+            const mainSection = window.PUBLICATION_CONFIG.sections.find(s => s.id === mainSectionId);
+            const isActive = mainSection?.subSections.some(s => s.id === currentSectionId);
+             link.classList.toggle('active', isActive);
+        });
+
         const bfMetricSelect = document.getElementById('publication-bf-metric-select');
         if (bfMetricSelect) {
             bfMetricSelect.value = currentBruteForceMetric;
