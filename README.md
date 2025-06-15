@@ -1,4 +1,5 @@
-Nodal Staging Analysis Tool (Version 3.2.0)
+# **Nodal Staging Analysis Tool** 
+(Version 3.2.0)
 
 ## 1. Einleitung
 
