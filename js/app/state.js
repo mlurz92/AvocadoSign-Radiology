@@ -7,7 +7,7 @@ window.state = (() => {
             currentCohort: window.APP_CONFIG.DEFAULT_SETTINGS.COHORT,
             dataTableSort: cloneDeep(window.APP_CONFIG.DEFAULT_SETTINGS.DATA_TABLE_SORT),
             analysisTableSort: cloneDeep(window.APP_CONFIG.DEFAULT_SETTINGS.ANALYSIS_TABLE_SORT),
-            publicationSection: window.APP_CONFIG.DEFAULT_SETTINGS.PUBLICATION_SECTION,
+            publicationSection: window.APP_CONFIG.DEFAULT_SETTINGS.PUBLICATION_SECTION, // Dieser Wert wird jetzt aus APP_CONFIG.DEFAULT_SETTINGS geholt, was in config.js angepasst wurde
             publicationBruteForceMetric: window.APP_CONFIG.DEFAULT_SETTINGS.PUBLICATION_BRUTE_FORCE_METRIC,
             publicationLang: window.APP_CONFIG.DEFAULT_SETTINGS.PUBLICATION_LANG,
             statsLayout: window.APP_CONFIG.DEFAULT_SETTINGS.STATS_LAYOUT,
@@ -15,10 +15,11 @@ window.state = (() => {
             statsCohort2: window.APP_CONFIG.DEFAULT_SETTINGS.STATS_COHORT2,
             comparisonView: window.APP_CONFIG.DEFAULT_SETTINGS.COMPARISON_VIEW,
             comparisonStudyId: window.APP_CONFIG.DEFAULT_SETTINGS.COMPARISON_STUDY_ID,
-            activeTabId: 'publication'
+            activeTabId: 'publication' // Der aktive Haupt-Tab bleibt "publication"
         };
 
         const loadedSection = loadFromLocalStorage(window.APP_CONFIG.STORAGE_KEYS.PUBLICATION_SECTION);
+        // Bestätigen, dass die geladene Sektion gültig ist, einschließlich des neuen 'title_main'
         const isValidSection = window.PUBLICATION_CONFIG.sections.some(s => s.id === loadedSection || s.subSections.some(sub => sub.id === loadedSection));
 
         currentState = {
