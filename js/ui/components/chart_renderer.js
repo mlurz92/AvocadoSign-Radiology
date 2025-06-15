@@ -188,7 +188,7 @@ window.chartRenderer = (() => {
             .on("mouseover", function(event, d) {
                 tooltip.transition().duration(50).style("opacity", .95);
                 const displayName = subgroupDisplayNames[d.key] || d.key;
-                const digits = (d.metric === 'AUC' || d.metric === 'F1') ? 3 : 1;
+                const digits = (d.metric === 'AUC' || d.metric === 'F1') ? 2 : 0;
                 const formattedValue = (d.metric === 'AUC' || d.metric === 'F1') ? formatNumber(d.value, digits) : formatPercent(d.value, digits);
                 tooltip.html(`<strong>${d.metric} (${displayName}):</strong> ${formattedValue}`).style("left", (event.pageX + 10) + "px").style("top", (event.pageY - 15) + "px");
                 d3.select(this).style("opacity", 1).style("stroke", "#333").style("stroke-width", 1);
@@ -253,7 +253,10 @@ window.chartRenderer = (() => {
             .attr("x1", x(0))
             .attr("y1", y(0))
             .attr("x2", x(1))
-            .attr("y2", y(1));
+            .attr("y2", y(1))
+            .style('stroke', '#adb5bd')
+            .style('stroke-width', 1)
+            .style('stroke-dasharray', '4 2');
 
         const rocLine = d3.line()
             .x(d => x(d[0]))
@@ -271,30 +274,53 @@ window.chartRenderer = (() => {
             .attr("class", "roc-curve")
             .attr("fill", "none")
             .attr("stroke", window.APP_CONFIG.CHART_SETTINGS.AS_COLOR)
-            .attr("stroke-width", 2)
-            .attr("d", rocLine);
+            .attr("stroke-width", 2);
 
-        chartArea.append("circle")
+        const pathLength = chartArea.select(".roc-curve").node().getTotalLength();
+        chartArea.select(".roc-curve")
+            .attr("stroke-dasharray", pathLength + " " + pathLength)
+            .attr("stroke-dashoffset", pathLength)
+            .transition()
+            .duration(window.APP_CONFIG.CHART_SETTINGS.ANIMATION_DURATION_MS)
+            .ease(d3.easeLinear)
+            .attr("stroke-dashoffset", 0)
+            .attr('d', rocLine);
+
+        const circle = chartArea.append("circle")
             .attr("cx", x(oneMinusSpecificity))
             .attr("cy", y(sensitivity))
-            .attr("r", 5)
+            .attr("r", 0)
             .attr("fill", window.APP_CONFIG.CHART_SETTINGS.AS_COLOR)
             .on("mouseover", (event) => {
                 tooltip.transition().duration(50).style("opacity", .95);
-                tooltip.html(`<strong>${methodName}</strong><br>Sensitivity: ${formatPercent(sensitivity, 1)}<br>1-Specificity: ${formatPercent(oneMinusSpecificity, 1)}<br>AUC: ${formatNumber(auc, 3)}`)
+                tooltip.html(`<strong>${methodName}</strong><br>Sensitivity: ${formatPercent(sensitivity, 1)}<br>1-Specificity: ${formatPercent(oneMinusSpecificity, 1)}<br>AUC: ${formatNumber(auc, 2)}`)
                     .style("left", (event.pageX + 10) + "px")
                     .style("top", (event.pageY - 15) + "px");
+                 d3.select(event.currentTarget).transition().duration(100).attr('r', 7);
             })
-            .on("mouseout", () => {
+            .on("mouseout", (event) => {
                 tooltip.transition().duration(200).style("opacity", 0);
+                d3.select(event.currentTarget).transition().duration(100).attr('r', 5);
             });
+            
+        circle.transition()
+            .delay(window.APP_CONFIG.CHART_SETTINGS.ANIMATION_DURATION_MS / 2)
+            .duration(window.APP_CONFIG.CHART_SETTINGS.ANIMATION_DURATION_MS / 2)
+            .attr("r", 5);
 
         chartArea.append("text")
             .attr("class", "auc-label")
-            .attr("x", x(0.95))
-            .attr("y", y(0.05))
+            .attr("x", innerWidth - 5)
+            .attr("y", innerHeight - 5)
             .attr("text-anchor", "end")
-            .text(`AUC: ${formatNumber(auc, 3)}`);
+            .style("font-size", "11px")
+            .style("font-weight", "bold")
+            .style("opacity", 0)
+            .text(`AUC: ${formatNumber(auc, 2)}`)
+            .transition()
+            .delay(window.APP_CONFIG.CHART_SETTINGS.ANIMATION_DURATION_MS)
+            .duration(400)
+            .style("opacity", 1);
     }
 
     return Object.freeze({
