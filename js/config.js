@@ -10,7 +10,7 @@ window.DEFAULT_T2_CRITERIA = Object.freeze({
 window.APP_CONFIG = Object.freeze({
     APP_NAME: "Nodal Staging: Avocado Sign vs. T2 Criteria",
     APP_VERSION: "3.1.0",
-    NA_PLACEHOLDER: '--', // Global placeholder for 'Not Available'
+    NA_PLACEHOLDER: '--',
     COHORTS: Object.freeze({
         OVERALL: { id: 'Overall', therapyValue: null, displayName: 'Overall' },
         SURGERY_ALONE: { id: 'surgeryAlone', therapyValue: 'surgeryAlone', displayName: 'Surgery alone' },
@@ -169,11 +169,6 @@ window.APP_CONFIG = Object.freeze({
         Barbaro_2024: { id: 9, text: "Barbaro B, Carafa MRP, Minordi LM, et al. Magnetic resonance imaging for assessment of rectal cancer nodes after chemoradiotherapy: a single center experience. Radiother Oncol 2024;193:110124. doi: 10.1016/j.radonc.2024.110124" }
     }),
     UI_TEXTS: Object.freeze({
-        cohortDisplayNames: {
-            'Overall': 'Overall',
-            'surgeryAlone': 'Surgery alone',
-            'neoadjuvantTherapy': 'Neoadjuvant therapy'
-        },
         t2LogicDisplayNames: {
             'AND': 'AND',
             'OR': 'OR',
@@ -196,10 +191,7 @@ window.APP_CONFIG = Object.freeze({
             therapyDistribution: 'Therapy',
             statusN: 'N-Status (Pathology)',
             statusAS: 'AS-Status',
-            statusT2: 'T2-Status (Applied)',
-            comparisonBar: 'Comparison: AS vs. {T2Name}',
-            rocCurve: 'ROC Curve for {Method}',
-            asPerformance: 'AS Performance (Current Cohort)'
+            statusT2: 'T2-Status (Applied)'
         },
         axisLabels: {
             age: 'Age (Years)',
@@ -299,15 +291,6 @@ window.APP_CONFIG = Object.freeze({
                 statusAS: { description: "Distribution of the Avocado Sign status in the [COHORT] cohort." },
                 statusT2: { description: "Distribution of the T2-criteria status based on current settings in the [COHORT] cohort." }
             },
-            quickGuideButton: { description: "Show a quick guide and important notes about the application." },
-            cohortButtons: { description: "Select the patient cohort for the analysis: <strong>Overall</strong>, <strong>Surgery alone</strong>, or <strong>Neoadjuvant therapy</strong>. This choice filters the data for all application tabs." },
-            headerStats: {
-                cohort: "Currently selected patient cohort for analysis.",
-                patientCount: "Total number of patients in the selected cohort.",
-                statusN: "Percentage of N+ patients (Pathology).",
-                statusAS: "Percentage of AS+ patients (Prediction).",
-                statusT2: "Percentage of T2+ patients (Applied Criteria)."
-            },
             dataTab: {
                 nr: "Patient's sequential ID number.",
                 name: "Patient's last name (anonymized/coded).",
@@ -318,7 +301,6 @@ window.APP_CONFIG = Object.freeze({
                 n_as_t2: "Direct status comparison: N (Histopathology reference), AS (Avocado Sign prediction), T2 (current criteria prediction). Click N, AS, or T2 in the column header for sub-sorting.",
                 notes: "Additional clinical or radiological notes on the case, if available.",
                 expandAll: "Expand or collapse the detail view of T2-weighted lymph node features for all patients in the current table view.",
-                collapseAll: "Collapse all detail views of T2-weighted lymph node features.",
                 expandRow: "Click here or the arrow button to show/hide details on the morphological properties of this patient's T2-weighted lymph nodes. Only available if T2 node data exists."
             },
             analysisTab: {
@@ -330,7 +312,6 @@ window.APP_CONFIG = Object.freeze({
                 as_counts: "Number of Avocado Sign positive (AS+) lymph nodes / Total number of lymph nodes visible on T1-CE MRI for this patient.",
                 t2_counts: "Number of T2-positive lymph nodes (based on current criteria) / Total number of lymph nodes visible on T2-MRI for this patient.",
                 expandAll: "Expand or collapse the detail view of the evaluated T2-weighted lymph nodes and the fulfilled criteria for all patients in the current table view.",
-                collapseAll: "Collapse all detail views of the evaluated T2-weighted lymph nodes and the fulfilled criteria.",
                 expandRow: "Click here or the arrow button to show/hide the detailed evaluation of this patient's individual T2-weighted lymph nodes according to the currently applied criteria. Fulfilled positive criteria are highlighted."
             },
             t2Logic: { description: "Logical operator for active T2 criteria: <strong>AND</strong> (A lymph node is positive only if ALL active criteria are met). <strong>OR</strong> (A lymph node is positive if AT LEAST ONE active criterion is met). The choice affects the T2 status calculation." },
@@ -343,14 +324,6 @@ window.APP_CONFIG = Object.freeze({
                 reset: "Resets the logic and all criteria to their default settings. The changes are not yet applied.",
                 apply: "Apply the currently set T2 criteria and logic to the entire dataset. This updates the T2 columns in the tables, all statistical analyses, and charts. The setting is also saved for future sessions."
             },
-            t2CriteriaCard: { unsavedIndicator: "<strong>Attention:</strong> There are unsaved changes to the T2 criteria or logic. Click 'Apply & Save' to update the results and save the settings." },
-            bruteForceMetric: { description: "Select the target metric for the brute-force optimization.<br><strong>Accuracy:</strong> Proportion of correct classifications.<br><strong>Balanced Accuracy:</strong> (Sens+Spec)/2; good for imbalanced classes.<br><strong>F1-Score:</strong> Harmonic mean of PPV & Sensitivity.<br><strong>PPV:</strong> Precision for positive predictions.<br><strong>NPV:</strong> Precision for negative predictions." },
-            bruteForceStart: { description: "Starts the brute-force search for the T2 criteria combination that maximizes the selected target metric in the current cohort. This may take some time and runs in the background." },
-            bruteForceInfo: { description: "Shows the status of the optimization worker and the currently analyzed patient cohort: <strong>[COHORT_NAME]</strong>." },
-            bruteForceResult: {
-                description: "Best result of the completed brute-force optimization for the selected cohort ([N_TOTAL] patients, including [N_PLUS] N+ and [N_MINUS] N-) and the target metric."
-            },
-            bruteForceDetailsButton: { description: "Opens a window with the top 10 results and more details about the completed optimization." },
             exportTab: {
                 description: "Allows exporting analysis results, tables, and charts based on the currently selected global cohort ([COHORT]) and the currently applied T2 criteria.",
                 statscsv: { description: "Detailed table of all calculated statistical metrics (descriptive, AS & T2 performance, comparisons, associations) from the Statistics tab as a CSV file.", type: 'STATS_CSV', ext: "csv" },
@@ -426,8 +399,7 @@ window.PUBLICATION_CONFIG = Object.freeze({
         {
             id: 'ergebnisse_main', labelKey: 'ergebnisse_main', subSections: [
                 { id: 'ergebnisse_patientencharakteristika', label: 'Patient Characteristics' },
-                { id: 'ergebnisse_as_diagnostische_guete', label: 'Diagnostic Performance of the Avocado Sign' },
-                { id: 'ergebnisse_vergleich_as_vs_t2', label: 'Comparison of Avocado Sign vs. T2w Criteria' }
+                { id: 'ergebnisse_vergleich_as_vs_t2', label: 'Diagnostic Performance and Comparison' }
             ]
         },
         { id: 'discussion_main', labelKey: 'discussion_main', subSections: [{ id: 'discussion_main', label: 'Discussion' }] },
