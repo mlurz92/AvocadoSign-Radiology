@@ -3,6 +3,8 @@ window.analysisTab = (() => {
     function createAnalysisTableCardHTML(data, sortState, appliedCriteria, appliedLogic) {
         const tableId = 'analysis-table';
         const columns = window.APP_CONFIG.TABLE_COLUMN_DEFINITIONS.ANALYSIS_TABLE_COLUMNS;
+        const formattedCriteria = window.studyT2CriteriaManager.formatCriteriaForDisplay(appliedCriteria, appliedLogic, true);
+        const cardTitle = `Patient Overview & Analysis Results (Applied T2: ${formattedCriteria})`;
 
         let headerHTML = `<thead class="small sticky-top bg-light" id="${tableId}-header"><tr>`;
         columns.forEach(col => {
@@ -48,7 +50,7 @@ window.analysisTab = (() => {
         return `
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <span>Patient Overview & Analysis Results (based on applied T2 criteria)</span>
+                    <span>${cardTitle}</span>
                     <button id="analysis-toggle-details" class="btn btn-sm btn-outline-secondary" data-action="expand" data-tippy-content="${toggleButtonTooltip}">
                        Expand All Details <i class="fas fa-chevron-down ms-1"></i>
                    </button>
@@ -109,14 +111,16 @@ window.analysisTab = (() => {
         let dashboardCardsHTML = '';
         if (stats && stats.patientCount > 0) {
             const dlBtns = (baseId, titleKey) => [{id:`dl-${baseId}-png`, icon: 'fa-image', tooltip: `Download '${window.APP_CONFIG.UI_TEXTS.chartTitles[titleKey]}' as PNG`, format:'png', chartId: baseId, chartName: window.APP_CONFIG.UI_TEXTS.chartTitles[titleKey]}, {id:`dl-${baseId}-svg`, icon: 'fa-file-code', tooltip: `Download '${window.APP_CONFIG.UI_TEXTS.chartTitles[titleKey]}' as SVG`, format:'svg', chartId: baseId, chartName: window.APP_CONFIG.UI_TEXTS.chartTitles[titleKey]}];
-            
+            const formattedAppliedT2 = window.studyT2CriteriaManager.formatCriteriaForDisplay(currentCriteria, currentLogic, true);
+            const t2DashboardTitle = `T2-Status (${formattedAppliedT2})`;
+
             dashboardCardsHTML = `
                 ${window.uiComponents.createDashboardCard(window.APP_CONFIG.UI_TEXTS.chartTitles.ageDistribution, `<p class="mb-0 small">Median: ${formatNumber(stats.age?.median, 1)} (${formatNumber(stats.age?.min, 0)} - ${formatNumber(stats.age?.max, 0)})</p>`, 'chart-dash-age', '', '', 'p-1', dlBtns('chart-dash-age', 'ageDistribution'), cohortDisplayName)}
                 ${window.uiComponents.createDashboardCard(window.APP_CONFIG.UI_TEXTS.chartTitles.genderDistribution, `<p class="mb-0 small">M: ${stats.sex?.m ?? 0} F: ${stats.sex?.f ?? 0}</p>`, 'chart-dash-gender', '', '', 'p-1', dlBtns('chart-dash-gender', 'genderDistribution'), cohortDisplayName)}
                 ${window.uiComponents.createDashboardCard(window.APP_CONFIG.UI_TEXTS.chartTitles.therapyDistribution, `<p class="mb-0 small">Surgery alone: ${stats.therapy?.surgeryAlone ?? 0} Neoadjuvant therapy: ${stats.therapy?.neoadjuvantTherapy ?? 0}</p>`, 'chart-dash-therapy', '', '', 'p-1', dlBtns('chart-dash-therapy', 'therapyDistribution'), cohortDisplayName)}
                 ${window.uiComponents.createDashboardCard(window.APP_CONFIG.UI_TEXTS.chartTitles.statusN, `<p class="mb-0 small">N+: ${stats.nStatus?.plus ?? 0} N-: ${stats.nStatus?.minus ?? 0}</p>`, 'chart-dash-status-n', '', '', 'p-1', dlBtns('chart-dash-status-n', 'statusN'), cohortDisplayName)}
                 ${window.uiComponents.createDashboardCard(window.APP_CONFIG.UI_TEXTS.chartTitles.statusAS, `<p class="mb-0 small">AS+: ${stats.asStatus?.plus ?? 0} AS-: ${stats.asStatus?.minus ?? 0}</p>`, 'chart-dash-status-as', '', '', 'p-1', dlBtns('chart-dash-as', 'statusAS'), cohortDisplayName)}
-                ${window.uiComponents.createDashboardCard(window.APP_CONFIG.UI_TEXTS.chartTitles.statusT2, `<p class="mb-0 small">T2+: ${stats.t2Status?.plus ?? 0} T2-: ${stats.t2Status?.minus ?? 0}</p>`, 'chart-dash-status-t2', '', '', 'p-1', dlBtns('chart-dash-t2', 'statusT2'), cohortDisplayName)}
+                ${window.uiComponents.createDashboardCard(t2DashboardTitle, `<p class="mb-0 small">T2+: ${stats.t2Status?.plus ?? 0} T2-: ${stats.t2Status?.minus ?? 0}</p>`, 'chart-dash-status-t2', '', '', 'p-1', dlBtns('chart-dash-t2', 'statusT2'), cohortDisplayName)}
             `;
         } else {
             dashboardCardsHTML = '<div class="col-12"><p class="text-muted text-center small p-3">No data for dashboard.</p></div>';
@@ -153,6 +157,9 @@ window.analysisTab = (() => {
                         return formatCI(m?.value, m?.ci?.lower, m?.ci?.upper, digits, p, '--');
                     };
                     
+                    const formattedAppliedT2 = window.studyT2CriteriaManager.formatCriteriaForDisplay(currentCriteria, currentLogic, true);
+                    const perfCardTitle = `Diagnostic Performance (Applied T2: ${formattedAppliedT2})`;
+
                     const metricsHtml = `
                         <div class="table-responsive">
                             <table class="table table-sm small mb-0 table-striped">
@@ -181,7 +188,7 @@ window.analysisTab = (() => {
                     `;
                     window.uiManager.updateElementHTML(metricsOverviewContainer.id, window.uiComponents.createStatisticsCard(
                         't2-metrics-overview-card',
-                        'Diagnostic Performance (Applied T2)',
+                        perfCardTitle,
                         metricsHtml,
                         false,
                         null,
