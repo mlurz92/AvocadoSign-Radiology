@@ -50,12 +50,12 @@ class App {
         const dependencies = { 
             state: window.state, t2CriteriaManager: window.t2CriteriaManager, studyT2CriteriaManager: window.studyT2CriteriaManager, 
             dataProcessor: window.dataProcessor, statisticsService: window.statisticsService, bruteForceManager: window.bruteForceManager, 
-            exportService: window.exportService, publicationHelpers: window.publicationHelpers, titlePageGenerator: window.titlePageGenerator, 
-            abstractGenerator: window.abstractGenerator, introductionGenerator: window.introductionGenerator, methodsGenerator: window.methodsGenerator, 
-            resultsGenerator: window.resultsGenerator, discussionGenerator: window.discussionGenerator, referencesGenerator: window.referencesGenerator, 
-            publicationService: window.publicationService, uiManager: window.uiManager, uiComponents: window.uiComponents, 
-            tableRenderer: window.tableRenderer, chartRenderer: window.chartRenderer, flowchartRenderer: window.flowchartRenderer, 
-            dataTab: window.dataTab, analysisTab: window.analysisTab, statisticsTab: window.statisticsTab, 
+            exportService: window.exportService, 
+            publicationHelpers: window.publicationHelpers, titlePageGenerator: window.titlePageGenerator, abstractGenerator: window.abstractGenerator, 
+            introductionGenerator: window.introductionGenerator, methodsGenerator: window.methodsGenerator, resultsGenerator: window.resultsGenerator, 
+            discussionGenerator: window.discussionGenerator, referencesGenerator: window.referencesGenerator, publicationService: window.publicationService,
+            uiManager: window.uiManager, uiComponents: window.uiComponents, tableRenderer: window.tableRenderer, chartRenderer: window.chartRenderer, 
+            flowchartRenderer: window.flowchartRenderer, dataTab: window.dataTab, analysisTab: window.analysisTab, statisticsTab: window.statisticsTab, 
             comparisonTab: window.comparisonTab, publicationTab: window.publicationTab, exportTab: window.exportTab, 
             eventManager: window.eventManager, APP_CONFIG: window.APP_CONFIG, PUBLICATION_CONFIG: window.PUBLICATION_CONFIG
         };
