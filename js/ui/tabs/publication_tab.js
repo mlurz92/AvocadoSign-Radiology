@@ -7,13 +7,17 @@ window.publicationTab = (() => {
             return '<div class="alert alert-warning">Statistics not available. Cannot generate publication content.</div>';
         }
 
+        const overallCohortId = window.APP_CONFIG.COHORTS.OVERALL.id;
+        const surgeryAloneCohortId = window.APP_CONFIG.COHORTS.SURGERY_ALONE.id;
+        const neoadjuvantCohortId = window.APP_CONFIG.COHORTS.NEOADJUVANT.id;
+
         const commonData = {
             appName: window.APP_CONFIG.APP_NAME,
             appVersion: window.APP_CONFIG.APP_VERSION,
-            nOverall: allCohortStats?.[window.APP_CONFIG.COHORTS.OVERALL.id]?.descriptive?.patientCount || 0,
-            nPositive: allCohortStats?.[window.APP_CONFIG.COHORTS.OVERALL.id]?.descriptive?.nStatus?.plus || 0,
-            nSurgeryAlone: allCohortStats?.[window.APP_CONFIG.COHORTS.SURGERY_ALONE.id]?.descriptive?.patientCount || 0,
-            nNeoadjuvantTherapy: allCohortStats?.[window.APP_CONFIG.COHORTS.NEOADJUVANT.id]?.descriptive?.patientCount || 0,
+            nOverall: allCohortStats?.[overallCohortId]?.descriptive?.patientCount || 0,
+            nPositive: allCohortStats?.[overallCohortId]?.descriptive?.nStatus?.plus || 0,
+            nSurgeryAlone: allCohortStats?.[surgeryAloneCohortId]?.descriptive?.patientCount || 0,
+            nNeoadjuvantTherapy: allCohortStats?.[neoadjuvantCohortId]?.descriptive?.patientCount || 0,
             references: window.APP_CONFIG.REFERENCES_FOR_PUBLICATION || {},
             bruteForceMetricForPublication: window.state.getPublicationBruteForceMetric(),
             currentLanguage: currentLanguage,
@@ -49,9 +53,9 @@ window.publicationTab = (() => {
             if (document.getElementById(flowchartContainerId)) {
                 if (typeof window.flowchartRenderer !== 'undefined' && allCohortStats?.Overall) {
                     const flowchartStats = {
-                        Overall: allCohortStats.Overall,
-                        surgeryAlone: allCohortStats.surgeryAlone,
-                        neoadjuvantTherapy: allCohortStats.neoadjuvantTherapy
+                        Overall: allCohortStats[overallCohortId],
+                        surgeryAlone: allCohortStats[surgeryAloneCohortId],
+                        neoadjuvantTherapy: allCohortStats[neoadjuvantCohortId]
                     };
                     window.flowchartRenderer.renderFlowchart(flowchartStats, flowchartContainerId);
                 }
@@ -67,7 +71,6 @@ window.publicationTab = (() => {
 
     function getSectionContentForExport(sectionId, lang, allCohortStats, commonData) {
         if (typeof window.publicationService === 'undefined') {
-            console.error("publicationService is not defined for export content generation.");
             return `Error: publicationService not available for section '${sectionId}'.`;
         }
         return window.publicationService.generateSectionHTML(sectionId, allCohortStats, commonData);
