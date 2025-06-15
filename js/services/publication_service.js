@@ -9,7 +9,6 @@ window.publicationService = (() => {
         'methoden_referenzstandard_histopathologie': window.methodsGenerator.generateReferenceStandardHTML,
         'methoden_statistische_analyse_methoden': window.methodsGenerator.generateStatisticalAnalysisHTML,
         'ergebnisse_patientencharakteristika': window.resultsGenerator.generatePatientCharacteristicsHTML,
-        'ergebnisse_as_diagnostische_guete': window.resultsGenerator.generateASPerformanceHTML,
         'ergebnisse_vergleich_as_vs_t2': window.resultsGenerator.generateComparisonHTML,
         'discussion_main': window.discussionGenerator.generateDiscussionHTML,
         'references_main': window.referencesGenerator.generateReferencesHTML
@@ -20,6 +19,9 @@ window.publicationService = (() => {
         let refCounter = 1;
 
         const processedHtml = html.replace(/\[([A-Za-z0-9_]+)\]/g, (match, refKey) => {
+            if (!allReferences[refKey]) {
+                return `[REF_NOT_FOUND: ${refKey}]`;
+            }
             if (!citedRefKeys.has(refKey)) {
                 citedRefKeys.set(refKey, refCounter++);
             }
@@ -34,7 +36,6 @@ window.publicationService = (() => {
             const listItems = sortedCitedRefs.map(([key, number]) => {
                 const refData = allReferences[key];
                 if (!refData) {
-                    console.warn(`Reference with key '${key}' not found in configuration.`);
                     return `<li>Reference for key '${key}' not found.</li>`;
                 }
                 const formattedText = refData.text.replace(/(\d{4};\d{1,3}:\d{1,4}–\d{1,4})/, '<strong>$1</strong>');
@@ -52,8 +53,7 @@ window.publicationService = (() => {
             try {
                 return generator(stats, commonData);
             } catch (error) {
-                console.error(`Error generating content for section ${sectionId}:`, error);
-                return `<div class="alert alert-danger">An error occurred while generating content for section '${sectionId}'. Please check the console for details.</div>`;
+                return `<div class="alert alert-danger">An error occurred while generating content for section '${sectionId}'.</div>`;
             }
         }
         
@@ -69,7 +69,6 @@ window.publicationService = (() => {
                 });
                 return combinedHTML;
             } catch (error) {
-                 console.error(`Error generating combined content for main section ${sectionId}:`, error);
                 return `<div class="alert alert-danger">An error occurred while generating combined content for section '${sectionId}'.</div>`;
             }
         }
