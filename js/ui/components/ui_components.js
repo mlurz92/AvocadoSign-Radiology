@@ -251,6 +251,59 @@ window.uiComponents = (() => {
         return html;
     }
 
+    function createBruteForceOverviewTableHTML(allBfResultsByCohort) {
+        if (!allBfResultsByCohort || Object.keys(allBfResultsByCohort).length === 0) {
+            return '<p class="text-muted small p-3">No saved brute-force optimization results available. Run optimization on the Analysis tab.</p>';
+        }
+
+        const formatCriteriaFunc = typeof window.studyT2CriteriaManager !== 'undefined' ? window.studyT2CriteriaManager.formatCriteriaForDisplay : (c, l) => 'N/A';
+        const na = window.APP_CONFIG.NA_PLACEHOLDER;
+        
+        let tableHTML = `
+            <div class="table-responsive">
+                <table class="table table-sm table-striped small caption-top">
+                    <caption>Saved Brute-Force Optima</caption>
+                    <thead>
+                        <tr>
+                            <th>Cohort</th>
+                            <th>Target Metric</th>
+                            <th>Best Value</th>
+                            <th>Criteria</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+
+        const cohortOrder = ['Overall', 'surgeryAlone', 'neoadjuvantTherapy'];
+        let hasContent = false;
+
+        cohortOrder.forEach(cohortId => {
+            if (allBfResultsByCohort[cohortId]) {
+                const cohortResults = allBfResultsByCohort[cohortId];
+                Object.keys(cohortResults).forEach(metricName => {
+                    const result = cohortResults[metricName];
+                    if(result && result.bestResult) {
+                        hasContent = true;
+                        tableHTML += `
+                            <tr>
+                                <td>${getCohortDisplayName(cohortId)}</td>
+                                <td>${metricName}</td>
+                                <td>${formatNumber(result.bestResult.metricValue, 4, na, true)}</td>
+                                <td><code>${formatCriteriaFunc(result.bestResult.criteria, result.bestResult.logic, true)}</code></td>
+                            </tr>
+                        `;
+                    }
+                });
+            }
+        });
+
+        if (!hasContent) {
+            return '<p class="text-muted small p-3">No saved brute-force optimization results available. Run optimization on the Analysis tab.</p>';
+        }
+
+        tableHTML += '</tbody></table></div>';
+        return tableHTML;
+    }
 
     return Object.freeze({
         createHeaderButtonHTML,
@@ -258,6 +311,7 @@ window.uiComponents = (() => {
         createT2CriteriaControls,
         createStatisticsCard,
         createPublicationNav,
-        createBruteForceModalContent
+        createBruteForceModalContent,
+        createBruteForceOverviewTableHTML
     });
 })();
