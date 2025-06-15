@@ -137,6 +137,7 @@ window.uiManager = (() => {
         let modalElement = document.getElementById('quick-guide-modal');
         if (!modalElement) {
             const appVersion = (typeof window.APP_CONFIG !== 'undefined') ? window.APP_CONFIG.APP_VERSION : '3.1.0';
+            const lastUpdatedDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
             const quickGuideContent = `
                 <h2>1. Introduction</h2>
                 <p>The <strong>Nodal Staging: Avocado Sign vs. T2 Criteria</strong> analysis tool is a client-side web application designed for scientific research in the radiological diagnosis of rectal cancer. It enables in-depth analyses and detailed comparisons of diagnostic performance for various MRI-based criteria for assessing mesorectal lymph node status (N-status). The application focuses on evaluating the novel "Avocado Sign" (AS) against established T2-weighted (T2w) morphological criteria. It is intended solely as a <strong>research instrument</strong>. The results are <strong>not for clinical diagnosis or direct patient treatment decisions</strong>.</p>
@@ -201,7 +202,7 @@ window.uiManager = (() => {
                     <li><strong>Configuration:</strong> <code>js/config.js</code> centralizes settings, UI texts, statistical constants, and publication configurations.</li>
                     <li><strong>Glossary of Key Terms:</strong> AS (Avocado Sign), AUC (Area Under the Curve), BF (Brute-Force), CI (Confidence Interval), nRCT (Neoadjuvant Chemoradiotherapy), NPV (Negative Predictive Value), OR (Odds Ratio), PPV (Positive Predictive Value), RD (Risk Difference), T2w (T2-weighted).</li>
                 </ul>
-                <p class="small text-muted text-end"><em>Description generated for Application Version ${appVersion}. Last updated: June 14, 2025.</em></p>
+                <p class="small text-muted text-end"><em>Description generated for Application Version ${appVersion}. Last updated: ${lastUpdatedDate}.</em></p>
             `;
             const modalHTML = `
                 <div class="modal fade" id="quick-guide-modal" tabindex="-1" aria-labelledby="quickGuideModalLabel" aria-hidden="true">
