@@ -17,7 +17,7 @@ window.comparisonTab = (() => {
         const createPerfTableRow = (stats, cohortKey) => {
             const cohortDisplayName = getCohortDisplayName(cohortKey);
             const fCI_p = (m, k) => { 
-                const d = (k === 'auc') ? 3 : ((k === 'f1' || k==='youden') ? 3 : 1); 
+                const d = (k === 'auc' || k === 'f1' || k ==='youden') ? 2 : 0; 
                 const p = !(k === 'auc' || k === 'f1' || k ==='youden'); 
                 return formatCI(m?.value, m?.ci?.lower, m?.ci?.upper, d, p, na); 
             };
@@ -102,8 +102,8 @@ window.comparisonTab = (() => {
             const metricNames = { sens: 'Sensitivity', spec: 'Specificity', ppv: 'PPV', npv: 'NPV', acc: 'Accuracy', balAcc: 'Bal. Accuracy', f1: 'F1-Score', auc: 'AUC' };
             let comparisonTableHTML = `<div class="table-responsive"><table class="table table-sm table-striped small mb-0" id="comp-as-vs-t2-comp-table"><thead class="small"><tr><th>Metric</th><th>AS (Value, 95% CI)</th><th>${t2ShortNameEffective} (Value, 95% CI)</th></tr></thead><tbody>`;
             metrics.forEach(key => {
-                const isRate = !(key === 'f1' || key === 'auc'); 
-                const digits = (key === 'auc' || key === 'f1') ? 3 : 1;
+                const isRate = !(key === 'f1' || key === 'auc' || key === 'balAcc'); 
+                const digits = (key === 'auc' || key === 'f1' || key === 'balAcc') ? 2 : 0;
                 const valAS = formatCI(performanceAS[key]?.value, performanceAS[key]?.ci?.lower, performanceAS[key]?.ci?.upper, digits, isRate, '--');
                 const valT2 = formatCI(performanceT2[key]?.value, performanceT2[key]?.ci?.lower, performanceT2[key]?.ci?.upper, digits, isRate, '--');
                 comparisonTableHTML += `<tr><td data-tippy-content="${getDefinitionTooltip(key)}">${metricNames[key]}</td><td data-tippy-content="${getInterpretationTooltip(key, performanceAS[key])}">${valAS}</td><td data-tippy-content="${getInterpretationTooltip(key, performanceT2[key])}">${valT2}</td></tr>`;
@@ -111,8 +111,8 @@ window.comparisonTab = (() => {
             comparisonTableHTML += `</tbody></table></div>`;
             const comparisonTableCardHTML = window.uiComponents.createStatisticsCard('comp-as-vs-t2-comp-table_card', `Performance Metrics (AS vs. ${t2ShortNameEffective})`, comparisonTableHTML, false, null, [{id: 'dl-comp-as-vs-t2-comp-table-png', icon: 'fa-image', format: 'png', tableId: 'comp-as-vs-t2-comp-table', tableName: `Comp_ASvsT2_Metrics_${comparisonCriteriaSet?.id || 'T2'}`}]);
             
-            const mcnemarTooltip = getInterpretationTooltip('pValue', comparison.mcnemar, { method1: 'AS', method2: t2ShortNameEffective, metricName: 'Accuracy'});
-            const delongTooltip = getInterpretationTooltip('pValue', comparison.delong, { method1: 'AS', method2: t2ShortNameEffective, metricName: 'AUC'});
+            const mcnemarTooltip = getInterpretationTooltip('pValue', {value: comparison.mcnemar?.pValue, testName: 'McNemar'}, { method1: 'AS', method2: t2ShortNameEffective, metricName: 'Accuracy'});
+            const delongTooltip = getInterpretationTooltip('pValue', {value: comparison.delong?.pValue, testName: 'DeLong'}, { method1: 'AS', method2: t2ShortNameEffective, metricName: 'AUC'});
 
             let testsTableHTML = `<table class="table table-sm table-striped small mb-0" id="comp-as-vs-t2-test-table"><thead class="small visually-hidden"><tr><th>Test</th><th>Statistic</th><th>p-Value</th><th>Method</th></tr></thead><tbody>`;
             testsTableHTML += `<tr><td data-tippy-content="${getDefinitionTooltip('mcnemar')}">McNemar (Acc)</td><td>${formatNumber(comparison?.mcnemar?.statistic, 3, na_stat, true)} (df=${comparison?.mcnemar?.df || na_stat})</td><td data-tippy-content="${mcnemarTooltip}">${getPValueText(comparison?.mcnemar?.pValue, false)} ${getStatisticalSignificanceSymbol(comparison?.mcnemar?.pValue)}</td><td>${comparison?.mcnemar?.method || na_stat}</td></tr>`;
