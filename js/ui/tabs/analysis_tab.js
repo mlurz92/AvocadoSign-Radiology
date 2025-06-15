@@ -106,6 +106,12 @@ window.analysisTab = (() => {
         const metricSelectValue = document.getElementById('brute-force-metric')?.value || window.APP_CONFIG.DEFAULT_SETTINGS.PUBLICATION_BRUTE_FORCE_METRIC;
         const bruteForceResultForCurrentCohortAndMetric = allBruteForceResults[currentCohort] ? allBruteForceResults[currentCohort][metricSelectValue] : null;
 
+        // NEU: Abrufen und Formatieren des Strings für Applied T2 Criteria
+        const appliedCriteria = window.t2CriteriaManager.getAppliedCriteria();
+        const appliedLogic = window.t2CriteriaManager.getAppliedLogic();
+        const appliedT2DisplayString = window.studyT2CriteriaManager.formatCriteriaForDisplay(appliedCriteria, appliedLogic, true);
+
+
         let dashboardCardsHTML = '';
         if (stats && stats.patientCount > 0) {
             const dlBtns = (baseId, titleKey) => [{id:`dl-${baseId}-png`, icon: 'fa-image', tooltip: `Download '${window.APP_CONFIG.UI_TEXTS.chartTitles[titleKey]}' as PNG`, format:'png', chartId: baseId, chartName: window.APP_CONFIG.UI_TEXTS.chartTitles[titleKey]}, {id:`dl-${baseId}-svg`, icon: 'fa-file-code', tooltip: `Download '${window.APP_CONFIG.UI_TEXTS.chartTitles[titleKey]}' as SVG`, format:'svg', chartId: baseId, chartName: window.APP_CONFIG.UI_TEXTS.chartTitles[titleKey]}];
@@ -181,12 +187,14 @@ window.analysisTab = (() => {
                     `;
                     window.uiManager.updateElementHTML(metricsOverviewContainer.id, window.uiComponents.createStatisticsCard(
                         't2-metrics-overview-card',
-                        'Diagnostic Performance (Applied T2)',
+                        `Diagnostic Performance (${window.APP_CONFIG.UI_TEXTS.labels.appliedT2Short}: ${appliedT2DisplayString})`, // NEU: Dynamischer Titel
                         metricsHtml,
                         false,
                         null,
                         [{id: 'dl-t2-metrics-overview-png', icon: 'fa-image', format: 'png', tableId: 't2-metrics-overview-card-content table', tableName: `T2_Metrics_Overview_${getCohortDisplayName(currentCohort).replace(/\s+/g, '_')}`}],
-                        't2-metrics-overview-card-content table'
+                        't2-metrics-overview-card-content table',
+                        currentCohort, // cohortId
+                        appliedT2DisplayString // appliedCriteriaDisplayString
                     ));
                 } else {
                     window.uiManager.updateElementHTML(metricsOverviewContainer.id, `<div class="col-12"><div class="alert alert-info small p-2">No diagnostic performance data available for current T2 criteria in cohort '${getCohortDisplayName(currentCohort)}'. Apply criteria or check data.</div></div>`);
