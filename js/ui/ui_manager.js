@@ -3,6 +3,7 @@ window.uiManager = (() => {
     let tippyInstances = [];
     let collapseEventListenersAttached = new Set();
     let quickGuideModalInstance = null;
+    let bruteForceModal = null;
 
     function showToast(message, type = 'info', duration = 3000) {
         if (typeof window.APP_CONFIG !== 'undefined' && window.APP_CONFIG.UI_SETTINGS?.TOAST_DURATION_MS) {
@@ -339,11 +340,13 @@ window.uiManager = (() => {
     }
 
     function updateBruteForceUI(status, payload = {}, isWorkerAvailable = false, currentCohort = null) {
-        const container = document.getElementById('brute-force-card-container');
+        const container = document.getElementById('brute-force-runner-card-container');
         if (!container) return;
+
         let contentHTML = '';
         let showResultControls = false;
         const cohortDisplayName = getCohortDisplayName(currentCohort);
+        const selectedMetric = document.getElementById('brute-force-metric')?.value || payload.metric || window.APP_CONFIG.DEFAULT_SETTINGS.PUBLICATION_BRUTE_FORCE_METRIC;
 
         if (!isWorkerAvailable) {
             contentHTML = `<p class="text-danger small p-3">Web Workers are not supported. Brute-force optimization is unavailable.</p>`;
@@ -361,31 +364,24 @@ window.uiManager = (() => {
                 <p class="small text-muted mt-2 mb-0">${currentBestText}</p>
             `;
         } else {
-            const bfResult = window.bruteForceManager.getResultsForCohort(currentCohort);
-            if (bfResult && bfResult.bestResult) {
+             const bfResult = window.bruteForceManager.getResultsForCohortAndMetric(currentCohort, selectedMetric);
+             if (bfResult && bfResult.bestResult) {
                 const best = bfResult.bestResult;
                 const criteriaDisplay = window.studyT2CriteriaManager.formatCriteriaForDisplay(best.criteria, best.logic);
-                let cohortStats = `(N=${bfResult.nTotal}, N+: ${bfResult.nPlus}, N-: ${bfResult.nMinus})`;
-
-                const resultTooltipTemplate = `Best result of the completed brute-force optimization for the selected cohort ([N_TOTAL] patients, including [N_PLUS] N+ and [N_MINUS] N-) and the target metric.`;
-                const resultTooltip = resultTooltipTemplate
-                    .replace('[N_TOTAL]', bfResult.nTotal)
-                    .replace('[N_PLUS]', bfResult.nPlus)
-                    .replace('[N_MINUS]', bfResult.nMinus);
-
+                const resultTooltipTemplate = `Best result of the completed brute-force optimization for the cohort '${cohortDisplayName}' and the target metric '${selectedMetric}'.`;
+                
                 contentHTML = `
-                    <p class="small text-muted" data-tippy-content="${resultTooltip}">
+                    <p class="small text-muted" data-tippy-content="${resultTooltipTemplate}">
                         <strong>Optimization complete for cohort '${cohortDisplayName}'.</strong><br>
                         Best ${bfResult.metric}: <strong class="text-primary">${formatNumber(best.metricValue, 4, 'N/A', true)}</strong><br>
-                        Criteria: <code>${criteriaDisplay}</code><br>
-                        Duration: ${formatNumber(bfResult.duration / 1000, 1, 'N/A', true)}s for ${formatNumber(bfResult.totalTested, 0)} combinations.
+                        Criteria: <code>${criteriaDisplay}</code>
                     </p>
                 `;
                 showResultControls = true;
             } else if (status === 'cancelled') {
                  contentHTML = `<p class="text-warning small p-3">Brute-force optimization was cancelled for cohort '${cohortDisplayName}'.</p>`;
             } else {
-                contentHTML = `<p class="text-muted small p-3">No brute-force optimization has been performed yet for cohort '${cohortDisplayName}'.</p>`;
+                contentHTML = `<p class="text-muted small p-3">No brute-force optimization has been performed yet for cohort '${cohortDisplayName}' and metric '${selectedMetric}'.</p>`;
             }
         }
 
@@ -400,12 +396,12 @@ window.uiManager = (() => {
                     <div class="d-flex align-items-center">
                         <label for="brute-force-metric" class="me-2 small text-muted" data-tippy-content="Select the target metric for the brute-force optimization.">Target:</label>
                         <select class="form-select form-select-sm me-2" id="brute-force-metric" ${isRunning ? 'disabled' : ''}>
-                            ${window.APP_CONFIG.AVAILABLE_BRUTE_FORCE_METRICS.map(metric => `<option value="${metric.value}" ${payload.metric === metric.value ? 'selected' : ''}>${metric.label}</option>`).join('')}
+                            ${window.APP_CONFIG.AVAILABLE_BRUTE_FORCE_METRICS.map(metric => `<option value="${metric.value}" ${selectedMetric === metric.value ? 'selected' : ''}>${metric.label}</option>`).join('')}
                         </select>
                         <button class="btn btn-sm btn-success me-2" id="btn-start-brute-force" data-tippy-content="Starts the brute-force search." ${isRunning || !isWorkerAvailable ? 'disabled' : ''}><i class="fas fa-play me-1"></i> Start</button>
                         <button class="btn btn-sm btn-danger me-2" id="btn-cancel-brute-force" ${!isRunning ? 'disabled' : ''}><i class="fas fa-stop me-1"></i> Cancel</button>
                         <button class="btn btn-sm btn-primary" id="btn-apply-best-bf-criteria" ${!showResultControls || isRunning ? 'disabled' : ''}><i class="fas fa-magic me-1"></i> Apply Best</button>
-                        <button class="btn btn-sm btn-outline-info ms-2" ${!showResultControls ? 'disabled' : ''} data-bs-toggle="modal" data-bs-target="#brute-force-modal" id="btn-show-bf-details" data-tippy-content="Opens a window with the top 10 results."><i class="fas fa-info-circle"></i> Top 10</button>
+                        <button class="btn btn-sm btn-outline-info ms-2" id="btn-show-bf-details" ${!showResultControls ? 'disabled' : ''} data-tippy-content="Opens a window with the top 10 results."><i class="fas fa-info-circle"></i> Top 10</button>
                     </div>
                 </div>
                 <div class="card-body">
