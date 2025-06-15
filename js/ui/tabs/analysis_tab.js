@@ -89,17 +89,19 @@ window.analysisTab = (() => {
         catch(error) { ids.forEach(id => window.uiManager.updateElementHTML(id, '<p class="text-danger small text-center p-2">Chart Error</p>')); }
     }
 
-    function render(data, currentCriteria, currentLogic, sortState, currentCohort, bfWorkerAvailable, currentCohortStats, bruteForceResultForCohort) {
+    function render(data, currentCriteria, currentLogic, sortState, currentCohort, bfWorkerAvailable, currentCohortStats, allBruteForceResults) {
         if (!data || !currentCriteria || !currentLogic) throw new Error("Data or criteria for Analysis Tab not available.");
         const criteriaControlsHTML = window.uiComponents.createT2CriteriaControls(currentCriteria, currentLogic);
         const analysisTableCardHTML = createAnalysisTableCardHTML(data, sortState, currentCriteria, currentLogic);
 
         const dashboardContainerId = 'analysis-dashboard';
         const metricsOverviewContainerId = 't2-metrics-overview';
-        const bruteForceCardContainerId = 'brute-force-card-container';
-
+        const bruteForceRunnerCardContainerId = 'brute-force-runner-card-container';
+        const bruteForceOverviewCardContainerId = 'brute-force-overview-card-container';
+        
         const stats = window.statisticsService.calculateDescriptiveStats(data);
         const cohortDisplayName = getCohortDisplayName(currentCohort);
+        const bruteForceResultForCurrentCohort = allBruteForceResults[currentCohort] ? allBruteForceResults[currentCohort][document.getElementById('brute-force-metric')?.value] : null;
 
         let dashboardCardsHTML = '';
         if (stats && stats.patientCount > 0) {
@@ -117,13 +119,20 @@ window.analysisTab = (() => {
             dashboardCardsHTML = '<div class="col-12"><p class="text-muted text-center small p-3">No data for dashboard.</p></div>';
         }
 
+        const bruteForceOverviewHTML = window.uiComponents.createStatisticsCard(
+            'bf-overview-card',
+            'Brute-Force Optima (Saved Results)',
+            window.uiComponents.createBruteForceOverviewTableHTML(allBruteForceResults),
+            false
+        );
 
         let finalHTML = `
             <div class="row g-2 mb-3" id="${dashboardContainerId}">${dashboardCardsHTML}</div>
             <div class="row g-4">
                 <div class="col-12">${criteriaControlsHTML}</div>
-                <div class="col-12 mb-3" id="${metricsOverviewContainerId}"></div>
-                <div class="col-12" id="${bruteForceCardContainerId}"></div>
+                <div class="col-12" id="${metricsOverviewContainerId}"></div>
+                <div class="col-lg-6" id="${bruteForceRunnerCardContainerId}"></div>
+                <div class="col-lg-6" id="${bruteForceOverviewCardContainerId}">${bruteForceOverviewHTML}</div>
                 <div class="col-12">${analysisTableCardHTML}</div>
             </div>`;
 
@@ -140,8 +149,7 @@ window.analysisTab = (() => {
                         const digits = (m?.name === 'auc') ? 3 : ((m?.name === 'f1') ? 3 : d);
                         return formatCI(m?.value, m?.ci?.lower, m?.ci?.upper, digits, p, '--');
                     };
-                    const na = '--';
-
+                    
                     const metricsHtml = `
                         <div class="table-responsive">
                             <table class="table table-sm small mb-0 table-striped">
@@ -182,9 +190,9 @@ window.analysisTab = (() => {
                 }
             }
             
-            const bruteForceCardContainer = document.getElementById(bruteForceCardContainerId);
-            if(bruteForceCardContainer) {
-                 window.uiManager.updateBruteForceUI(window.bruteForceManager.isRunning() ? 'progress' : 'initial', bruteForceResultForCohort, window.bruteForceManager.isWorkerAvailable(), currentCohort);
+            const bruteForceRunnerCardContainer = document.getElementById(bruteForceRunnerCardContainerId);
+            if(bruteForceRunnerCardContainer) {
+                 window.uiManager.updateBruteForceUI(window.bruteForceManager.isRunning() ? 'progress' : 'initial', bruteForceResultForCurrentCohort, bfWorkerAvailable, currentCohort);
             }
 
             const tableBody = document.getElementById('analysis-table-body');
