@@ -156,7 +156,7 @@ window.uiComponents = (() => {
         const navItems = window.PUBLICATION_CONFIG.sections.map(mainSection => {
             const sectionLabel = window.APP_CONFIG.UI_TEXTS.publicationTab.sectionLabels[mainSection.labelKey] || mainSection.labelKey;
             
-            const isMainActive = mainSection.id === currentSectionId || mainSection.subSections.some(sub => sub.id === currentSectionId);
+            const isMainActive = mainSection.id === currentSectionId || (mainSection.subSections && mainSection.subSections.some(sub => sub.id === currentSectionId));
             
             return `
                 <li class="nav-item">
