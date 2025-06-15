@@ -13,18 +13,23 @@ window.publicationHelpers = (() => {
 
         const pRoundedTo2 = Math.round(p * 100) / 100;
         const pRoundedTo3 = Math.round(p * 1000) / 1000;
-
+        
         if (p < 0.01) {
             return `${prefix} = .${pRoundedTo3.toFixed(3).substring(2)}`;
         }
-        
-        if (pRoundedTo2 === 0.05 && p !== 0.05) {
+
+        if (pRoundedTo2 === 0.05 && p.toPrecision(15) !== (0.05).toPrecision(15)) {
              return `${prefix} = .${pRoundedTo3.toFixed(3).substring(2)}`;
         }
-
-        return `${prefix} = .${pRoundedTo2.toFixed(2).substring(2)}`;
+        
+        let formattedP = pRoundedTo2.toFixed(2);
+        if (formattedP.startsWith("0.")) {
+            formattedP = formattedP.substring(1);
+        }
+        
+        return `${prefix} = ${formattedP}`;
     }
-
+    
     function formatValueForPublication(value, digits = 0, isPercent = false) {
         const num = parseFloat(value);
         if (num === null || num === undefined || isNaN(num) || !isFinite(num)) {
@@ -62,20 +67,17 @@ window.publicationHelpers = (() => {
             case 'npv':
             case 'acc':
                 isPercent = true;
-                digits = 1;
+                digits = 0;
                 break;
             case 'auc':
             case 'kappa':
             case 'icc':
-            case 'f1':
-            case 'balacc':
-            case 'youden':
-                isPercent = false;
-                digits = 2;
-                break;
             case 'or':
             case 'hr':
             case 'rr':
+            case 'f1':
+            case 'balacc':
+            case 'youden':
                 isPercent = false;
                 digits = 2;
                 break;
@@ -84,17 +86,9 @@ window.publicationHelpers = (() => {
                 digits = 2;
                 break;
         }
-        
-        if (metricLower === 'auc' || metricLower === 'kappa' || metricLower === 'icc') {
-            digits = 2;
-        }
 
         const valueStr = formatValueForPublication(metric.value, digits, isPercent);
         let valueWithUnit = isPercent ? `${valueStr}%` : valueStr;
-        
-        if (metricLower === 'auc') {
-             valueWithUnit = formatValueForPublication(metric.value, 3, false);
-        }
 
         if (showValueOnly) {
             return valueWithUnit;
@@ -112,14 +106,7 @@ window.publicationHelpers = (() => {
         const lowerStr = formatValueForPublication(metric.ci.lower, digits, isPercent);
         const upperStr = formatValueForPublication(metric.ci.upper, digits, isPercent);
         
-        let ciStr;
-        if (isPercent) {
-             ciStr = `${lowerStr}%, ${upperStr}%`;
-        } else {
-             const lowerCIStr = metricLower === 'auc' ? formatValueForPublication(metric.ci.lower, 3, false) : lowerStr;
-             const upperCIStr = metricLower === 'auc' ? formatValueForPublication(metric.ci.upper, 3, false) : upperStr;
-             ciStr = `${lowerCIStr}, ${upperCIStr}`;
-        }
+        const ciStr = isPercent ? `${lowerStr}%, ${upperStr}%` : `${lowerStr}, ${upperStr}`;
 
         return `${valueWithUnit}${numeratorInfo} (95% CI: ${ciStr})`;
     }
@@ -130,7 +117,7 @@ window.publicationHelpers = (() => {
         }
 
         const { id, caption, headers, rows, notes } = config;
-        let tableHtml = `<div class="table-responsive my-4" id="${id}">`;
+        let tableHtml = `<div class="table-responsive my-4" id="${id || generateUUID()}">`;
         tableHtml += `<table class="table table-sm table-striped small">`;
         if (caption) {
             tableHtml += `<caption><strong>${caption}</strong></caption>`;
