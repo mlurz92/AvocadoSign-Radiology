@@ -10,9 +10,21 @@ window.bruteForceManager = (() => {
     let onCancelled = null;
     let onStarted = null;
 
+    function _loadResultsFromStorage() {
+        const storedResults = loadFromLocalStorage(window.APP_CONFIG.STORAGE_KEYS.BRUTE_FORCE_RESULTS);
+        if (storedResults && typeof storedResults === 'object') {
+            allCohortResults = storedResults;
+        } else {
+            allCohortResults = {};
+        }
+    }
+
+    function _saveResultsToStorage() {
+        saveToLocalStorage(window.APP_CONFIG.STORAGE_KEYS.BRUTE_FORCE_RESULTS, allCohortResults);
+    }
+
     function initializeWorker() {
         if (typeof Worker === 'undefined') {
-            console.error("BruteForceManager: Web Workers are not supported in this browser.");
             if (onError) onError({ message: 'Web Workers are not supported in this browser.' });
             return false;
         }
@@ -25,7 +37,6 @@ window.bruteForceManager = (() => {
             worker.onerror = handleWorkerError;
             return true;
         } catch (e) {
-            console.error("BruteForceManager: Worker initialization failed.", e);
             worker = null;
             if (onError) onError({ message: `Worker initialization failed: ${e.message}` });
             return false;
@@ -34,7 +45,6 @@ window.bruteForceManager = (() => {
 
     function handleWorkerMessage(event) {
         if (!event || !event.data || !event.data.type) {
-            console.warn("BruteForceManager: Received an invalid message from the worker.", event);
             return;
         }
         const { type, payload } = event.data;
@@ -50,9 +60,14 @@ window.bruteForceManager = (() => {
                 break;
             case 'result':
                 isRunning = false;
-                const resultCohort = payload?.cohort || currentCohortRunning;
-                if (resultCohort && payload?.bestResult) {
-                    allCohortResults[resultCohort] = cloneDeep(payload);
+                const resultCohort = payload?.cohort;
+                const resultMetric = payload?.metric;
+                if (resultCohort && resultMetric && payload?.bestResult) {
+                    if (!allCohortResults[resultCohort]) {
+                        allCohortResults[resultCohort] = {};
+                    }
+                    allCohortResults[resultCohort][resultMetric] = cloneDeep(payload);
+                    _saveResultsToStorage();
                 }
                 currentCohortRunning = null;
                 if (onResult) onResult(payload);
@@ -68,7 +83,6 @@ window.bruteForceManager = (() => {
                 currentCohortRunning = null;
                 break;
             default:
-                 console.warn(`BruteForceManager: Received unknown message type '${type}' from worker.`);
                  break;
         }
     }
@@ -79,7 +93,6 @@ window.bruteForceManager = (() => {
         currentCohortRunning = null;
         
         const errorMessage = `Worker error in ${error.filename} at line ${error.lineno}: ${error.message}`;
-        console.error("BruteForceManager: " + errorMessage, error);
 
         if (onError) {
             onError({
@@ -96,7 +109,7 @@ window.bruteForceManager = (() => {
         onError = callbacks.onError || null;
         onCancelled = callbacks.onCancelled || null;
         onStarted = callbacks.onStarted || null;
-        allCohortResults = {};
+        _loadResultsFromStorage();
         return initializeWorker();
     }
 
@@ -104,21 +117,18 @@ window.bruteForceManager = (() => {
         if (isRunning) {
             const message = "An optimization is already running.";
             if (onError) onError({ message: message, cohort });
-            console.warn(`BruteForceManager: ${message}`);
             return false;
         }
         if (!worker) {
             if (!initializeWorker()) {
                 const message = "Worker not available and could not be re-initialized.";
                 if (onError) onError({ message: message, cohort });
-                console.error(`BruteForceManager: ${message}`);
                 return false;
             }
         }
         if (!data || data.length === 0) {
              const message = "No data provided for optimization.";
              if (onError) onError({ message: message, cohort });
-             console.error(`BruteForceManager: ${message}`);
             return false;
         }
 
@@ -145,7 +155,11 @@ window.bruteForceManager = (() => {
         return true;
     }
 
-    function getResultsForCohort(cohortId) {
+    function getResultsForCohortAndMetric(cohortId, metric) {
+        return allCohortResults[cohortId]?.[metric] ? cloneDeep(allCohortResults[cohortId][metric]) : null;
+    }
+
+    function getAllResultsForCohort(cohortId) {
         return allCohortResults[cohortId] ? cloneDeep(allCohortResults[cohortId]) : null;
     }
 
@@ -170,7 +184,8 @@ window.bruteForceManager = (() => {
         init,
         startAnalysis,
         cancelAnalysis,
-        getResultsForCohort,
+        getResultsForCohortAndMetric,
+        getAllResultsForCohort,
         getAllResults,
         isRunning: () => isRunning,
         isWorkerAvailable,
