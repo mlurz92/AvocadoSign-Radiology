@@ -13,15 +13,15 @@ window.publicationHelpers = (() => {
 
         const pRoundedTo2 = Math.round(p * 100) / 100;
         const pRoundedTo3 = Math.round(p * 1000) / 1000;
-        
+
         if (p < 0.01) {
             return `${prefix} = .${pRoundedTo3.toFixed(3).substring(2)}`;
         }
-
+        
         if (pRoundedTo2 === 0.05 && p.toPrecision(15) !== (0.05).toPrecision(15)) {
              return `${prefix} = .${pRoundedTo3.toFixed(3).substring(2)}`;
         }
-        
+
         let formattedP = pRoundedTo2.toFixed(2);
         if (formattedP.startsWith("0.")) {
             formattedP = formattedP.substring(1);
@@ -29,7 +29,7 @@ window.publicationHelpers = (() => {
         
         return `${prefix} = ${formattedP}`;
     }
-    
+
     function formatValueForPublication(value, digits = 0, isPercent = false) {
         const num = parseFloat(value);
         if (num === null || num === undefined || isNaN(num) || !isFinite(num)) {
@@ -72,12 +72,12 @@ window.publicationHelpers = (() => {
             case 'auc':
             case 'kappa':
             case 'icc':
-            case 'or':
-            case 'hr':
-            case 'rr':
             case 'f1':
             case 'balacc':
             case 'youden':
+            case 'or':
+            case 'hr':
+            case 'rr':
                 isPercent = false;
                 digits = 2;
                 break;
@@ -86,7 +86,7 @@ window.publicationHelpers = (() => {
                 digits = 2;
                 break;
         }
-
+        
         const valueStr = formatValueForPublication(metric.value, digits, isPercent);
         let valueWithUnit = isPercent ? `${valueStr}%` : valueStr;
 
