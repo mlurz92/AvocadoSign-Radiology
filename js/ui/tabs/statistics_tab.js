@@ -13,7 +13,7 @@ window.statisticsTab = (() => {
         const formattedAppliedT2 = window.studyT2CriteriaManager.formatCriteriaForDisplay(appliedCriteria, appliedLogic, true);
 
         const tooltips = {
-            age: "Patient age in years (Median, Min-Max, Mean ± Standard Deviation).",
+            age: "Patient age in years (Median, Min–Max, Mean ± Standard Deviation).",
             sex: "Distribution of male and female patients.",
             therapy: "Distribution of treatment approaches before surgery.",
             nStatus: "Distribution of final histopathological N-Status (N+/N-).",
@@ -163,47 +163,41 @@ window.statisticsTab = (() => {
 
     function render(processedData, appliedCriteria, appliedLogic, layout, cohort1, cohort2, globalCohort) {
         if (!processedData) throw new Error("Statistics data not available.");
+        
+        const allCohortStats = window.statisticsService.calculateAllPublicationStats(processedData, appliedCriteria, appliedLogic, window.bruteForceManager.getAllResults());
         const na_stat = window.APP_CONFIG.NA_PLACEHOLDER;
-        let datasets = [], cohortIds = [];
-        let baseEvaluatedData = window.t2CriteriaManager.evaluateDataset(cloneDeep(processedData), appliedCriteria, appliedLogic);
+        
+        let cohortIdsToShow = [];
         if (layout === 'einzel') {
-            datasets.push(window.dataProcessor.filterDataByCohort(baseEvaluatedData, globalCohort));
-            cohortIds.push(globalCohort);
+            cohortIdsToShow.push(globalCohort);
         } else {
-            datasets.push(window.dataProcessor.filterDataByCohort(baseEvaluatedData, cohort1));
-            datasets.push(window.dataProcessor.filterDataByCohort(baseEvaluatedData, cohort2));
-            cohortIds.push(cohort1, cohort2);
+            cohortIdsToShow.push(cohort1, cohort2);
         }
-        if (datasets.length === 0 || datasets.every(d => !Array.isArray(d) || d.length === 0)) {
+
+        const datasetsExist = cohortIdsToShow.some(cid => allCohortStats[cid] && allCohortStats[cid].descriptive.patientCount > 0);
+        if (!datasetsExist) {
             return '<div class="col-12"><div class="alert alert-warning">No data available for the selected statistics cohort(s).</div></div>';
         }
         
-        const allCohortStats = {};
         const outerRow = document.createElement('div');
         outerRow.className = 'row g-4';
         const formattedAppliedT2Short = `Applied T2 (${window.studyT2CriteriaManager.formatCriteriaForDisplay(appliedCriteria, appliedLogic, true)})`;
         const formattedAppliedT2Long = `Applied T2 (${window.studyT2CriteriaManager.formatCriteriaForDisplay(appliedCriteria, appliedLogic, false)})`;
 
-        datasets.forEach((data, i) => {
-            const cohortId = cohortIds[i];
+        cohortIdsToShow.forEach((cohortId, i) => {
+            const stats = allCohortStats[cohortId];
             const col = document.createElement('div');
             col.className = layout === 'vergleich' ? 'col-xl-6' : 'col-12';
             const innerRowId = `inner-stat-row-${i}`;
-            col.innerHTML = `<h4 class="mb-3">Cohort: ${getCohortDisplayName(cohortId)} (N=${data.length})</h4><div class="row g-3" id="${innerRowId}"></div>`;
-            outerRow.appendChild(col);
-            const innerContainer = col.querySelector(`#${innerRowId}`);
-            if (data.length > 0) {
-                const stats = {
-                    descriptive: window.statisticsService.calculateDescriptiveStats(data),
-                    performanceAS: window.statisticsService.calculateDiagnosticPerformance(data, 'asStatus', 'nStatus'),
-                    performanceT2: window.statisticsService.calculateDiagnosticPerformance(data, 't2Status', 'nStatus'),
-                    comparisonASvsT2: window.statisticsService.compareDiagnosticMethods(data, 'asStatus', 't2Status', 'nStatus'),
-                    associations: window.statisticsService.calculateAssociations(data, appliedCriteria)
-                };
-                allCohortStats[cohortId] = stats;
-                innerContainer.innerHTML += window.uiComponents.createStatisticsCard(`descriptive-stats-${i}`, 'Descriptive Statistics', createDescriptiveStatsContentHTML({descriptive: stats.descriptive}, i, cohortId), true, null, [{id: `dl-desc-table-${i}-png`, icon: 'fa-image', format: 'png', tableId: `table-descriptive-demographics-${i}`, tableName: `Descriptive_Demographics_${cohortId.replace(/\s+/g, '_')}`}], `table-descriptive-demographics-${i}`);
+            
+            if (stats && stats.descriptive.patientCount > 0) {
+                col.innerHTML = `<h4 class="mb-3">Cohort: ${getCohortDisplayName(cohortId)} (N=${stats.descriptive.patientCount})</h4><div class="row g-3" id="${innerRowId}"></div>`;
+                outerRow.appendChild(col);
+                const innerContainer = col.querySelector(`#${innerRowId}`);
 
-                const fCI_p_stat = (m, k) => { const d = (k === 'auc') ? 3 : ((k === 'f1' || k==='youden') ? 3 : 1); const p = !(k === 'auc'||k==='f1'||k==='youden'); return formatCI(m?.value, m?.ci?.lower, m?.ci?.upper, d, p, na_stat); };
+                innerContainer.innerHTML += window.uiComponents.createStatisticsCard(`descriptive-stats-${i}`, 'Descriptive Statistics', createDescriptiveStatsContentHTML(stats, i, cohortId), true, null, [{id: `dl-desc-table-${i}-png`, icon: 'fa-image', format: 'png', tableId: `table-descriptive-demographics-${i}`, tableName: `Descriptive_Demographics_${cohortId.replace(/\s+/g, '_')}`}], `table-descriptive-demographics-${i}`);
+
+                const fCI_p_stat = (m, k) => { const d = (k === 'auc' || k ==='f1' || k==='youden') ? 3 : 1; const p = !(k === 'auc'||k==='f1'||k==='youden'); return formatCI(m?.value, m?.ci?.lower, m?.ci?.upper, d, p, na_stat); };
                 
                 const createPerfTableHTML = (perfStats) => {
                     if (!perfStats || typeof perfStats.matrix !== 'object') return '<p class="text-muted small p-2">No diagnostic performance data.</p>';
@@ -224,8 +218,8 @@ window.statisticsTab = (() => {
 
                 const createCompTableHTML = (compStats) => {
                     if (!compStats) return '<p class="text-muted small p-2">No comparison data.</p>';
-                    const mcnemarTooltip = getInterpretationTooltip('pValue', compStats.mcnemar, { method1: 'AS', method2: formattedAppliedT2Short, metricName: 'Accuracy', testName: compStats.mcnemar?.method});
-                    const delongTooltip = getInterpretationTooltip('pValue', compStats.delong, { method1: 'AS', method2: formattedAppliedT2Short, metricName: 'AUC', testName: compStats.delong?.method});
+                    const mcnemarTooltip = getInterpretationTooltip('pValue', {value: compStats.mcnemar?.pValue, testName: 'McNemar'}, { method1: 'AS', method2: formattedAppliedT2Short, metricName: 'Accuracy'});
+                    const delongTooltip = getInterpretationTooltip('pValue', {value: compStats.delong?.pValue, testName: 'DeLong'}, { method1: 'AS', method2: formattedAppliedT2Short, metricName: 'AUC'});
                     
                     return `<div class="table-responsive"><table class="table table-sm table-striped small mb-0"><thead><tr>
                         <th data-tippy-content="Statistical test used to compare the two methods.">Test</th>
@@ -278,12 +272,12 @@ window.statisticsTab = (() => {
                 };
 
                 innerContainer.innerHTML += window.uiComponents.createStatisticsCard(`performance-as-${i}`, 'Diagnostic Performance: Avocado Sign (vs. N)', createPerfTableHTML(stats.performanceAS), false, null, [{id: `dl-as-perf-table-${i}-png`, icon: 'fa-image', format: 'png', tableId: `performance-as-${i}-content table`, tableName: `AS_Performance_${cohortId.replace(/\s+/g, '_')}`}], `performance-as-${i}-content table`);
-                innerContainer.innerHTML += window.uiComponents.createStatisticsCard(`performance-t2-${i}`, `Diagnostic Performance: ${formattedAppliedT2Long} vs. N`, createPerfTableHTML(stats.performanceT2), false, null, [{id: `dl-t2-perf-table-${i}-png`, icon: 'fa-image', format: 'png', tableId: `performance-t2-${i}-content table`, tableName: `T2_Applied_Performance_${cohortId.replace(/\s+/g, '_')}`}], `performance-t2-${i}-content table`);
-                innerContainer.innerHTML += window.uiComponents.createStatisticsCard(`comparison-as-t2-${i}`, `Statistical Comparison: AS vs. ${formattedAppliedT2Short}`, createCompTableHTML(stats.comparisonASvsT2), false, null, [{id: `dl-comp-as-t2-table-${i}-png`, icon: 'fa-image', format: 'png', tableId: `comparison-as-t2-${i}-content table`, tableName: `Comp_AS_T2_Applied_${cohortId.replace(/\s+/g, '_')}`}], `comparison-as-t2-${i}-content table`);
-                innerContainer.innerHTML += window.uiComponents.createStatisticsCard(`associations-${i}`, 'Association with N-Status', createAssocTableHTML(stats.associations, appliedCriteria), false, null, [{id: `dl-assoc-table-${i}-png`, icon: 'fa-image', format: 'png', tableId: `associations-${i}-content table`, tableName: `Associations_${cohortId.replace(/\s+/g, '_')}`}], `associations-${i}-content table`);
-
+                innerContainer.innerHTML += window.uiComponents.createStatisticsCard(`performance-t2-${i}`, `Diagnostic Performance: ${formattedAppliedT2Long} vs. N`, createPerfTableHTML(stats.performanceT2Applied), false, null, [{id: `dl-t2-perf-table-${i}-png`, icon: 'fa-image', format: 'png', tableId: `performance-t2-${i}-content table`, tableName: `T2_Applied_Performance_${cohortId.replace(/\s+/g, '_')}`}], `performance-t2-${i}-content table`);
+                innerContainer.innerHTML += window.uiComponents.createStatisticsCard(`comparison-as-t2-${i}`, `Statistical Comparison: AS vs. ${formattedAppliedT2Short}`, createCompTableHTML(stats.comparisonASvsT2Applied), false, null, [{id: `dl-comp-as-t2-table-${i}-png`, icon: 'fa-image', format: 'png', tableId: `comparison-as-t2-${i}-content table`, tableName: `Comp_AS_T2_Applied_${cohortId.replace(/\s+/g, '_')}`}], `comparison-as-t2-${i}-content table`);
+                innerContainer.innerHTML += window.uiComponents.createStatisticsCard(`associations-${i}`, 'Association with N-Status', createAssocTableHTML(stats.associationsApplied, appliedCriteria), false, null, [{id: `dl-assoc-table-${i}-png`, icon: 'fa-image', format: 'png', tableId: `associations-${i}-content table`, tableName: `Associations_${cohortId.replace(/\s+/g, '_')}`}], `associations-${i}-content table`);
             } else {
-                innerContainer.innerHTML = '<div class="col-12"><div class="alert alert-warning small p-2">No data for this cohort.</div></div>';
+                 col.innerHTML = `<h4 class="mb-3">Cohort: ${getCohortDisplayName(cohortId)}</h4><div class="alert alert-warning small p-2">No data for this cohort.</div>`;
+                 outerRow.appendChild(col);
             }
         });
 
@@ -295,7 +289,7 @@ window.statisticsTab = (() => {
              
              let compContent = '<p class="text-muted small p-2">Not enough data for cohort comparison.</p>';
              const aucCompAS = window.statisticsService.calculateZTestForAUCComparison(c1Stats.performanceAS.auc.value, c1Stats.performanceAS.auc.se, c1Stats.descriptive.patientCount, c2Stats.performanceAS.auc.value, c2Stats.performanceAS.auc.se, c2Stats.descriptive.patientCount);
-             const aucCompT2 = window.statisticsService.calculateZTestForAUCComparison(c1Stats.performanceT2.auc.value, c1Stats.performanceT2.auc.se, c1Stats.descriptive.patientCount, c2Stats.performanceT2.auc.value, c2Stats.performanceT2.auc.se, c2Stats.descriptive.patientCount);
+             const aucCompT2 = window.statisticsService.calculateZTestForAUCComparison(c1Stats.performanceT2Applied.auc.value, c1Stats.performanceT2Applied.auc.se, c1Stats.descriptive.patientCount, c2Stats.performanceT2Applied.auc.value, c2Stats.performanceT2Applied.auc.se, c2Stats.descriptive.patientCount);
 
              if(aucCompAS && aucCompT2) {
                  compContent = `<div class="table-responsive"><table class="table table-sm table-striped small mb-0">
@@ -308,7 +302,7 @@ window.statisticsTab = (() => {
                     </tr></thead>
                     <tbody>
                         <tr><td>Avocado Sign</td><td>AUC</td><td>${formatNumber(c1Stats.performanceAS.auc.value, 3, na_stat, true)}</td><td>${formatNumber(c2Stats.performanceAS.auc.value, 3, na_stat, true)}</td><td>${getPValueText(aucCompAS.pValue, false)}</td></tr>
-                        <tr><td>${formattedAppliedT2Short}</td><td>AUC</td><td>${formatNumber(c1Stats.performanceT2.auc.value, 3, na_stat, true)}</td><td>${formatNumber(c2Stats.performanceT2.auc.value, 3, na_stat, true)}</td><td>${getPValueText(aucCompT2.pValue, false)}</td></tr>
+                        <tr><td>${formattedAppliedT2Short}</td><td>AUC</td><td>${formatNumber(c1Stats.performanceT2Applied.auc.value, 3, na_stat, true)}</td><td>${formatNumber(c2Stats.performanceT2Applied.auc.value, 3, na_stat, true)}</td><td>${getPValueText(aucCompT2.pValue, false)}</td></tr>
                     </tbody>
                  </table></div>`;
              }
@@ -322,7 +316,7 @@ window.statisticsTab = (() => {
             criteriaComparisonCard.innerHTML = window.uiComponents.createStatisticsCard(
                 'criteria-comparison',
                 `Criteria Comparison Table (Cohort: ${getCohortDisplayName(globalCohort)})`,
-                createCriteriaComparisonTableHTML(window.statisticsService.calculateAllPublicationStats(processedData, appliedCriteria, appliedLogic, window.bruteForceManager.getAllResults()), globalCohort, appliedCriteria, appliedLogic),
+                createCriteriaComparisonTableHTML(allCohortStats, globalCohort, appliedCriteria, appliedLogic),
                 false,
                 'criteriaComparisonTable',
                 [{id: 'dl-criteria-comp-table-png', icon: 'fa-image', format: 'png', tableId: 'criteria-comparison-content table', tableName: `Criteria_Comparison_${globalCohort.replace(/\s+/g, '_')}`}],
@@ -332,15 +326,15 @@ window.statisticsTab = (() => {
         }
 
         setTimeout(() => {
-            datasets.forEach((data, i) => {
-                if (data.length > 0) {
-                    const stats = window.statisticsService.calculateDescriptiveStats(data);
+            cohortIdsToShow.forEach((cohortId, i) => {
+                const stats = allCohortStats[cohortId];
+                if (stats && stats.descriptive.patientCount > 0) {
                     if (document.getElementById(`chart-stat-age-${i}`)) {
-                        window.chartRenderer.renderAgeDistributionChart(stats.ageData, `chart-stat-age-${i}`, { height: 180, margin: { top: 10, right: 10, bottom: 35, left: 40 } });
+                        window.chartRenderer.renderAgeDistributionChart(stats.descriptive.ageData, `chart-stat-age-${i}`, { height: 180, margin: { top: 10, right: 10, bottom: 35, left: 40 } });
                     }
                     if (document.getElementById(`chart-stat-gender-${i}`)) {
-                        const genderData = [{label: 'Male', value: stats.sex.m ?? 0}, {label: 'Female', value: stats.sex.f ?? 0}];
-                        if (stats.sex.unknown > 0) genderData.push({label: 'Unknown', value: stats.sex.unknown });
+                        const genderData = [{label: 'Male', value: stats.descriptive.sex.m ?? 0}, {label: 'Female', value: stats.descriptive.sex.f ?? 0}];
+                        if (stats.descriptive.sex.unknown > 0) genderData.push({label: 'Unknown', value: stats.descriptive.sex.unknown });
                         window.chartRenderer.renderPieChart(genderData, `chart-stat-gender-${i}`, { height: 180, margin: { top: 10, right: 10, bottom: 35, left: 10 }, innerRadiusFactor: 0.0, legendBelow: true });
                     }
                 }
