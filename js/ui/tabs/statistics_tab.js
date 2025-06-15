@@ -152,7 +152,6 @@ window.statisticsTab = (() => {
         return tableHtml;
     }
 
-
     function render(processedData, appliedCriteria, appliedLogic, layout, cohort1, cohort2, globalCohort) {
         if (!processedData) throw new Error("Statistics data not available.");
         const na_stat = window.APP_CONFIG.NA_PLACEHOLDER;
