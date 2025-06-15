@@ -157,11 +157,29 @@ window.uiComponents = (() => {
             const sectionLabel = window.APP_CONFIG.UI_TEXTS.publicationTab.sectionLabels[mainSection.labelKey] || mainSection.id.replace(/_/g, ' ');
             const isMainActive = mainSection.id === currentSectionId || (mainSection.subSections && mainSection.subSections.some(sub => sub.id === currentSectionId));
             
+            let subNavHTML = '';
+            if (isMainActive && mainSection.subSections && mainSection.subSections.length > 0) {
+                subNavHTML += '<ul class="nav flex-column ps-3 mt-1 mb-2">';
+                mainSection.subSections.forEach(sub => {
+                    const isSubActive = sub.id === currentSectionId;
+                    subNavHTML += `
+                        <li class="nav-item">
+                            <a class="nav-link nav-link-sub py-1 publication-section-link ${isSubActive ? 'active' : ''}" href="#" data-section-id="${sub.id}" data-tippy-content="${sub.label}">
+                                ${sub.label}
+                            </a>
+                        </li>`;
+                });
+                subNavHTML += '</ul>';
+            }
+            
+            const mainLinkClass = (mainSection.subSections && mainSection.subSections.length > 0) ? 'nav-link-main' : '';
+
             return `
                 <li class="nav-item">
-                    <a class="nav-link py-2 publication-section-link ${isMainActive ? 'active' : ''}" href="#" data-section-id="${mainSection.id}" data-tippy-content="${sectionLabel}">
+                    <a class="nav-link py-2 publication-section-link ${mainLinkClass} ${isMainActive && !subNavHTML ? 'active' : ''}" href="#" data-section-id="${mainSection.id}" data-tippy-content="${sectionLabel}">
                         ${sectionLabel}
                     </a>
+                    ${subNavHTML}
                 </li>`;
         }).join('');
 
