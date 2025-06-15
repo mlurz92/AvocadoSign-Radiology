@@ -91,8 +91,9 @@ window.analysisTab = (() => {
 
     function render(data, currentCriteria, currentLogic, sortState, currentCohort, bfWorkerAvailable, currentCohortStats, allBruteForceResults) {
         if (!data || !currentCriteria || !currentLogic) throw new Error("Data or criteria for Analysis Tab not available.");
+        
         const criteriaControlsHTML = window.uiComponents.createT2CriteriaControls(currentCriteria, currentLogic);
-        const analysisTableCardHTML = createAnalysisTableCardHTML(data, sortState, currentCriteria, appliedLogic);
+        const analysisTableCardHTML = createAnalysisTableCardHTML(data, sortState, currentCriteria, currentLogic);
 
         const dashboardContainerId = 'analysis-dashboard';
         const metricsOverviewContainerId = 't2-metrics-overview';
