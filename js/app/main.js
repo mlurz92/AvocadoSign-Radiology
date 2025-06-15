@@ -5,6 +5,7 @@ class App {
         this.currentCohortData = [];
         this.allPublicationStats = null;
         this.comparisonDataForExport = null;
+        this.bruteForceModal = null;
     }
 
     init() {
@@ -19,6 +20,11 @@ class App {
             this.processedData = window.dataProcessor.processAllData(this.rawData);
             if (this.processedData.length === 0) {
                 window.uiManager.showToast("Warning: No valid patient data loaded.", "warning");
+            }
+
+            const modalElement = document.getElementById('brute-force-modal');
+            if (modalElement) {
+                this.bruteForceModal = new bootstrap.Modal(modalElement);
             }
             
             this.recalculateAllStats();
@@ -36,50 +42,29 @@ class App {
             window.uiManager.showToast('Application initialized.', 'success', 2500);
 
         } catch (error) {
-            console.error("Fatal error during app initialization:", error);
             window.uiManager.updateElementHTML('app-container', `<div class="alert alert-danger m-5"><strong>Initialization Error:</strong> ${error.message}.<br>Please check the browser console for more details.</div>`);
         }
     }
 
     checkDependencies() {
         const dependencies = { 
-            state: window.state, 
-            t2CriteriaManager: window.t2CriteriaManager, 
-            studyT2CriteriaManager: window.studyT2CriteriaManager, 
-            dataProcessor: window.dataProcessor, 
-            statisticsService: window.statisticsService, 
-            bruteForceManager: window.bruteForceManager, 
-            exportService: window.exportService,
-            publicationHelpers: window.publicationHelpers, 
-            abstractGenerator: window.abstractGenerator, 
-            introductionGenerator: window.introductionGenerator, 
-            methodsGenerator: window.methodsGenerator,
-            resultsGenerator: window.resultsGenerator, 
-            discussionGenerator: window.discussionGenerator, 
-            referencesGenerator: window.referencesGenerator, 
-            publicationService: window.publicationService,
-            uiManager: window.uiManager, 
-            uiComponents: window.uiComponents, 
-            tableRenderer: window.tableRenderer, 
-            chartRenderer: window.chartRenderer, 
-            flowchartRenderer: window.flowchartRenderer,
-            dataTab: window.dataTab, 
-            analysisTab: window.analysisTab, 
-            statisticsTab: window.statisticsTab, 
-            comparisonTab: window.comparisonTab, 
-            publicationTab: window.publicationTab, 
-            exportTab: window.exportTab,
-            eventManager: window.eventManager, 
-            APP_CONFIG: window.APP_CONFIG, 
-            PUBLICATION_CONFIG: window.PUBLICATION_CONFIG
+            state: window.state, t2CriteriaManager: window.t2CriteriaManager, studyT2CriteriaManager: window.studyT2CriteriaManager, 
+            dataProcessor: window.dataProcessor, statisticsService: window.statisticsService, bruteForceManager: window.bruteForceManager, 
+            exportService: window.exportService, publicationHelpers: window.publicationHelpers, abstractGenerator: window.abstractGenerator, 
+            introductionGenerator: window.introductionGenerator, methodsGenerator: window.methodsGenerator, resultsGenerator: window.resultsGenerator, 
+            discussionGenerator: window.discussionGenerator, referencesGenerator: window.referencesGenerator, publicationService: window.publicationService,
+            uiManager: window.uiManager, uiComponents: window.uiComponents, tableRenderer: window.tableRenderer, chartRenderer: window.chartRenderer, 
+            flowchartRenderer: window.flowchartRenderer, dataTab: window.dataTab, analysisTab: window.analysisTab, statisticsTab: window.statisticsTab, 
+            comparisonTab: window.comparisonTab, publicationTab: window.publicationTab, exportTab: window.exportTab, eventManager: window.eventManager, 
+            APP_CONFIG: window.APP_CONFIG, PUBLICATION_CONFIG: window.PUBLICATION_CONFIG
         };
         for (const dep in dependencies) {
             if (typeof dependencies[dep] === 'undefined' || dependencies[dep] === null) {
-                throw new Error(`Core module or dependency '${dep}' is not available. Check script loading order or definition.`);
+                throw new Error(`Core module or dependency '${dep}' is not available.`);
             }
         }
         if (typeof window.patientDataRaw === 'undefined' || window.patientDataRaw === null) {
-            throw new Error("Global 'patientDataRaw' is not available. Please ensure 'data/data.js' is loaded correctly.");
+            throw new Error("Global 'patientDataRaw' is not available.");
         }
     }
 
@@ -88,10 +73,11 @@ class App {
             onStarted: (payload) => window.uiManager.updateBruteForceUI('started', payload, true, window.state.getCurrentCohort()),
             onProgress: (payload) => window.uiManager.updateBruteForceUI('progress', payload, true, window.state.getCurrentCohort()),
             onResult: (payload) => {
-                window.uiManager.updateBruteForceUI('result', payload, true, payload.cohort);
+                const bfResults = window.bruteForceManager.getAllResults();
+                const cohortBfResults = bfResults[payload.cohort] || {};
+                window.uiManager.updateBruteForceUI('result', cohortBfResults[payload.metric], true, payload.cohort);
                 if (payload?.results?.length > 0) {
-                    window.uiManager.updateElementHTML('brute-force-modal-body', window.uiComponents.createBruteForceModalContent(payload));
-                    window.uiManager.initializeTooltips(document.getElementById('brute-force-modal-body'));
+                    this.showBruteForceDetails(payload.metric);
                     window.uiManager.showToast('Optimization finished.', 'success');
                     this.recalculateAllStats();
                     this.refreshCurrentTab();
@@ -131,7 +117,6 @@ class App {
         } catch (error) {
             this.currentCohortData = [];
             window.uiManager.showToast("Error during data preparation.", "danger");
-            console.error("Data preparation error:", error);
         }
     }
     
@@ -152,10 +137,7 @@ class App {
         const statsNeoadjuvantTherapy = this.allPublicationStats[window.APP_CONFIG.COHORTS.NEOADJUVANT.id];
         const filteredDataForComparisonTab = window.dataProcessor.filterDataByCohort(this.processedData, cohortForComparisonTab);
         
-        let performanceT2 = null;
-        let comparisonCriteriaSet = null;
-        let t2ShortName = null;
-        let comparisonASvsT2 = null;
+        let performanceT2 = null, comparisonCriteriaSet = null, t2ShortName = null, comparisonASvsT2 = null;
         let cohortForSet = cohortForComparisonTab;
         let patientCountForSet = filteredDataForComparisonTab.length;
 
@@ -164,14 +146,10 @@ class App {
             const appliedCriteria = window.t2CriteriaManager.getAppliedCriteria();
             const appliedLogic = window.t2CriteriaManager.getAppliedLogic();
             comparisonCriteriaSet = {
-                id: window.APP_CONFIG.SPECIAL_IDS.APPLIED_CRITERIA_STUDY_ID,
-                name: window.APP_CONFIG.SPECIAL_IDS.APPLIED_CRITERIA_DISPLAY_NAME,
-                displayShortName: window.APP_CONFIG.SPECIAL_IDS.APPLIED_CRITERIA_DISPLAY_NAME,
-                criteria: appliedCriteria,
-                logic: appliedLogic,
+                id: window.APP_CONFIG.SPECIAL_IDS.APPLIED_CRITERIA_STUDY_ID, name: window.APP_CONFIG.SPECIAL_IDS.APPLIED_CRITERIA_DISPLAY_NAME,
+                displayShortName: window.APP_CONFIG.SPECIAL_IDS.APPLIED_CRITERIA_DISPLAY_NAME, criteria: appliedCriteria, logic: appliedLogic,
                 studyInfo: {
-                    reference: 'User-defined criteria',
-                    patientCohort: `Current: ${getCohortDisplayName(cohortForComparisonTab)} (N=${filteredDataForComparisonTab.length})`,
+                    reference: 'User-defined criteria', patientCohort: `Current: ${getCohortDisplayName(cohortForComparisonTab)} (N=${filteredDataForComparisonTab.length})`,
                     keyCriteriaSummary: window.studyT2CriteriaManager.formatCriteriaForDisplay(appliedCriteria, appliedLogic, false)
                 }
             };
@@ -183,28 +161,18 @@ class App {
                 cohortForSet = studySet.applicableCohort || window.APP_CONFIG.COHORTS.OVERALL.id;
                 const statsForStudyCohort = this.allPublicationStats[cohortForSet];
                 patientCountForSet = window.dataProcessor.filterDataByCohort(this.processedData, cohortForSet).length;
-                
                 performanceT2 = statsForStudyCohort?.performanceT2Literature?.[selectedStudyId];
                 comparisonCriteriaSet = studySet;
                 t2ShortName = studySet.displayShortName || studySet.name;
-                comparisonASvsT2 = statsForStudyCohort?.[`comparisonASvsT2_literature_${selectedStudyId}`];
+                comparisonASvsT2 = statsForStudyCohort?.comparisonASvsT2Literature?.[selectedStudyId];
             }
         }
 
         return {
-            cohort: cohortForComparisonTab,
-            patientCount: filteredDataForComparisonTab.length,
-            statsCurrentCohort,
-            statsGesamt: statsOverall,
-            statsSurgeryAlone,
-            statsNeoadjuvantTherapy,
-            performanceAS: statsCurrentCohort?.performanceAS,
-            performanceT2,
-            comparison: comparisonASvsT2,
-            comparisonCriteriaSet,
-            cohortForComparison: cohortForSet,
-            patientCountForComparison: patientCountForSet,
-            t2ShortName
+            cohort: cohortForComparisonTab, patientCount: filteredDataForComparisonTab.length, statsCurrentCohort,
+            statsGesamt: statsOverall, statsSurgeryAlone, statsNeoadjuvantTherapy,
+            performanceAS: statsCurrentCohort?.performanceAS, performanceT2, comparison: comparisonASvsT2,
+            comparisonCriteriaSet, cohortForComparison: cohortForSet, patientCountForComparison: patientCountForSet, t2ShortName
         };
     }
 
@@ -238,12 +206,10 @@ class App {
         const cohort = window.state.getCurrentCohort();
         const criteria = window.t2CriteriaManager.getAppliedCriteria();
         const logic = window.t2CriteriaManager.getAppliedLogic();
-        const bruteForceResults = window.bruteForceManager.getAllResults();
+        const allBruteForceResults = window.bruteForceManager.getAllResults();
         
         const publicationData = {
-            rawData: this.rawData,
-            allCohortStats: this.allPublicationStats,
-            bruteForceResults: bruteForceResults,
+            rawData: this.rawData, allCohortStats: this.allPublicationStats, bruteForceResults: allBruteForceResults,
             currentLanguage: window.state.getCurrentPublikationLang()
         };
 
@@ -255,7 +221,7 @@ class App {
 
         switch (tabId) {
             case 'data': window.uiManager.renderTabContent(tabId, () => window.dataTab.render(this.currentCohortData, window.state.getDataTableSort())); break;
-            case 'analysis': window.uiManager.renderTabContent(tabId, () => window.analysisTab.render(this.currentCohortData, window.t2CriteriaManager.getCurrentCriteria(), window.t2CriteriaManager.getAppliedLogic(), window.state.getAnalysisTableSort(), cohort, window.bruteForceManager.isWorkerAvailable(), this.allPublicationStats[cohort], bruteForceResults[cohort])); break;
+            case 'analysis': window.uiManager.renderTabContent(tabId, () => window.analysisTab.render(this.currentCohortData, window.t2CriteriaManager.getCurrentCriteria(), window.t2CriteriaManager.getAppliedLogic(), window.state.getAnalysisTableSort(), cohort, window.bruteForceManager.isWorkerAvailable(), this.allPublicationStats[cohort], allBruteForceResults)); break;
             case 'statistics': window.uiManager.renderTabContent(tabId, () => window.statisticsTab.render(this.processedData, criteria, logic, window.state.getStatsLayout(), window.state.getStatsCohort1(), window.state.getStatsCohort2(), cohort)); break;
             case 'comparison': window.uiManager.renderTabContent(tabId, () => window.comparisonTab.render(window.state.getComparisonView(), currentComparisonData, window.state.getComparisonStudyId(), cohort, this.processedData, criteria, logic)); break;
             case 'publication': window.uiManager.renderTabContent(tabId, () => window.publicationTab.render(publicationData, window.state.getPublicationSection())); break;
@@ -269,7 +235,7 @@ class App {
             if (source === "user") {
                 window.uiManager.showToast(`Cohort '${getCohortDisplayName(newCohort)}' selected.`, 'info');
             } else if (source === "auto_comparison") {
-                window.uiManager.showToast(`Global cohort automatically set to '${getCohortDisplayName(newCohort)}' to match the study selection in the Comparison tab.`, 'info', 4000);
+                window.uiManager.showToast(`Global cohort automatically set to '${getCohortDisplayName(newCohort)}' to match the study selection.`, 'info', 4000);
                 window.uiManager.highlightElement(`btn-cohort-${newCohort}`);
             }
         }
@@ -293,23 +259,21 @@ class App {
         const metric = document.getElementById('brute-force-metric')?.value || 'Balanced Accuracy';
         const cohortId = window.state.getCurrentCohort();
         const dataForWorker = window.dataProcessor.filterDataByCohort(this.processedData, cohortId).map(p => ({
-            id: p.id,
-            nStatus: p.nStatus,
-            t2Nodes: p.t2Nodes
+            id: p.id, nStatus: p.nStatus, t2Nodes: p.t2Nodes
         }));
         
         if (dataForWorker.length > 0) {
             window.bruteForceManager.startAnalysis(dataForWorker, metric, cohortId);
         } else {
-            window.uiManager.showToast("No data for optimization in this cohort. Please select another cohort.", "warning");
+            window.uiManager.showToast("No data for optimization in this cohort.", "warning");
         }
     }
 
-    applyBestBruteForceCriteria() {
+    applyBestBruteForceCriteria(metric) {
         const cohortId = window.state.getCurrentCohort();
-        const bfResult = window.bruteForceManager.getResultsForCohort(cohortId);
+        const bfResult = window.bruteForceManager.getResultsForCohortAndMetric(cohortId, metric);
         if (!bfResult?.bestResult?.criteria) {
-            window.uiManager.showToast('No valid brute-force results to apply for this cohort.', 'warning');
+            window.uiManager.showToast(`No valid brute-force result for metric '${metric}' to apply.`, 'warning');
             return;
         }
         const best = bfResult.bestResult;
@@ -323,9 +287,18 @@ class App {
             }
         });
         window.t2CriteriaManager.updateLogic(best.logic);
-        window.uiManager.updateT2CriteriaControlsUI(window.t2CriteriaManager.getCurrentCriteria(), window.t2CriteriaManager.getCurrentLogic());
         this.applyAndRefreshAll();
-        window.uiManager.showToast('Best brute-force criteria applied & saved.', 'success');
+        window.uiManager.showToast(`Best brute-force criteria for '${metric}' applied & saved.`, 'success');
+    }
+
+    showBruteForceDetails(metric) {
+        const cohortId = window.state.getCurrentCohort();
+        const resultData = window.bruteForceManager.getResultsForCohortAndMetric(cohortId, metric);
+        window.uiManager.updateElementHTML('brute-force-modal-body', window.uiComponents.createBruteForceModalContent(resultData));
+        window.uiManager.initializeTooltips(document.getElementById('brute-force-modal-body'));
+        if (this.bruteForceModal) {
+            this.bruteForceModal.show();
+        }
     }
     
     handleSingleExport(exportType) {
@@ -340,7 +313,7 @@ class App {
         
         const exporter = {
             'stats-csv': () => window.exportService.exportStatistikCSV(this.allPublicationStats[cohort], cohort, criteria, logic),
-            'bruteforce-txt': () => window.exportService.exportBruteForceReport(bfResults[cohort]),
+            'bruteforce-txt': () => window.exportService.exportBruteForceReport(bfResults[cohort] ? bfResults[cohort][document.getElementById('brute-force-metric')?.value] : null),
             'datatable-md': () => window.exportService.exportTableMarkdown(currentFilteredData, 'daten', cohort),
             'analysistable-md': () => window.exportService.exportTableMarkdown(evaluatedCurrentFilteredData, 'auswertung', cohort, criteria, logic),
             'filtered-data-csv': () => window.exportService.exportFilteredDataCSV(currentFilteredData, cohort),
@@ -350,7 +323,7 @@ class App {
         if (exporter[exportType]) {
             exporter[exportType]();
         } else {
-            window.uiManager.showToast(`Export type '${exportType}' not recognized or implemented.`, 'warning');
+            window.uiManager.showToast(`Export type '${exportType}' not recognized.`, 'warning');
         }
     }
 
