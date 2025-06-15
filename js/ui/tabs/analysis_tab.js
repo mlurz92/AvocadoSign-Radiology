@@ -89,7 +89,8 @@ window.analysisTab = (() => {
         catch(error) { ids.forEach(id => window.uiManager.updateElementHTML(id, '<p class="text-danger small text-center p-2">Chart Error</p>')); }
     }
 
-    function render(data, currentCriteria, currentLogic, sortState, currentCohort, bfWorkerAvailable, currentCohortStats, allBruteForceResults) {
+    // Angepasste render Funktion
+    function render(data, currentCriteria, currentLogic, sortState, currentCohort, bfWorkerAvailable, currentCohortStats, allBruteForceResults, appliedT2DisplayString) {
         if (!data || !currentCriteria || !currentLogic) throw new Error("Data or criteria for Analysis Tab not available.");
         
         const criteriaControlsHTML = window.uiComponents.createT2CriteriaControls(currentCriteria, currentLogic);
@@ -103,13 +104,13 @@ window.analysisTab = (() => {
         const stats = window.statisticsService.calculateDescriptiveStats(data);
         const cohortDisplayName = getCohortDisplayName(currentCohort);
         
-        const metricSelectValue = document.getElementById('brute-force-metric')?.value || window.APP_CONFIG.DEFAULT_SETTINGS.PUBLICATION_BRUTE_FORCE_METRIC;
+        const metricSelectValue = document.getElementById('brute-force-metric')?.value || payload?.metric || window.APP_CONFIG.DEFAULT_SETTINGS.PUBLICATION_BRUTE_FORCE_METRIC;
         const bruteForceResultForCurrentCohortAndMetric = allBruteForceResults[currentCohort] ? allBruteForceResults[currentCohort][metricSelectValue] : null;
 
-        // NEU: Abrufen und Formatieren des Strings für Applied T2 Criteria
-        const appliedCriteria = window.t2CriteriaManager.getAppliedCriteria();
-        const appliedLogic = window.t2CriteriaManager.getAppliedLogic();
-        const appliedT2DisplayString = window.studyT2CriteriaManager.formatCriteriaForDisplay(appliedCriteria, appliedLogic, true);
+        // appliedT2DisplayString wird nun direkt als Argument übergeben, anstatt hier abgerufen zu werden.
+        // const appliedCriteria = window.t2CriteriaManager.getAppliedCriteria();
+        // const appliedLogic = window.t2CriteriaManager.getAppliedLogic();
+        // const appliedT2DisplayString = window.studyT2CriteriaManager.formatCriteriaForDisplay(appliedCriteria, appliedLogic, true);
 
 
         let dashboardCardsHTML = '';
@@ -131,8 +132,7 @@ window.analysisTab = (() => {
         const bruteForceOverviewHTML = window.uiComponents.createStatisticsCard(
             'bf-overview-card',
             'Brute-Force Optima (Saved Results)',
-            window.uiComponents.createBruteForceOverviewTableHTML(allBruteForceResults),
-            false
+            window.uiComponents.createBruteForceOverviewTableHTML(allBruteForceResults)
         );
 
         let finalHTML = `
@@ -187,7 +187,7 @@ window.analysisTab = (() => {
                     `;
                     window.uiManager.updateElementHTML(metricsOverviewContainer.id, window.uiComponents.createStatisticsCard(
                         't2-metrics-overview-card',
-                        `Diagnostic Performance (${window.APP_CONFIG.UI_TEXTS.labels.appliedT2Short}: ${appliedT2DisplayString})`, // NEU: Dynamischer Titel
+                        `Diagnostic Performance (${window.APP_CONFIG.UI_TEXTS.labels?.appliedT2Short || 'Applied T2'}: ${appliedT2DisplayString})`, // NEU: Dynamischer Titel mit Safe-Navigation
                         metricsHtml,
                         false,
                         null,
