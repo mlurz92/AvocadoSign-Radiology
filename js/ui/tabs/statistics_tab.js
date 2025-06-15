@@ -66,7 +66,8 @@ window.statisticsTab = (() => {
             </div>`;
     }
 
-    function createCriteriaComparisonTableHTML(allStats, globalCoh) {
+    // Angepasste Funktion createCriteriaComparisonTableHTML
+    function createCriteriaComparisonTableHTML(allStats, globalCoh, appliedT2DisplayString) {
         const na_stat = window.APP_CONFIG.NA_PLACEHOLDER;
         const results = [];
         const asPerf = allStats[globalCoh]?.performanceAS;
@@ -83,7 +84,7 @@ window.statisticsTab = (() => {
         const appliedComp = allStats[globalCoh]?.comparisonASvsT2Applied;
         if(appliedPerf) {
             results.push({
-                name: window.APP_CONFIG.SPECIAL_IDS.APPLIED_CRITERIA_DISPLAY_NAME,
+                name: appliedT2DisplayString, // NEU: Dynamische Beschriftung
                 cohort: getCohortDisplayName(globalCoh),
                 n: allStats[globalCoh]?.descriptive?.patientCount || '?',
                 pValue: appliedComp?.delong?.pValue,
@@ -152,6 +153,7 @@ window.statisticsTab = (() => {
         return tableHtml;
     }
 
+    // Angepasste render Funktion
     function render(processedData, appliedCriteria, appliedLogic, layout, cohort1, cohort2, globalCohort) {
         if (!processedData) throw new Error("Statistics data not available.");
         const na_stat = window.APP_CONFIG.NA_PLACEHOLDER;
@@ -171,6 +173,10 @@ window.statisticsTab = (() => {
         const allCohortStats = {};
         const outerRow = document.createElement('div');
         outerRow.className = 'row g-4';
+
+        // NEU: Abrufen des formatierten Strings für Applied T2 Criteria
+        const appliedT2DisplayString = window.studyT2CriteriaManager.formatCriteriaForDisplay(appliedCriteria, appliedLogic, true);
+
         datasets.forEach((data, i) => {
             const cohortId = cohortIds[i];
             const col = document.createElement('div');
@@ -211,8 +217,8 @@ window.statisticsTab = (() => {
 
                 const createCompTableHTML = (compStats) => {
                     if (!compStats) return '<p class="text-muted small p-2">No comparison data.</p>';
-                    const mcnemarTooltip = getInterpretationTooltip('pValue', compStats.mcnemar, { method1: 'AS', method2: 'T2 (Applied)', metricName: 'Accuracy', testName: compStats.mcnemar?.method});
-                    const delongTooltip = getInterpretationTooltip('pValue', compStats.delong, { method1: 'AS', method2: 'T2 (Applied)', metricName: 'AUC', testName: compStats.delong?.method});
+                    const mcnemarTooltip = getInterpretationTooltip('pValue', compStats.mcnemar, { method1: 'AS', method2: `T2 (${appliedT2DisplayString})`, metricName: 'Accuracy', testName: compStats.mcnemar?.method}); // NEU: Dynamischer Tooltip
+                    const delongTooltip = getInterpretationTooltip('pValue', compStats.delong, { method1: 'AS', method2: `T2 (${appliedT2DisplayString})`, metricName: 'AUC', testName: compStats.delong?.method}); // NEU: Dynamischer Tooltip
                     
                     return `<div class="table-responsive"><table class="table table-sm table-striped small mb-0"><thead><tr>
                         <th data-tippy-content="Statistical test used to compare the two methods.">Test</th>
@@ -265,8 +271,28 @@ window.statisticsTab = (() => {
                 };
 
                 innerContainer.innerHTML += window.uiComponents.createStatisticsCard(`performance-as-${i}`, 'Diagnostic Performance: Avocado Sign (AS vs. N)', createPerfTableHTML(stats.performanceAS), false, null, [{id: `dl-as-perf-table-${i}-png`, icon: 'fa-image', format: 'png', tableId: `performance-as-${i}-content table`, tableName: `AS_Performance_${cohortId.replace(/\s+/g, '_')}`}], `performance-as-${i}-content table`);
-                innerContainer.innerHTML += window.uiComponents.createStatisticsCard(`performance-t2-${i}`, 'Diagnostic Performance: T2 (Applied Criteria vs. N)', createPerfTableHTML(stats.performanceT2), false, null, [{id: `dl-t2-perf-table-${i}-png`, icon: 'fa-image', format: 'png', tableId: `performance-t2-${i}-content table`, tableName: `T2_Applied_Performance_${cohortId.replace(/\s+/g, '_')}`}], `performance-t2-${i}-content table`);
-                innerContainer.innerHTML += window.uiComponents.createStatisticsCard(`comparison-as-t2-${i}`, 'Statistical Comparison: AS vs. T2 (Applied Criteria)', createCompTableHTML(stats.comparisonASvsT2), false, null, [{id: `dl-comp-as-t2-table-${i}-png`, icon: 'fa-image', format: 'png', tableId: `comparison-as-t2-${i}-content table`, tableName: `Comp_AS_T2_Applied_${cohortId.replace(/\s+/g, '_')}`}], `comparison-as-t2-${i}-content table`);
+                innerContainer.innerHTML += window.uiComponents.createStatisticsCard(
+                    `performance-t2-${i}`, 
+                    `Diagnostic Performance: T2 (${appliedT2DisplayString} vs. N)`, // NEU: Dynamischer Titel
+                    createPerfTableHTML(stats.performanceT2), 
+                    false, 
+                    null, 
+                    [{id: `dl-t2-perf-table-${i}-png`, icon: 'fa-image', format: 'png', tableId: `performance-t2-${i}-content table`, tableName: `T2_Applied_Performance_${cohortId.replace(/\s+/g, '_')}`}], 
+                    `performance-t2-${i}-content table`,
+                    cohortId, // cohortId
+                    appliedT2DisplayString // appliedCriteriaDisplayString
+                );
+                innerContainer.innerHTML += window.uiComponents.createStatisticsCard(
+                    `comparison-as-t2-${i}`, 
+                    `Statistical Comparison: AS vs. T2 (${appliedT2DisplayString})`, // NEU: Dynamischer Titel
+                    createCompTableHTML(stats.comparisonASvsT2), 
+                    false, 
+                    null, 
+                    [{id: `dl-comp-as-t2-table-${i}-png`, icon: 'fa-image', format: 'png', tableId: `comparison-as-t2-${i}-content table`, tableName: `Comp_AS_T2_Applied_${cohortId.replace(/\s+/g, '_')}`}], 
+                    `comparison-as-t2-${i}-content table`,
+                    cohortId, // cohortId
+                    appliedT2DisplayString // appliedCriteriaDisplayString
+                );
                 innerContainer.innerHTML += window.uiComponents.createStatisticsCard(`associations-${i}`, 'Association with N-Status', createAssocTableHTML(stats.associations, appliedCriteria), false, null, [{id: `dl-assoc-table-${i}-png`, icon: 'fa-image', format: 'png', tableId: `associations-${i}-content table`, tableName: `Associations_${cohortId.replace(/\s+/g, '_')}`}], `associations-${i}-content table`);
 
             } else {
@@ -295,7 +321,7 @@ window.statisticsTab = (() => {
                     </tr></thead>
                     <tbody>
                         <tr><td>Avocado Sign</td><td>AUC</td><td>${formatNumber(c1Stats.performanceAS.auc.value, 3, na_stat, true)}</td><td>${formatNumber(c2Stats.performanceAS.auc.value, 3, na_stat, true)}</td><td>${getPValueText(aucCompAS.pValue, false)}</td></tr>
-                        <tr><td>T2 (Applied)</td><td>AUC</td><td>${formatNumber(c1Stats.performanceT2.auc.value, 3, na_stat, true)}</td><td>${formatNumber(c2Stats.performanceT2.auc.value, 3, na_stat, true)}</td><td>${getPValueText(aucCompT2.pValue, false)}</td></tr>
+                        <tr><td>T2 (${appliedT2DisplayString})</td><td>AUC</td><td>${formatNumber(c1Stats.performanceT2.auc.value, 3, na_stat, true)}</td><td>${formatNumber(c2Stats.performanceT2.auc.value, 3, na_stat, true)}</td><td>${getPValueText(aucCompT2.pValue, false)}</td></tr>
                     </tbody>
                  </table></div>`;
              }
@@ -308,8 +334,8 @@ window.statisticsTab = (() => {
             criteriaComparisonCard.className = 'col-12';
             criteriaComparisonCard.innerHTML = window.uiComponents.createStatisticsCard(
                 'criteria-comparison',
-                `Criteria Comparison: AS, Applied T2, & Literature Sets (for Cohort: ${getCohortDisplayName(globalCohort)})`,
-                createCriteriaComparisonTableHTML(window.statisticsService.calculateAllPublicationStats(processedData, appliedCriteria, appliedLogic, window.bruteForceManager.getAllResults()), globalCohort),
+                `Criteria Comparison: AS, ${appliedT2DisplayString}, & Literature Sets (for Cohort: ${getCohortDisplayName(globalCohort)})`, // NEU: Dynamischer Titel
+                createCriteriaComparisonTableHTML(window.statisticsService.calculateAllPublicationStats(processedData, appliedCriteria, appliedLogic, window.bruteForceManager.getAllResults()), globalCohort, appliedT2DisplayString), // NEU: appliedT2DisplayString übergeben
                 false,
                 'criteriaComparisonTable',
                 [{id: 'dl-criteria-comp-table-png', icon: 'fa-image', format: 'png', tableId: 'criteria-comparison-content table', tableName: `Criteria_Comparison_${globalCohort.replace(/\s+/g, '_')}`}],
