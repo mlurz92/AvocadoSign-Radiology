@@ -33,8 +33,8 @@ window.titlePageGenerator = (() => {
             keyResultsHTML = `
                 <h4 style="font-size: 1.1rem; font-weight: bold; margin-top: 1.5rem;">Key Results</h4>
                 <ul style="padding-left: 20px; margin-top: 0.5rem;">
-                    <li>In a retrospective study of ${nOverall} patients with rectal cancer, the Avocado Sign (AS) on contrast-enhanced MRI yielded an area under the receiver operating characteristic curve (AUC) of ${helpers.formatMetricForPublication(performanceAS.auc, 'auc', true)}.</li>
-                    ${bfResultForPub ? `<li>A cohort-optimized T2-weighted (T2w) criteria set, identified via brute-force analysis, yielded an AUC of ${helpers.formatMetricForPublication(bfResultForPub.auc, 'auc', true)}.</li>` : ''}
+                    <li>In a retrospective study of ${nOverall} patients with rectal cancer, the Avocado Sign (AS) on contrast-enhanced MRI yielded an area under the receiver operating characteristic curve (AUC) of ${helpers.formatMetricForPublication(performanceAS.auc, 'auc', false, true)}.</li>
+                    ${bfResultForPub ? `<li>A cohort-optimized T2-weighted (T2w) criteria set, identified via brute-force analysis, yielded an AUC of ${helpers.formatMetricForPublication(bfResultForPub.auc, 'auc', false, true)}.</li>` : ''}
                     ${bfComparisonForPub ? `<li>The diagnostic performance of the AS was not inferior to that of the cohort-optimized T2w criteria (${helpers.formatPValueForPublication(bfComparisonForPub.delong.pValue)}).</li>` : ''}
                 </ul>
             `;
