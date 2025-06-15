@@ -9,7 +9,7 @@ window.DEFAULT_T2_CRITERIA = Object.freeze({
 
 window.APP_CONFIG = Object.freeze({
     APP_NAME: "Nodal Staging: Avocado Sign vs. T2 Criteria",
-    APP_VERSION: "3.1.0",
+    APP_VERSION: "3.2.0-radiology-edition",
     NA_PLACEHOLDER: '--',
     COHORTS: Object.freeze({
         OVERALL: { id: 'Overall', therapyValue: null, displayName: 'Overall' },
@@ -25,7 +25,7 @@ window.APP_CONFIG = Object.freeze({
         STATS_COHORT1: 'Overall',
         STATS_COHORT2: 'neoadjuvantTherapy',
         COMPARISON_VIEW: 'as-vs-t2',
-        COMPARISON_STUDY_ID: 'applied_criteria',
+        COMPARISON_STUDY_ID: 'rutegard_et_al_esgar',
         PUBLICATION_SECTION: 'abstract_main',
         PUBLICATION_BRUTE_FORCE_METRIC: 'Balanced Accuracy',
         PUBLICATION_LANG: 'en'
@@ -40,6 +40,7 @@ window.APP_CONFIG = Object.freeze({
     STORAGE_KEYS: Object.freeze({
         APPLIED_CRITERIA: 'appliedT2Criteria_v4.2_detailed',
         APPLIED_LOGIC: 'appliedT2Logic_v4.2_detailed',
+        BRUTE_FORCE_RESULTS: 'bruteForceResults_v3.2_detailed',
         CURRENT_COHORT: 'currentCohort_v4.3_unified',
         PUBLICATION_SECTION: 'currentPublicationSection_v4.4_detailed',
         PUBLICATION_BRUTE_FORCE_METRIC: 'currentPublicationBfMetric_v4.4_detailed',
@@ -50,7 +51,7 @@ window.APP_CONFIG = Object.freeze({
         COMPARISON_VIEW: 'currentComparisonView_v4.2_detailed',
         COMPARISON_STUDY_ID: 'currentComparisonStudyId_v4.2_detailed',
         CHART_COLOR_SCHEME: 'chartColorScheme_v4.2_detailed',
-        FIRST_APP_START: 'appFirstStart_v3.1.0'
+        FIRST_APP_START: 'appFirstStart_v3.2.0'
     }),
     PATHS: Object.freeze({
         BRUTE_FORCE_WORKER: 'workers/brute_force_worker.js'
@@ -185,6 +186,11 @@ window.APP_CONFIG = Object.freeze({
                 references_main: 'References'
             }
         },
+        PUBLICATION_TEXTS: Object.freeze({
+            MIM_REGULATORY_STATEMENT: "This retrospective, single-institution study was performed in compliance with the Health Insurance Portability and Accountability Act and received approval from the institutional review board. The requirement for written informed consent was waived for this retrospective analysis.",
+            STATISTICAL_ANALYSIS_METHODS: "Descriptive statistics were used to summarize patient characteristics. Diagnostic performance metrics—including sensitivity, specificity, positive predictive value, negative predictive value, and accuracy—were calculated for each diagnostic method. Wilson score method was used for 95% confidence intervals (CIs) of proportions, and the bootstrap percentile method ([N_BOOTSTRAP] replications) was used for CIs of the area under the receiver operating characteristic curve (AUC).",
+            STATISTICAL_ANALYSIS_COMPARISON: "The primary comparison between the AUC of the Avocado Sign and other criteria was performed using the method described by DeLong et al. for correlated ROC curves. McNemar’s test was used to compare accuracies. For associations between individual categorical features and N-status, Fisher's exact test was used. All statistical analyses were performed using custom software scripts (JavaScript, ES2020+) implemented in the analysis tool itself (Version [APP_VERSION]). A two-sided P value of less than [P_LEVEL] was considered to indicate statistical significance."
+        }),
         chartTitles: {
             ageDistribution: 'Age Distribution',
             genderDistribution: 'Sex',
@@ -230,7 +236,7 @@ window.APP_CONFIG = Object.freeze({
                 phi: { title: 'Phi Coefficient (Matthews Correlation Coefficient)', text: 'A measure of the quality of a binary classification, ranging from -1 (total disagreement) to +1 (perfect agreement). 0 indicates a random guess.' },
                 mcnemar: { title: 'McNemar\'s Test', text: 'A statistical test used on paired nominal data to determine if there are significant differences between two dependent diagnostic tests.' },
                 delong: { title: 'DeLong\'s Test', text: 'A non-parametric statistical test used to compare the Area Under the Curve (AUC) of two correlated ROC curves.' },
-                pValue: { title: 'p-Value', text: 'The probability of obtaining test results at least as extreme as the results actually observed, under the assumption that the null hypothesis is correct. A smaller p-value (typically < 0.05) indicates strong evidence against the null hypothesis.' }
+                pValue: { title: 'P value', text: 'The probability of obtaining test results at least as extreme as the results actually observed, under the assumption that the null hypothesis is correct. A smaller P value (typically < .05) indicates strong evidence against the null hypothesis.' }
             },
             interpretation: {
                 notAvailable: 'Data for this metric is not available or could not be calculated for the current selection.',
@@ -243,10 +249,10 @@ window.APP_CONFIG = Object.freeze({
                 f1: 'An F1-Score of <strong>{value}</strong> indicates the harmonic mean of PPV and sensitivity. A score of 1.0 is perfect.',
                 auc: 'An AUC of <strong>{value}</strong> indicates a <strong>{strength}</strong> overall ability of the test to discriminate between N+ and N- patients.',
                 pValue: {
-                    default: "A p-value of {pValue} indicates that {significanceText}. This means there is a {strength} statistical evidence of a difference between {comparison} for the metric '{metric}'.",
-                    mcnemar: "A p-value of {pValue} for McNemar's test suggests that the difference in accuracy between {method1} and {method2} is {significanceText}. This indicates a {strength} evidence of a difference in their classification agreement with the reference standard.",
-                    delong: "A p-value of {pValue} for DeLong's test suggests that the difference in AUC between {method1} and {method2} is {significanceText}. This indicates a {strength} evidence of a difference in their overall diagnostic performance.",
-                    fisher: "A p-value of {pValue} from Fisher's exact test indicates that the association between having feature '{featureName}' and being N-positive is {significanceText}. This suggests a {strength} evidence of a non-random association."
+                    default: "A P value of {pValue} indicates that {significanceText}. This means there is a {strength} statistical evidence of a difference between {comparison} for the metric '{metric}'.",
+                    mcnemar: "A P value of {pValue} for McNemar's test suggests that the difference in accuracy between {method1} and {method2} is {significanceText}. This indicates a {strength} evidence of a difference in their classification agreement with the reference standard.",
+                    delong: "A P value of {pValue} for DeLong's test suggests that the difference in AUC between {method1} and {method2} is {significanceText}. This indicates a {strength} evidence of a difference in their overall diagnostic performance.",
+                    fisher: "A P value of {pValue} from Fisher's exact test indicates that the association between having feature '{featureName}' and being N-positive is {significanceText}. This suggests a {strength} evidence of a non-random association."
                 },
                 or: {
                     value: "An Odds Ratio of {value} means the odds of a patient being N-positive are {value} times {direction} for patients with '{featureName}' compared to those without it. This indicates a {strength} association.",
@@ -260,10 +266,10 @@ window.APP_CONFIG = Object.freeze({
                     value: "A Phi coefficient of {value} indicates a {strength} positive correlation between the presence of feature '{featureName}' and a positive N-status.",
                 },
                 ci: {
-                    includesOne: "does not exclude an odds ratio of 1, so the association is not statistically significant at the p < 0.05 level",
-                    excludesOne: "excludes an odds ratio of 1, suggesting a statistically significant association at the p < 0.05 level",
-                    includesZero: "crosses zero, indicating the observed risk difference is not statistically significant at the p < 0.05 level",
-                    excludesZero: "does not cross zero, suggesting a statistically significant risk difference at the p < 0.05 level"
+                    includesOne: "does not exclude an odds ratio of 1, so the association is not statistically significant at the P < .05 level",
+                    excludesOne: "excludes an odds ratio of 1, suggesting a statistically significant association at the P < .05 level",
+                    includesZero: "crosses zero, indicating the observed risk difference is not statistically significant at the P < .05 level",
+                    excludesZero: "does not cross zero, suggesting a statistically significant risk difference at the P < .05 level"
                 },
                 strength: {
                     very_strong: "very strong",
