@@ -65,9 +65,27 @@ window.eventManager = (() => {
             'btn-apply-criteria': () => app.applyAndRefreshAll(),
             'btn-start-brute-force': () => app.startBruteForceAnalysis(),
             'btn-cancel-brute-force': () => window.bruteForceManager.cancelAnalysis(),
-            'btn-apply-best-bf-criteria': () => app.applyBestBruteForceCriteria(),
+            'btn-apply-best-bf-criteria': () => {
+                const metricSelect = document.getElementById('brute-force-metric');
+                if (metricSelect) {
+                    app.applyBestBruteForceCriteria(metricSelect.value);
+                }
+            },
+            'btn-show-bf-details': () => {
+                 const metricSelect = document.getElementById('brute-force-metric');
+                 if (metricSelect) {
+                     app.showBruteForceDetails(metricSelect.value);
+                 }
+            },
             'statistics-toggle-comparison': () => handleStatsLayoutToggle(button),
-            'export-bruteforce-modal-txt': () => window.exportService.exportBruteForceReport(window.bruteForceManager.getResultsForCohort(window.state.getCurrentCohort()))
+            'export-bruteforce-modal-txt': () => {
+                 const metricSelect = document.getElementById('brute-force-metric');
+                 if (metricSelect) {
+                    const cohortId = window.state.getCurrentCohort();
+                    const resultData = window.bruteForceManager.getResultsForCohortAndMetric(cohortId, metricSelect.value);
+                    window.exportService.exportBruteForceReport(resultData);
+                 }
+            }
         };
 
         if (singleClickActions[button.id] && !button.disabled) {
@@ -118,6 +136,7 @@ window.eventManager = (() => {
         
         const changeActions = {
             't2-logic-switch': () => handleT2LogicChange(target),
+            'brute-force-metric': () => app.refreshCurrentTab(),
             'statistics-cohort-select-1': () => handleStatsCohortChange(target),
             'statistics-cohort-select-2': () => handleStatsCohortChange(target),
             'comp-study-select': () => handleComparisonStudyChange(target.value),
