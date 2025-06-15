@@ -138,7 +138,7 @@ window.tableRenderer = (() => {
             itemContent += formatCriterionCheck('size', 'size', lk.size, lk.checkResult, lk.size);
             itemContent += formatCriterionCheck('shape', 'shape', lk.shape, lk.checkResult, lk.shape);
             itemContent += formatCriterionCheck('border', 'border', lk.border, lk.checkResult, lk.border);
-            itemContent += formatCriterionCheck('homogeneity', 'homogeneity', lk.checkResult, lk.homogeneity);
+            itemContent += formatCriterionCheck('homogeneity', 'homogeneity', lk.homogeneity, lk.checkResult, lk.homogeneity);
             itemContent += formatCriterionCheck('signal', 'signal', lk.signal, lk.checkResult, lk.signal);
 
             content += `<div class="${baseClass} ${highlightClass}">${itemContent}</div>`;
