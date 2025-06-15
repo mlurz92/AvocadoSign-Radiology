@@ -212,29 +212,13 @@ function getStatisticalSignificanceSymbol(pValue) {
     return 'ns';
 }
 
-function getPValueText(pValue, forPublication = false) {
+function getPValueText(pValue) {
     const p = parseFloat(pValue);
     if (p === null || p === undefined || isNaN(p) || !isFinite(p)) return 'N/A';
 
-    if (forPublication) {
-        const prefix = '<em>P</em>';
-        if (p < 0.001) return `${prefix} < .001`;
-        if (p > 0.99) return `${prefix} > .99`;
-        
-        if (p < 0.05 && p >= 0.01 && (p * 100).toFixed(0) === '5') {
-            return `${prefix} = .${p.toFixed(3).substring(2)}`;
-        }
-        
-        if (p < 0.01) {
-            return `${prefix} = .${p.toFixed(3).substring(2)}`;
-        }
-        
-        return `${prefix} = .${p.toFixed(2).substring(2)}`;
-    } else {
-        const prefix = 'p';
-        if (p < 0.001) return `${prefix} < 0.001`;
-        return `${prefix} = ${p.toFixed(3)}`;
-    }
+    const prefix = 'p';
+    if (p < 0.001) return `${prefix} < 0.001`;
+    return `${prefix} = ${p.toFixed(3)}`;
 }
 
 
@@ -349,7 +333,7 @@ function getInterpretationTooltip(metricKey, data, context = {}) {
              break;
 
         case 'pValue':
-            const pValueFormatted = getPValueText(value, false);
+            const pValueFormatted = getPValueText(value);
             const significance = value < window.APP_CONFIG.STATISTICAL_CONSTANTS.SIGNIFICANCE_LEVEL;
             const significanceText = significance ? templates.significance.significant : templates.significance.not_significant;
             const pStrength = significance ? templates.strength.strong : templates.strength.very_weak;
