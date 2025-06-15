@@ -50,13 +50,14 @@ class App {
         const dependencies = { 
             state: window.state, t2CriteriaManager: window.t2CriteriaManager, studyT2CriteriaManager: window.studyT2CriteriaManager, 
             dataProcessor: window.dataProcessor, statisticsService: window.statisticsService, bruteForceManager: window.bruteForceManager, 
-            exportService: window.exportService, publicationHelpers: window.publicationHelpers, abstractGenerator: window.abstractGenerator, 
-            introductionGenerator: window.introductionGenerator, methodsGenerator: window.methodsGenerator, resultsGenerator: window.resultsGenerator, 
-            discussionGenerator: window.discussionGenerator, referencesGenerator: window.referencesGenerator, publicationService: window.publicationService,
-            uiManager: window.uiManager, uiComponents: window.uiComponents, tableRenderer: window.tableRenderer, chartRenderer: window.chartRenderer, 
-            flowchartRenderer: window.flowchartRenderer, dataTab: window.dataTab, analysisTab: window.analysisTab, statisticsTab: window.statisticsTab, 
-            comparisonTab: window.comparisonTab, publicationTab: window.publicationTab, exportTab: window.exportTab, eventManager: window.eventManager, 
-            APP_CONFIG: window.APP_CONFIG, PUBLICATION_CONFIG: window.PUBLICATION_CONFIG
+            exportService: window.exportService, publicationHelpers: window.publicationHelpers, titlePageGenerator: window.titlePageGenerator, 
+            abstractGenerator: window.abstractGenerator, introductionGenerator: window.introductionGenerator, methodsGenerator: window.methodsGenerator, 
+            resultsGenerator: window.resultsGenerator, discussionGenerator: window.discussionGenerator, referencesGenerator: window.referencesGenerator, 
+            publicationService: window.publicationService, uiManager: window.uiManager, uiComponents: window.uiComponents, 
+            tableRenderer: window.tableRenderer, chartRenderer: window.chartRenderer, flowchartRenderer: window.flowchartRenderer, 
+            dataTab: window.dataTab, analysisTab: window.analysisTab, statisticsTab: window.statisticsTab, 
+            comparisonTab: window.comparisonTab, publicationTab: window.publicationTab, exportTab: window.exportTab, 
+            eventManager: window.eventManager, APP_CONFIG: window.APP_CONFIG, PUBLICATION_CONFIG: window.PUBLICATION_CONFIG
         };
         for (const dep in dependencies) {
             if (typeof dependencies[dep] === 'undefined' || dependencies[dep] === null) {
@@ -313,7 +314,10 @@ class App {
         
         const exporter = {
             'stats-csv': () => window.exportService.exportStatistikCSV(this.allPublicationStats[cohort], cohort, criteria, logic),
-            'bruteforce-txt': () => window.exportService.exportBruteForceReport(bfResults[cohort] ? bfResults[cohort][document.getElementById('brute-force-metric')?.value] : null),
+            'bruteforce-txt': () => {
+                const metric = document.getElementById('brute-force-metric')?.value;
+                window.exportService.exportBruteForceReport(bfResults[cohort] ? bfResults[cohort][metric] : null)
+            },
             'datatable-md': () => window.exportService.exportTableMarkdown(currentFilteredData, 'daten', cohort),
             'analysistable-md': () => window.exportService.exportTableMarkdown(evaluatedCurrentFilteredData, 'auswertung', cohort, criteria, logic),
             'filtered-data-csv': () => window.exportService.exportFilteredDataCSV(currentFilteredData, cohort),
