@@ -6,21 +6,23 @@ window.publicationHelpers = (() => {
             return 'N/A';
         }
 
-        const prefix = '<em>P</em>';
+        const prefix = 'P';
 
         if (p < 0.001) return `${prefix} < .001`;
         if (p > 0.99) return `${prefix} > .99`;
 
         const pRoundedTo2 = Math.round(p * 100) / 100;
-        if (p < 0.05 && pRoundedTo2 === 0.05) {
-            return `${prefix} = .${p.toFixed(3).substring(2)}`;
-        }
-        
+        const pRoundedTo3 = Math.round(p * 1000) / 1000;
+
         if (p < 0.01) {
-            return `${prefix} = .${p.toFixed(3).substring(2)}`;
+            return `${prefix} = .${pRoundedTo3.toFixed(3).substring(2)}`;
         }
         
-        return `${prefix} = .${p.toFixed(2).substring(2)}`;
+        if (pRoundedTo2 === 0.05 && p !== 0.05) {
+             return `${prefix} = .${pRoundedTo3.toFixed(3).substring(2)}`;
+        }
+
+        return `${prefix} = .${pRoundedTo2.toFixed(2).substring(2)}`;
     }
 
     function formatValueForPublication(value, digits = 0, isPercent = false) {
@@ -38,8 +40,8 @@ window.publicationHelpers = (() => {
             formattedString = finalValue.toFixed(digits);
         }
 
-        if (!isPercent && Math.abs(parseFloat(formattedString)) < 1 && formattedString.startsWith('0.')) {
-            return `.${formattedString.substring(2)}`;
+        if (!isPercent && Math.abs(parseFloat(formattedString)) < 1 && (formattedString.startsWith('0.') || formattedString.startsWith('-0.'))) {
+            return formattedString.replace('0.', '.');
         }
         
         return formattedString;
@@ -60,11 +62,14 @@ window.publicationHelpers = (() => {
             case 'npv':
             case 'acc':
                 isPercent = true;
-                digits = 0;
+                digits = 1;
                 break;
             case 'auc':
             case 'kappa':
             case 'icc':
+            case 'f1':
+            case 'balacc':
+            case 'youden':
                 isPercent = false;
                 digits = 2;
                 break;
@@ -79,9 +84,17 @@ window.publicationHelpers = (() => {
                 digits = 2;
                 break;
         }
+        
+        if (metricLower === 'auc' || metricLower === 'kappa' || metricLower === 'icc') {
+            digits = 2;
+        }
 
         const valueStr = formatValueForPublication(metric.value, digits, isPercent);
         let valueWithUnit = isPercent ? `${valueStr}%` : valueStr;
+        
+        if (metricLower === 'auc') {
+             valueWithUnit = formatValueForPublication(metric.value, 3, false);
+        }
 
         if (showValueOnly) {
             return valueWithUnit;
@@ -103,7 +116,9 @@ window.publicationHelpers = (() => {
         if (isPercent) {
              ciStr = `${lowerStr}%, ${upperStr}%`;
         } else {
-             ciStr = `${lowerStr}, ${upperStr}`;
+             const lowerCIStr = metricLower === 'auc' ? formatValueForPublication(metric.ci.lower, 3, false) : lowerStr;
+             const upperCIStr = metricLower === 'auc' ? formatValueForPublication(metric.ci.upper, 3, false) : upperStr;
+             ciStr = `${lowerCIStr}, ${upperCIStr}`;
         }
 
         return `${valueWithUnit}${numeratorInfo} (95% CI: ${ciStr})`;
