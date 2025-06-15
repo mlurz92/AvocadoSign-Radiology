@@ -11,7 +11,7 @@ window.titlePageGenerator = (() => {
         const correspondingAuthor = {
             name: "Markus Lurz",
             address: "Delitzscher Str. 141, 04129 Leipzig, Germany",
-            email: "Markus.Lurz sanktgeorg.de",
+            email: "Markus.Lurz@sanktgeorg.de",
             phone: "+49 (0)341 909-0000"
         };
         
