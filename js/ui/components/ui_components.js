@@ -154,8 +154,7 @@ window.uiComponents = (() => {
 
     function createPublicationNav(currentSectionId) {
         const navItems = window.PUBLICATION_CONFIG.sections.map(mainSection => {
-            const sectionLabel = window.APP_CONFIG.UI_TEXTS.publicationTab.sectionLabels[mainSection.labelKey] || mainSection.labelKey;
-            
+            const sectionLabel = window.APP_CONFIG.UI_TEXTS.publicationTab.sectionLabels[mainSection.labelKey] || mainSection.id.replace(/_/g, ' ');
             const isMainActive = mainSection.id === currentSectionId || (mainSection.subSections && mainSection.subSections.some(sub => sub.id === currentSectionId));
             
             return `
