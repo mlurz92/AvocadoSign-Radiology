@@ -74,7 +74,6 @@ window.exportService = (() => {
             }, 150);
             return true;
         } catch (error) {
-            console.error(`Download failed for ${filename}:`, error);
             window.uiManager.showToast(`Error downloading file '${filename}'.`, 'danger');
             return false;
         }
@@ -192,7 +191,6 @@ window.exportService = (() => {
                     else reject(new Error("Canvas toBlob failed for table."));
                 }, 'image/png');
             } catch (error) {
-                console.error("html2canvas conversion failed:", error);
                 window.uiManager.showToast('Could not render table for export.', 'danger');
                 const errorBlob = new Blob([`Error rendering table to PNG: ${error.message}`], { type: 'text/plain' });
                 resolve(errorBlob);
@@ -270,7 +268,6 @@ window.exportService = (() => {
             
             return Papa.unparse(csvData, { delimiter: window.APP_CONFIG.EXPORT_SETTINGS.CSV_DELIMITER || ";" });
         } catch (error) {
-             console.error("Error in generateStatistikCSVString:", error);
              return null;
         }
     }
@@ -324,7 +321,6 @@ window.exportService = (() => {
             report += `==================================================\r\n`;
             return report;
         } catch (error) {
-             console.error("Error in generateBruteForceTXTString:", error);
              return null;
         }
     }
@@ -359,19 +355,17 @@ window.exportService = (() => {
             let metaInfo = `# ${title}`; if (!['daten', 'auswertung', 'comp_as_perf'].includes(tableType)) metaInfo += ` (Cohort: ${kollektivDisplayName})`; metaInfo += '\n'; if(criteria && logic && ['auswertung', 'deskriptiv'].includes(tableType)) metaInfo += `\n_T2 Basis (applied): ${escMD(formatCriteriaFunc(criteria, logic))}_\n\n`; else if (options.t2CriteriaLabelFull && ['comp_as_vs_t2_perf', 'comp_as_vs_t2_tests', 'comp_as_vs_t2_comp'].includes(tableType)) metaInfo += `\n_T2 Basis (comparison): ${escMD(options.t2CriteriaLabelFull)}_\n\n`; else metaInfo += '\n';
             return `${metaInfo}${headerLine}\n${separatorLine}\n${bodyLines}`;
         } catch (error) {
-            console.error(`Error in generateMarkdownTableString for type ${tableType}:`, error);
             return `# Error generating Markdown table for ${tableType}.`;
         }
    }
 
-    function generateFilteredDataCSVString(data) {
+   function generateFilteredDataCSVString(data) {
        if (!Array.isArray(data) || data.length === 0) return null;
        try {
            const columns = ["id", "lastName", "firstName", "birthDate", "sex", "age", "therapy", "examDate", "nStatus", "countPathologyNodes", "countPathologyNodesPositive", "asStatus", "countASNodes", "countASNodesPositive", "t2Status", "countT2Nodes", "countT2NodesPositive", "notes"];
            const csvData = data.map(p => { const row = {}; columns.forEach(col => { row[col] = p[col] ?? ''; }); return row; });
            return Papa.unparse(csvData, { header: true, delimiter: window.APP_CONFIG.EXPORT_SETTINGS.CSV_DELIMITER || ";" });
        } catch (error) {
-           console.error("Error in generateFilteredDataCSVString:", error);
            return null;
        }
    }
@@ -408,10 +402,14 @@ window.exportService = (() => {
             if (config.INCLUDE_AS_VS_T2_COMPARISON_CHART) { const chartKey = Object.keys(chartSVGs).find(k => k.startsWith('comp-chart')); if(chartSVGs[chartKey]) { html += `<div class="chart-container"><h3>Comparison of Selected Metrics (AS vs T2 - ${appliedCriteriaDisplayName})</h3>${chartSVGs[chartKey]}</div>`; } }
             if (config.INCLUDE_ASSOCIATIONS_TABLE && statsDataForCurrentKollektiv?.associationsApplied && Object.keys(statsDataForCurrentKollektiv.associationsApplied).length > 0) { html += `<h2>Association with N-Status</h2><table><thead><tr><th>Feature</th><th>OR (95% CI)</th><th>RD (%) (95% CI)</th><th>Phi</th><th>p-Value</th><th>Test</th></tr></thead><tbody>`; const a = statsDataForCurrentKollektiv.associationsApplied; const fRowAssoc = (nm, obj) => { if (!obj) return ''; const orS = formatCI(obj.or?.value, obj.or?.ci?.lower, obj.or?.ci?.upper, 2, false, na); const rdV = formatNumber(obj.rd?.value !== null && !isNaN(obj.rd?.value) ? obj.rd.value * 100 : NaN, 1, na, true); const rdL = formatNumber(obj.rd?.ci?.lower !== null && !isNaN(obj.rd?.ci?.lower) ? obj.rd.ci.lower * 100 : NaN, 1, na, true); const rdU = formatNumber(obj.rd?.ci?.upper !== null && !isNaN(obj.rd?.ci?.upper) ? obj.rd.ci.upper * 100 : NaN, 1, na, true); const rdS = rdV !== na ? `${rdV}% (${rdL}% - ${rdU}%)` : na; const phiS = formatNumber(obj.phi?.value, 2, na, true); const pS = getPValueText(obj.pValue, false) + ' ' + getStatisticalSignificanceSymbol(obj.pValue); const tN = obj.testName || na; return `<tr><td>${nm}</td><td>${orS}</td><td>${rdS}</td><td>${phiS}</td><td>${pS}</td><td>${tN}</td></tr>`; }; html += fRowAssoc('AS Positive', a?.as); if (a?.size_mwu) html += `<tr><td>${a.size_mwu.featureName || 'LN Size (Median Comp.)'}</td><td>${na}</td><td>${na}</td><td>${na}</td><td>${getPValueText(a.size_mwu.pValue, false)} ${getStatisticalSignificanceSymbol(a.size_mwu.pValue)}</td><td>${a.size_mwu.testName || na}</td></tr>`; ['size', 'shape', 'border', 'homogeneity', 'signal'].forEach(k => { if (a && a[k]) { const isActive = criteria[k]?.active === true; html += fRowAssoc(a[k].featureName + (isActive ? '' : ' (inactive)'), a[k]); } }); html += `</tbody></table>`; }
             const currentKollektivBfResult = allBruteForceResults ? allBruteForceResults[kollektiv] : null;
-            if (config.INCLUDE_BRUTEFORCE_BEST_RESULT && currentKollektivBfResult?.results && currentKollektivBfResult.results.length > 0 && currentKollektivBfResult.bestResult) { html += `<h2>Best Brute-Force Result (for Cohort: ${kollektivName})</h2><div class="meta-info"><ul>`; const best = currentKollektivBfResult.bestResult; html += `<li><strong>Optimized Metric:</strong> ${currentKollektivBfResult.metric}</li><li><strong>Best Value:</strong> ${formatNumber(best.metricValue, 4, na, true)}</li><li><strong>Logic:</strong> ${best.logic?.toUpperCase()}</li><li><strong>Criteria:</strong> ${formatCriteriaFunc(best.criteria, best.logic)}</li></ul><p class="small text-muted">Cohort N=${formatNumber(currentKollektivBfResult.nTotal, 0, na)} (N+: ${formatNumber(currentKollektivBfResult.nPlus, 0, na)}, N-: ${formatNumber(currentKollektivBfResult.nMinus, 0, na)})</p></div>`; }
+            if (config.INCLUDE_BRUTEFORCE_BEST_RESULT && currentKollektivBfResult && Object.values(currentKollektivBfResult)[0]?.bestResult) {
+                const bestResultForMetric = Object.values(currentKollektivBfResult)[0];
+                html += `<h2>Best Brute-Force Result (for Cohort: ${kollektivName})</h2><div class="meta-info"><ul>`; 
+                const best = bestResultForMetric.bestResult; 
+                html += `<li><strong>Optimized Metric:</strong> ${bestResultForMetric.metric}</li><li><strong>Best Value:</strong> ${formatNumber(best.metricValue, 4, na, true)}</li><li><strong>Logic:</strong> ${best.logic?.toUpperCase()}</li><li><strong>Criteria:</strong> ${formatCriteriaFunc(best.criteria, best.logic)}</li></ul><p class="small text-muted">Cohort N=${formatNumber(bestResultForMetric.nTotal, 0, na)} (N+: ${formatNumber(bestResultForMetric.nPlus, 0, na)}, N-: ${formatNumber(bestResultForMetric.nMinus, 0, na)})</p></div>`; 
+            }
             html += `<div class="report-footer">${config.REPORT_AUTHOR} - ${timestamp}</div></body></html>`; return html;
         } catch (error) {
-             console.error("Error in generateComprehensiveReportHTML:", error);
              return `<html><head><title>Error</title></head><body>Error creating report: ${error.message}</body></html>`;
         }
     }
@@ -430,7 +428,7 @@ window.exportService = (() => {
              } else {
                  throw new Error("Blob generation failed.");
              }
-         } catch (error) { console.error(`Error during chart export (${chartName}, ${format}):`, error); window.uiManager.showToast(`Error during chart export (${format.toUpperCase()}).`, 'danger'); }
+         } catch (error) { window.uiManager.showToast(`Error during chart export (${format.toUpperCase()}).`, 'danger'); }
     }
 
     async function exportTablePNG(tableElementId, kollektiv, typeKey, tableName = 'Tabelle') {
@@ -444,7 +442,7 @@ window.exportService = (() => {
              } else {
                 throw new Error("Table blob generation failed.");
              }
-         } catch(error) { console.error(`Error during table PNG export for '${tableName}':`, error); window.uiManager.showToast(`Error during table PNG export for '${tableName}'.`, 'danger'); }
+         } catch(error) { window.uiManager.showToast(`Error during table PNG export for '${tableName}'.`, 'danger'); }
      }
 
     async function exportChartsZip(scopeSelector, zipTypeKey, kollektiv, format) {
@@ -461,8 +459,8 @@ window.exportService = (() => {
              const chartId = svgElement.closest('div[id]')?.id || `chart_${index + 1}`;
              const chartName = chartId.replace(/^chart-/, '').replace(/-container$/, '').replace(/-content$/, '').replace(/-[0-9]+$/, '');
              let filenameKey, conversionPromise, ext;
-             if (format === 'png') { filenameKey = 'CHART_SINGLE_PNG'; ext = 'png'; conversionPromise = convertSvgToPngBlob(svgElement).catch(e => { console.error(`PNG conversion for ${chartName} failed:`, e); return null; }); }
-             else if (format === 'svg') { filenameKey = 'CHART_SINGLE_SVG'; ext = 'svg'; conversionPromise = convertSvgToSvgBlob(svgElement).catch(e => { console.error(`SVG conversion for ${chartName} failed:`, e); return null; }); }
+             if (format === 'png') { filenameKey = 'CHART_SINGLE_PNG'; ext = 'png'; conversionPromise = convertSvgToPngBlob(svgElement).catch(e => null); }
+             else if (format === 'svg') { filenameKey = 'CHART_SINGLE_SVG'; ext = 'svg'; conversionPromise = convertSvgToSvgBlob(svgElement).catch(e => null); }
              else { return; }
              const filename = generateFilename(filenameKey, kollektiv, ext, { chartName });
              promises.push(conversionPromise.then(blob => (blob ? { blob, filename } : { error: new Error("Blob is null for chart"), filename })));
@@ -476,17 +474,17 @@ window.exportService = (() => {
               const typeKey = 'TABLE_PNG_EXPORT';
               const filename = generateFilename(typeKey, kollektiv, 'png', {tableName: tableName, tableId});
               const baseWidth = table.offsetWidth || 800;
-              promises.push(convertTableToPngBlob(tableId, baseWidth).catch(e => { console.error(`Table PNG conversion for ${tableName} failed:`, e); return null; }).then(blob => (blob ? { blob, filename } : { error: new Error("Table Blob is null"), filename })));
+              promises.push(convertTableToPngBlob(tableId, baseWidth).catch(e => null).then(blob => (blob ? { blob, filename } : { error: new Error("Table Blob is null"), filename })));
          });
 
          try {
              const results = await Promise.all(promises);
-             results.forEach(result => { if (result && result.blob) { zip.file(result.filename, result.blob); successCount++; } else if (result && result.error) { console.error(`Error during conversion for ${result.filename}:`, result.error); } });
+             results.forEach(result => { if (result && result.blob) { zip.file(result.filename, result.blob); successCount++; } else if (result && result.error) { } });
              if (successCount > 0) {
                  const zipFilename = generateFilename(zipTypeKey, kollektiv, 'zip'); const content = await zip.generateAsync({ type: "blob", compression: "DEFLATE", compressionOptions: { level: 6 } });
                  if (downloadFile(content, zipFilename, "application/zip")) window.uiManager.showToast(`${successCount} object(s) successfully exported as ${format.toUpperCase()} (ZIP).`, 'success');
              } else { window.uiManager.showToast(`Export (${format.toUpperCase()}) failed: No objects could be converted.`, 'danger'); }
-         } catch (error) { console.error(`Error creating ${format.toUpperCase()} ZIP:`, error); window.uiManager.showToast(`Error creating ${format.toUpperCase()} ZIP.`, 'danger'); }
+         } catch (error) { window.uiManager.showToast(`Error creating ${format.toUpperCase()} ZIP.`, 'danger'); }
      }
 
      async function exportCategoryZip(category, data, bfResults, kollektiv, criteria, logic) {
@@ -507,7 +505,6 @@ window.exportService = (() => {
              }
          }
          const currentKollektivStats = statsDataForAllKollektive ? statsDataForAllKollektive[kollektiv] : null;
-         const currentKollektivBfResult = bfResults ? bfResults[kollektiv] : null;
 
          const addFile = (filename, content) => { if (content !== null && content !== undefined && String(content).length > 0) { zip.file(filename, content); filesAdded++; return true; } return false; };
          try {
@@ -523,18 +520,20 @@ window.exportService = (() => {
                  }
 
                  if (window.PUBLICATION_CONFIG && window.state && window.publicationService && window.APP_CONFIG) {
-                     const commonDataForPub = { appName: window.APP_CONFIG.APP_NAME, appVersion: window.APP_CONFIG.APP_VERSION, bruteForceMetricForPublication: window.state.getPublicationBruteForceMetric() };
+                     const commonDataForPub = { appName: window.APP_CONFIG.APP_NAME, appVersion: window.APP_CONFIG.APP_VERSION, nOverall: data.length, nPositive: data.filter(p => p.nStatus === '+').length, nSurgeryAlone: data.filter(p => p.therapy === 'surgeryAlone').length, nNeoadjuvantTherapy: data.filter(p => p.therapy === 'neoadjuvantTherapy').length, references: window.APP_CONFIG.REFERENCES_FOR_PUBLICATION, bruteForceMetricForPublication: window.state.getPublicationBruteForceMetric(), currentLanguage: lang, rawData: data };
                      window.PUBLICATION_CONFIG.sections.forEach(mainSection => {
-                         mainSection.subSections.forEach(subSection => {
-                            const mdContent = window.publicationService.generateSectionHTML(subSection.id, statsDataForAllKollektive, commonDataForPub);
-                            const typeKey = `PUBLICATION_SECTION_MD`;
-                            const sectionName = subSection.label.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '');
-                            addFile(generateFilename(typeKey, kollektiv, 'md', {sectionName: sectionName}), generateMarkdownTableString(mdContent, `publication_${mainSection.id}`, kollektiv, null, null, {subSectionLabel: subSection.label}));
-                         });
+                         const sectionContent = window.publicationService.generateSectionHTML(mainSection.id, statsDataForAllKollektive, commonDataForPub);
+                         const typeKey = `PUBLICATION_SECTION_MD`;
+                         const sectionName = mainSection.labelKey.replace(/_main$/, '').replace(/_/g, '-');
+                         addFile(generateFilename(typeKey, kollektiv, 'md', {sectionName: sectionName}), `# ${window.APP_CONFIG.UI_TEXTS.publicationTab.sectionLabels[mainSection.labelKey]}\n\n${sectionContent.replace(/<[^>]*>/g, '')}`);
                      });
                  }
              }
-             if (['all'].includes(category) && currentKollektivBfResult) { addFile(generateFilename('BRUTEFORCE_TXT', kollektiv, 'txt'), generateBruteForceTXTString(currentKollektivBfResult)); }
+             if (['all'].includes(category) && bfResults && bfResults[kollektiv]) {
+                 Object.keys(bfResults[kollektiv]).forEach(metric => {
+                    addFile(generateFilename('BRUTEFORCE_TXT', kollektiv, 'txt', {studyId: metric}), generateBruteForceTXTString(bfResults[kollektiv][metric]));
+                 });
+             }
              if (['all', 'html'].includes(category) && data && data.length > 0 ) { addFile(generateFilename('COMPREHENSIVE_REPORT_HTML', kollektiv, 'html'), generateComprehensiveReportHTML(data, bfResults, kollektiv, criteria, logic)); }
              if (['png'].includes(category)) { await exportChartsZip('#app-container', 'PNG_ZIP', kollektiv, 'png'); return; }
              if (['svg'].includes(category)) { await exportChartsZip('#app-container', 'SVG_ZIP', kollektiv, 'svg'); return; }
@@ -544,7 +543,7 @@ window.exportService = (() => {
                 const content = await zip.generateAsync({ type: "blob", compression: "DEFLATE", compressionOptions: { level: 6 } });
                 if (downloadFile(content, zipFilename, "application/zip")) window.uiManager.showToast(`${filesAdded} file(s) successfully exported in ${category.toUpperCase()} ZIP package.`, 'success');
             } else { window.uiManager.showToast(`No files found or generated for the ${category.toUpperCase()} ZIP package.`, 'warning'); }
-         } catch (error) { console.error(`Error creating ${category.toUpperCase()} ZIP package:`, error); window.uiManager.showToast(`Error creating ${category.toUpperCase()} ZIP package.`, 'danger'); }
+         } catch (error) { window.uiManager.showToast(`Error creating ${category.toUpperCase()} ZIP package.`, 'danger'); }
      }
 
     function exportComparisonData(actionId, comparisonData, kollektiv) {
@@ -553,7 +552,6 @@ window.exportService = (() => {
         if (!comparisonData) { window.uiManager.showToast("No data available for comparison export.", "warning"); return; }
         const { performanceAS, performanceT2, comparison, comparisonCriteriaSet, cohortForComparison, t2ShortName } = comparisonData || {};
         const isAsPurView = actionId.includes('-as-pur-');
-        const isAsVsT2View = actionId.includes('-as-vs-t2-');
         
         const appliedCriteria = window.t2CriteriaManager.getAppliedCriteria();
         const appliedLogic = window.t2CriteriaManager.getAppliedLogic();
@@ -562,11 +560,11 @@ window.exportService = (() => {
         options.studyId = comparisonCriteriaSet?.id || null;
 
         if (comparisonCriteriaSet?.id === window.APP_CONFIG.SPECIAL_IDS.APPLIED_CRITERIA_STUDY_ID) {
-            options.t2CriteriaLabelShort = `${window.APP_CONFIG.SPECIAL_IDS.APPLIED_CRITERIA_DISPLAY_NAME} (${formatCriteriaFunc(appliedCriteria, appliedLogic, true)})`;
+            options.t2CriteriaLabelShort = `${window.APP_CONFIG.SPECIAL_IDS.APPLIED_CRITERIA_DISPLAY_NAME}`;
             options.t2CriteriaLabelFull = `${window.APP_CONFIG.SPECIAL_IDS.APPLIED_CRITERIA_DISPLAY_NAME} (${formatCriteriaFunc(appliedCriteria, appliedLogic, false)})`;
         } else if (t2ShortName) {
             options.t2CriteriaLabelShort = t2ShortName;
-            options.t2CriteriaLabelFull = formatCriteriaFunc(comparisonCriteriaSet.criteria, comparisonCriteriaSet.logic, false);
+            options.t2CriteriaLabelFull = comparisonCriteriaSet?.studyInfo?.keyCriteriaSummary || formatCriteriaFunc(comparisonCriteriaSet.criteria, comparisonCriteriaSet.logic, false);
         }
 
         try {
@@ -578,12 +576,11 @@ window.exportService = (() => {
                  const rows = Object.entries(allStatsData).map(([key, stats]) => { let k = key.replace('stats',''); let dN = (k === 'Gesamt') ? 'Overall' : (k === 'SurgeryAlone') ? 'surgeryAlone' : 'neoadjuvantTherapy'; if (!stats || typeof stats.matrix !== 'object') return [getCohortDisplayName(dN), 0, ...Array(24).fill(na), na]; const n = stats.matrix ? (stats.matrix.tp + stats.matrix.fp + stats.matrix.fn + stats.matrix.tn) : 0; const fRowData = (m, metric_k) => { const dig = (metric_k === 'auc' || metric_k === 'f1' || metric_k === 'balAcc') ? 3 : 1; return [fVal(m?.value, dig, true), fVal(m?.ci?.lower, dig, true), fVal(m?.ci?.upper, dig, true)]; }; return [ getCohortDisplayName(dN), n, ...fRowData(stats.sens, 'sens'), ...fRowData(stats.spec, 'spec'), ...fRowData(stats.ppv, 'ppv'), ...fRowData(stats.npv, 'npv'), ...fRowData(stats.acc, 'acc'), ...fRowData(stats.balAcc, 'balAcc'), ...fRowData(stats.f1, 'f1'), ...fRowData(stats.auc, 'auc'), stats.sens?.method || na ]; });
                  content = Papa.unparse([headers, ...rows], { delimiter: window.APP_CONFIG.EXPORT_SETTINGS.CSV_DELIMITER || ";" }); filenameKey = 'COMP_AS_PERF_CSV'; extension = 'csv'; mimeType = 'text/csv;charset=utf-8;';
             } else if (isAsPurView && actionId === 'download-performance-as-pur-md') { options.kollektiv = kollektiv; content = generateMarkdownTableString(comparisonData, 'comp_as_perf', kollektiv, null, null, options); filenameKey = 'COMP_AS_PERF_MD'; extension = 'md'; mimeType = 'text/markdown;charset=utf-8;';
-            } else if (isAsVsT2View && actionId === 'download-performance-as-vs-t2-csv') { if (!performanceAS || !performanceT2) { window.uiManager.showToast("Comparison data for CSV missing.", "warning"); return; } const headers = ['Metric', 'AS (Value)', 'AS (95% CI)', 'T2 (Value)', 'T2 (95% CI)', 'CI Method AS', 'CI Method T2']; const fRow = (mKey, nm, isP = true, d = 1) => { const mAS = performanceAS[mKey]; const mT2 = performanceT2[mKey]; const dig = (mKey === 'auc' || mKey === 'f1' || mKey === 'balAcc') ? 3 : d; const ciAS = `(${formatNumber(mAS?.ci?.lower, dig, na, true)} - ${formatNumber(mAS?.ci?.upper, dig, na, true)})`; const ciT2 = `(${formatNumber(mT2?.ci?.lower, dig, na, true)} - ${formatNumber(mT2?.ci?.upper, dig, na, true)})`; const valAS = formatNumber(mAS?.value, dig, na, true); const valT2 = formatNumber(mT2?.value, dig, na, true); return [nm, valAS, ciAS, valT2, ciT2, mAS?.method || na, mT2?.method || na]; }; const rows = [ fRow('sens', 'Sensitivity'), fRow('spec', 'Specificity'), fRow('ppv', 'PPV'), fRow('npv', 'NPV'), fRow('acc', 'Accuracy'), fRow('balAcc', 'Balanced Accuracy', false, 3), fRow('f1', 'F1-Score', false, 3), fRow('auc', 'AUC', false, 3) ]; content = Papa.unparse([headers, ...rows], { delimiter: window.APP_CONFIG.EXPORT_SETTINGS.CSV_DELIMITER || ";" }); filenameKey = 'COMP_AS_VS_T2_PERF_CSV'; extension = 'csv'; mimeType = 'text/csv;charset=utf-8;';
-            } else if (isAsVsT2View && actionId === 'download-comp-table-as-vs-t2-md') { content = generateMarkdownTableString(comparisonData, 'comp_as_vs_t2_comp', kollektiv, null, null, options); filenameKey = 'COMP_AS_VS_T2_COMP_MD'; extension = 'md'; mimeType = 'text/markdown;charset=utf-8;';
-            } else if (isAsVsT2View && actionId === 'download-tests-as-vs-t2-md') { content = generateMarkdownTableString(comparisonData, 'comp_as_vs_t2_tests', kollektiv, null, null, options); filenameKey = 'COMP_AS_VS_T2_TESTS_MD'; extension = 'md'; mimeType = 'text/markdown;charset=utf-8;';
+            } else if (actionId === 'download-performance-as-vs-t2-csv') { if (!performanceAS || !performanceT2) { window.uiManager.showToast("Comparison data for CSV missing.", "warning"); return; } const headers = ['Metric', 'AS (Value)', 'AS (95% CI)', 'T2 (Value)', 'T2 (95% CI)', 'CI Method AS', 'CI Method T2']; const fRow = (mKey, nm, isP = true, d = 1) => { const mAS = performanceAS[mKey]; const mT2 = performanceT2[mKey]; const dig = (mKey === 'auc' || mKey === 'f1' || mKey === 'balAcc') ? 3 : d; const ciAS = `(${formatNumber(mAS?.ci?.lower, dig, na, true)} - ${formatNumber(mAS?.ci?.upper, dig, na, true)})`; const ciT2 = `(${formatNumber(mT2?.ci?.lower, dig, na, true)} - ${formatNumber(mT2?.ci?.upper, dig, na, true)})`; const valAS = formatNumber(mAS?.value, dig, na, true); const valT2 = formatNumber(mT2?.value, dig, na, true); return [nm, valAS, ciAS, valT2, ciT2, mAS?.method || na, mT2?.method || na]; }; const rows = [ fRow('sens', 'Sensitivity'), fRow('spec', 'Specificity'), fRow('ppv', 'PPV'), fRow('npv', 'NPV'), fRow('acc', 'Accuracy'), fRow('balAcc', 'Balanced Accuracy', false, 3), fRow('f1', 'F1-Score', false, 3), fRow('auc', 'AUC', false, 3) ]; content = Papa.unparse([headers, ...rows], { delimiter: window.APP_CONFIG.EXPORT_SETTINGS.CSV_DELIMITER || ";" }); filenameKey = 'COMP_AS_VS_T2_PERF_CSV'; extension = 'csv'; mimeType = 'text/csv;charset=utf-8;';
+            } else if (actionId === 'download-comp-table-as-vs-t2-md') { content = generateMarkdownTableString(comparisonData, 'comp_as_vs_t2_comp', kollektiv, null, null, options); filenameKey = 'COMP_AS_VS_T2_COMP_MD'; extension = 'md'; mimeType = 'text/markdown;charset=utf-8;';
+            } else if (actionId === 'download-tests-as-vs-t2-md') { content = generateMarkdownTableString(comparisonData, 'comp_as_vs_t2_tests', kollektiv, null, null, options); filenameKey = 'COMP_AS_VS_T2_TESTS_MD'; extension = 'md'; mimeType = 'text/markdown;charset=utf-8;';
             }
         } catch(error) {
-            console.error(`Error during comparison export ${actionId}:`, error);
             window.uiManager.showToast(`Error during comparison export (${actionId}).`, "danger");
             return;
         }
@@ -641,7 +638,6 @@ window.exportService = (() => {
         exportComprehensiveReportHTML,
         exportSingleChart,
         exportTablePNG,
-        exportChartsZip,
         exportCategoryZip,
         exportComparisonData,
         generateFilename
