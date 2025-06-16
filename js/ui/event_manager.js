@@ -16,6 +16,9 @@ window.eventManager = (() => {
         document.body.addEventListener('click', handleBodyClick);
         document.body.addEventListener('change', handleBodyChange);
         document.body.addEventListener('input', handleBodyInput);
+        document.body.addEventListener('mouseover', handleBodyMouseOver);
+        document.body.addEventListener('mouseout', handleBodyMouseOut);
+        
         const mainTabEl = document.getElementById('main-tabs');
         if (mainTabEl) {
             mainTabEl.addEventListener('shown.bs.tab', handleTabShown);
@@ -51,6 +54,81 @@ window.eventManager = (() => {
         } else {
             app.handleSingleExport(exportType);
         }
+    }
+
+    function handleBodyMouseOver(event) {
+        const criteriaControl = event.target.closest('.t2-criteria-button, .criteria-checkbox, .criteria-range, .criteria-input-manual');
+        if (!criteriaControl || document.getElementById('analysis-tab')?.classList.contains('active') === false) return;
+
+        const group = criteriaControl.closest('.criteria-group');
+        if (!group) return;
+
+        const checkbox = group.querySelector('.criteria-checkbox');
+        if (!checkbox || !checkbox.checked) return;
+        
+        const featureType = checkbox.value;
+        let featureValue = null;
+
+        if(featureType === 'size') {
+            featureValue = document.getElementById('input-size')?.value;
+        } else {
+            const button = criteriaControl.closest('.t2-criteria-button');
+            if(button) featureValue = button.dataset.value;
+        }
+
+        if(featureType && featureValue !== null) {
+            highlightAnalysisTableRows(featureType, featureValue);
+        }
+    }
+
+    function handleBodyMouseOut(event) {
+        const criteriaControl = event.target.closest('.t2-criteria-button, .criteria-checkbox, .criteria-range, .criteria-input-manual');
+        if (!criteriaControl || document.getElementById('analysis-tab')?.classList.contains('active') === false) return;
+        
+        clearAnalysisTableHighlights();
+    }
+    
+    function highlightAnalysisTableRows(featureType, featureValue) {
+        const tableBody = document.getElementById('analysis-table-body');
+        if (!tableBody) return;
+    
+        tableBody.querySelectorAll('tr[data-patient-id]').forEach(row => {
+            const detailContent = document.querySelector(`#analysis-detail-${row.dataset.patientId} .sub-row-content`);
+            if (!detailContent) return;
+            
+            const matchingNodes = detailContent.querySelectorAll(`[data-t2-${featureType}]`);
+            let patientHasMatch = false;
+            
+            matchingNodes.forEach(nodeEl => {
+                let isMatch = false;
+                const nodeValue = nodeEl.dataset[`t2${featureType.charAt(0).toUpperCase() + featureType.slice(1)}`];
+
+                if (featureType === 'size') {
+                    if (parseFloat(nodeValue) >= parseFloat(featureValue)) {
+                        isMatch = true;
+                    }
+                } else {
+                    if (nodeValue === featureValue) {
+                        isMatch = true;
+                    }
+                }
+                
+                if (isMatch) {
+                    patientHasMatch = true;
+                    const featureSpan = nodeEl.querySelector(`[data-feature-type="${featureType}"]`);
+                    if(featureSpan) featureSpan.classList.add('live-highlight-feature');
+                }
+            });
+    
+            if (patientHasMatch) {
+                row.classList.add('live-highlight-row');
+            }
+        });
+    }
+
+    function clearAnalysisTableHighlights() {
+        document.querySelectorAll('.live-highlight-row').forEach(row => row.classList.remove('live-highlight-row'));
+        document.querySelectorAll('.live-highlight-feature').forEach(span => span.classList.remove('live-highlight-feature'));
     }
 
     function handleBodyClick(event) {
