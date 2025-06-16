@@ -181,9 +181,20 @@ class App {
         const currentCohort = window.state.getCurrentCohort();
         const headerStats = window.dataProcessor.calculateHeaderStats(this.currentCohortData, currentCohort);
         window.uiManager.updateHeaderStatsUI(headerStats);
-        window.uiManager.updateCohortButtonsUI(currentCohort);
-        
+
         const activeTabId = window.state.getActiveTabId();
+        let isCohortSelectionLocked = false;
+        if (activeTabId === 'comparison' && window.state.getComparisonView() === 'as-vs-t2') {
+            const studyId = window.state.getComparisonStudyId();
+            if (studyId && studyId !== window.APP_CONFIG.SPECIAL_IDS.APPLIED_CRITERIA_STUDY_ID) {
+                const studySet = window.studyT2CriteriaManager.getStudyCriteriaSetById(studyId);
+                if (studySet?.applicableCohort) {
+                    isCohortSelectionLocked = true;
+                }
+            }
+        }
+        window.uiManager.updateCohortButtonsUI(currentCohort, isCohortSelectionLocked);
+        
         if (activeTabId === 'statistics') {
             window.uiManager.updateStatisticsSelectorsUI(window.state.getStatsLayout(), window.state.getStatsCohort1(), window.state.getStatsCohort2());
         } else if (activeTabId === 'comparison') {
