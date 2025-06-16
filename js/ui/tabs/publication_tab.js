@@ -1,5 +1,73 @@
 window.publicationTab = (() => {
 
+    function renderWordCounts() {
+        const sectionsToCount = [
+            { id: 'introduction_main', limit: 400 },
+            { id: 'methoden_main', limit: 800 },
+            { id: 'ergebnisse_main', limit: 1000 },
+            { id: 'discussion_main', limit: 800 }
+        ];
+
+        sectionsToCount.forEach(section => {
+            const contentElement = document.getElementById(section.id);
+            const navElement = document.querySelector(`.publication-section-link[data-section-id="${section.id}"]`);
+            if (contentElement && navElement) {
+                const text = contentElement.textContent || contentElement.innerText || '';
+                const wordCount = text.trim().split(/\s+/).filter(Boolean).length;
+                
+                let countIndicator = navElement.querySelector('.word-count-indicator');
+                if (!countIndicator) {
+                    countIndicator = document.createElement('span');
+                    countIndicator.className = 'badge rounded-pill ms-2 word-count-indicator';
+                    navElement.appendChild(countIndicator);
+                }
+                
+                countIndicator.textContent = `${wordCount} / ${section.limit}`;
+                
+                const ratio = wordCount / section.limit;
+                let bgColor = 'bg-success';
+                if (ratio > 1) {
+                    bgColor = 'bg-danger';
+                } else if (ratio > 0.85) {
+                    bgColor = 'bg-warning';
+                }
+                countIndicator.className = `badge rounded-pill ms-2 word-count-indicator ${bgColor}`;
+            }
+        });
+    }
+
+    function renderStardChecklist() {
+        const stardData = window.stardGenerator.generateStardChecklistData();
+        let html = `
+            <h2 id="stard_checklist">STARD 2015 Checklist</h2>
+            <p class="small text-muted">This checklist indicates where each of the 30 items from the Standards for Reporting of Diagnostic Accuracy Studies (STARD) is addressed within the generated manuscript.</p>
+            <div class="table-responsive">
+                <table class="table table-sm table-bordered small">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 15%;">Section</th>
+                            <th style="width: 10%;">Item</th>
+                            <th>Description</th>
+                            <th style="width: 25%;">Reported in Section</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+        stardData.forEach(item => {
+            html += `
+                <tr>
+                    <td>${item.section}</td>
+                    <td>${item.item}</td>
+                    <td>${item.label}</td>
+                    <td><em>${item.location}</em></td>
+                </tr>
+            `;
+        });
+        html += '</tbody></table></div>';
+        return html;
+    }
+
+
     function render(data, currentSectionId) {
         const { rawData, allCohortStats, bruteForceResults, currentLanguage } = data;
         
@@ -24,7 +92,10 @@ window.publicationTab = (() => {
             rawData: rawData
         };
 
-        const finalContentHTML = window.publicationService.generateFullPublicationHTML(allCohortStats, commonData);
+        const isChecklistActive = currentSectionId === 'stard_checklist';
+        const finalContentHTML = isChecklistActive 
+            ? renderStardChecklist() 
+            : window.publicationService.generateFullPublicationHTML(allCohortStats, commonData);
         
         const finalHTML = `
             <div class="row mb-3">
@@ -60,6 +131,9 @@ window.publicationTab = (() => {
                     window.flowchartRenderer.renderFlowchart(flowchartStats, flowchartContainerId);
                 }
             }
+
+            renderWordCounts();
+            
             if (typeof window.uiManager !== 'undefined') {
                 const contentArea = document.getElementById('publication-content-area');
                 if(contentArea) window.uiManager.initializeTooltips(contentArea);
@@ -70,6 +144,9 @@ window.publicationTab = (() => {
     }
 
     function getSectionContentForExport(sectionId, lang, allCohortStats, commonData) {
+        if (sectionId === 'stard_checklist') {
+            return renderStardChecklist();
+        }
         if (typeof window.publicationService === 'undefined') {
             return `Error: publicationService not available for section '${sectionId}'.`;
         }
