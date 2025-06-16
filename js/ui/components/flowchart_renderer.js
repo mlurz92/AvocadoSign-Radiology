@@ -45,27 +45,38 @@ window.flowchartRenderer = (() => {
 
         const nodes = [
             { id: 'start', x: (width - boxWidth) / 2, y: 20, text: [`Patients with rectal cancer`, `assessed for eligibility`, `(n = ${nOverall})`] },
-            { id: 'exclusion', x: (width + hSpacing) / 2, y: 125, width: 180, height: 40, text: [`Excluded (n = 0)`] },
+            { id: 'exclusion', x: (width + hSpacing / 2.5), y: 125, width: 180, height: 40, text: [`Excluded (n = 0)`] },
             { id: 'included', x: (width - boxWidth) / 2, y: 125, text: [`Included in final analysis`, `(n = ${nOverall})`] },
             { id: 'surgeryAlone', x: (width - hSpacing - boxWidth) / 2, y: 250, text: [`Underwent primary surgery`, `(n = ${nSurgeryAlone})`] },
             { id: 'neoadjuvant', x: (width + hSpacing - boxWidth) / 2, y: 250, text: [`Received neoadjuvant therapy`, `(n = ${nNeoadjuvantTherapy})`] }
         ];
-
+        
+        const lineGenerator = d3.line().x(d => d.x).y(d => d.y);
+        
         const links = [
-            { source: { x: nodes[0].x + boxWidth / 2, y: nodes[0].y + boxHeight }, target: { x: nodes[2].x + boxWidth / 2, y: nodes[2].y } },
-            { source: { x: nodes[0].x + boxWidth, y: nodes[0].y + boxHeight / 2 }, target: { x: nodes[1].x, y: nodes[1].y + boxHeight / 2 } },
-            { source: { x: nodes[2].x + boxWidth / 2, y: nodes[2].y + boxHeight }, target: { x: nodes[2].x + boxWidth / 2, y: nodes[2].y + boxHeight + 30 } },
-            { source: { x: nodes[2].x + boxWidth / 2, y: nodes[2].y + boxHeight + 30 }, target: { x: nodes[3].x + boxWidth / 2, y: nodes[2].y + boxHeight + 30 } },
-            { source: { x: nodes[2].x + boxWidth / 2, y: nodes[2].y + boxHeight + 30 }, target: { x: nodes[4].x + boxWidth / 2, y: nodes[2].y + boxHeight + 30 } },
-            { source: { x: nodes[3].x + boxWidth / 2, y: nodes[2].y + boxHeight + 30 }, target: { x: nodes[3].x + boxWidth / 2, y: nodes[3].y } },
-            { source: { x: nodes[4].x + boxWidth / 2, y: nodes[2].y + boxHeight + 30 }, target: { x: nodes[4].x + boxWidth / 2, y: nodes[4].y } }
+            { path: [{x: nodes[0].x + boxWidth / 2, y: nodes[0].y + boxHeight}, {x: nodes[2].x + boxWidth / 2, y: nodes[2].y}] },
+            { path: [{x: nodes[0].x + boxWidth, y: nodes[0].y + boxHeight / 2}, {x: nodes[1].x, y: nodes[1].y + (nodes[1].height || boxHeight) / 2}] },
+            { path: [
+                {x: nodes[2].x + boxWidth / 2, y: nodes[2].y + boxHeight},
+                {x: nodes[2].x + boxWidth / 2, y: nodes[2].y + boxHeight + 30}
+            ]},
+            { path: [
+                {x: nodes[2].x + boxWidth / 2, y: nodes[2].y + boxHeight + 30},
+                {x: nodes[3].x + boxWidth / 2, y: nodes[2].y + boxHeight + 30}
+            ]},
+            { path: [
+                {x: nodes[2].x + boxWidth / 2, y: nodes[2].y + boxHeight + 30},
+                {x: nodes[4].x + boxWidth / 2, y: nodes[2].y + boxHeight + 30}
+            ]},
+            { path: [{x: nodes[3].x + boxWidth / 2, y: nodes[2].y + boxHeight + 30}, {x: nodes[3].x + boxWidth / 2, y: nodes[3].y}] },
+            { path: [{x: nodes[4].x + boxWidth / 2, y: nodes[2].y + boxHeight + 30}, {x: nodes[4].x + boxWidth / 2, y: nodes[4].y}] }
         ];
 
         svg.selectAll('.flowchart-link')
             .data(links)
             .enter()
             .append('path')
-            .attr('d', d => `M ${d.source.x} ${d.source.y} L ${d.target.x} ${d.target.y}`)
+            .attr('d', d => lineGenerator(d.path))
             .attr('stroke', '#333')
             .attr('stroke-width', 1.5)
             .attr('fill', 'none')
@@ -83,7 +94,9 @@ window.flowchartRenderer = (() => {
             .attr('height', d => d.height || boxHeight)
             .attr('fill', '#f8f9fa')
             .attr('stroke', '#6c757d')
-            .attr('stroke-width', 1);
+            .attr('stroke-width', 1)
+            .attr('rx', 2)
+            .attr('ry', 2);
 
         const textElements = nodeGroups.append('text')
             .attr('x', d => (d.width || boxWidth) / 2)
@@ -94,7 +107,7 @@ window.flowchartRenderer = (() => {
         textElements.each(function(d) {
             const el = d3.select(this);
             const lineHeight = 1.2;
-            const startY = -((d.text.length - 1) * lineHeight) / 2.2;
+            const startY = -((d.text.length - 1) * lineHeight) / 2.1;
             d.text.forEach((line, i) => {
                 el.append('tspan')
                     .attr('x', (d.width || boxWidth) / 2)
