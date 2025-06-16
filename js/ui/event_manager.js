@@ -1,6 +1,6 @@
 window.eventManager = (() => {
     let appInstance = null;
-    const debouncedInputHandler = debounce(handleCriteriaInputChange, window.APP_CONFIG.PERFORMANCE_SETTINGS.DEBOUNCE_DELAY_MS);
+    const debouncedInputHandler = window.utils.debounce(handleCriteriaInputChange, window.APP_CONFIG.PERFORMANCE_SETTINGS.DEBOUNCE_DELAY_MS);
 
     function init(app) {
         if (!app) {
@@ -22,33 +22,27 @@ window.eventManager = (() => {
         const detailsToggleButton = e.target.closest('#data-toggle-details, #analysis-toggle-details');
         const quickGuideButton = e.target.closest('#btn-quick-guide');
 
-        // Analysis Tab Specific
         const criteriaButton = e.target.closest('.t2-criteria-button');
         const criteriaCheckbox = e.target.closest('.criteria-checkbox');
         const logicSwitch = e.target.closest('#t2-logic-switch');
         const applyButton = e.target.closest('#btn-apply-criteria');
         const resetButton = e.target.closest('#btn-reset-criteria');
         
-        // Brute Force
         const startBfButton = e.target.closest('#btn-start-brute-force');
         const cancelBfButton = e.target.closest('#btn-cancel-brute-force');
         const showBfDetailsButton = e.target.closest('#btn-show-bf-details');
         const applyBestBfButton = e.target.closest('#btn-apply-best-bf-criteria');
         const bfMetricSelect = e.target.closest('#brute-force-metric');
 
-        // Statistics Tab Specific
         const statsViewToggle = e.target.closest('.statistics-view-btn');
         const statsCohortSelect = e.target.closest('select[id^="statistics-cohort-select-"]');
         
-        // Comparison Tab Specific
         const compViewToggle = e.target.closest('.comp-view-btn');
         const compStudySelect = e.target.closest('#comp-study-select');
 
-        // Publication Tab Specific
         const pubSectionLink = e.target.closest('.publication-section-link');
         const pubBfMetricSelect = e.target.closest('#publication-bf-metric-select');
 
-        // Export Tab Specific
         const exportButton = e.target.closest('button[id^="export-"]');
         const singleExportButton = e.target.closest('button[data-export-type]');
         const comparisonExportButton = e.target.closest('button[id^="download-"]');
