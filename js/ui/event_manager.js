@@ -1,365 +1,388 @@
-window.eventManager = (() => {
-    let app;
+class App {
+    constructor() {
+        this.rawData = typeof window.patientDataRaw !== 'undefined' ? window.patientDataRaw : [];
+        this.processedData = [];
+        this.currentCohortData = [];
+        this.allPublicationStats = null;
+        this.comparisonDataForExport = null;
+        this.bruteForceModal = null;
+    }
 
-    const debouncedUpdateSizeInput = debounce(value => {
-        if (window.t2CriteriaManager.updateCriterionThreshold(value)) {
-            if (!window.t2CriteriaManager.getCurrentCriteria().size?.active) {
-                window.t2CriteriaManager.toggleCriterionActive('size', true);
+    init() {
+        try {
+            if (typeof window.uiManager === 'undefined' || window.uiManager === null) {
+                const appContainer = document.getElementById('app-container');
+                if (appContainer) {
+                    appContainer.innerHTML = `<div class="alert alert-danger m-5"><strong>Initialization Error:</strong> The 'uiManager' module could not be loaded. Please ensure all JavaScript files are linked correctly and contain no critical errors.</div>`;
+                }
+                throw new Error("UI Manager (uiManager.js) is not available. Check script loading order or module integrity.");
             }
-            window.uiManager.updateT2CriteriaControlsUI(window.t2CriteriaManager.getCurrentCriteria(), window.t2CriteriaManager.getCurrentLogic());
+
+            this.checkDependencies();
+            
+            window.state.init();
+            window.t2CriteriaManager.init();
+            this.initializeBruteForceManager();
+            window.eventManager.init(this);
+
+            this.processedData = window.dataProcessor.processAllData(this.rawData);
+            if (this.processedData.length === 0) {
+                window.uiManager.showToast("Warning: No valid patient data loaded.", "warning");
+            }
+
+            const modalElement = document.getElementById('brute-force-modal');
+            if (modalElement) {
+                this.bruteForceModal = new bootstrap.Modal(modalElement);
+            }
+            
+            this.recalculateAllStats();
+            this.filterAndPrepareData();
+            this.updateUI();
+            this.renderCurrentTab();
+            
+            if (!loadFromLocalStorage(window.APP_CONFIG.STORAGE_KEYS.FIRST_APP_START)) {
+                window.uiManager.showQuickGuide();
+                saveToLocalStorage(window.APP_CONFIG.STORAGE_KEYS.FIRST_APP_START, true);
+            }
+            
+            window.uiManager.initializeTooltips(document.body);
             window.uiManager.markCriteriaSavedIndicator(window.t2CriteriaManager.isUnsaved());
-        }
-    }, window.APP_CONFIG.PERFORMANCE_SETTINGS.DEBOUNCE_DELAY_MS);
+            window.uiManager.showToast('Application initialized.', 'success', 2500);
 
-    function init(appInstance) {
-        app = appInstance;
-        document.body.addEventListener('click', handleBodyClick);
-        document.body.addEventListener('change', handleBodyChange);
-        document.body.addEventListener('input', handleBodyInput);
-        document.body.addEventListener('mouseover', handleBodyMouseOver);
-        document.body.addEventListener('mouseout', handleBodyMouseOut);
-        
-        const mainTabEl = document.getElementById('main-tabs');
-        if (mainTabEl) {
-            mainTabEl.addEventListener('shown.bs.tab', handleTabShown);
-        }
-    }
-
-    function handleTabShown(event) {
-        if (event.target?.id) {
-            app.processTabChange(event.target.id.replace('-tab', ''));
-        }
-    }
-
-    function handleExportClick(button) {
-        const exportType = button.id.replace('export-', '');
-        if (exportType.endsWith('-zip')) {
-            const category = exportType.replace('-zip', '');
-            if (category === 'radiology-submission') {
-                window.exportService.exportRadiologySubmissionPackage(
-                    app.getProcessedData(),
-                    app.allPublicationStats,
-                    window.bruteForceManager.getAllResults()
-                );
+        } catch (error) {
+            const appContainer = document.getElementById('app-container');
+            if(appContainer) {
+                 window.uiManager.updateElementHTML('app-container', `<div class="alert alert-danger m-5"><strong>Initialization Error:</strong> ${error.message}.<br>Please check the browser console for more details.</div>`);
             } else {
-                window.exportService.exportCategoryZip(
-                    category, 
-                    app.getProcessedData(), 
-                    window.bruteForceManager.getAllResults(), 
-                    window.state.getCurrentCohort(), 
-                    window.t2CriteriaManager.getAppliedCriteria(), 
-                    window.t2CriteriaManager.getAppliedLogic()
-                );
+                 document.body.innerHTML = `<div class="alert alert-danger m-5"><strong>Fatal Initialization Error:</strong> ${error.message}. App container not found.</div>`;
             }
-        } else {
-            app.handleSingleExport(exportType);
         }
     }
 
-    function handleBodyMouseOver(event) {
-        const criteriaControl = event.target.closest('.t2-criteria-button, .criteria-checkbox, .criteria-range, .criteria-input-manual');
-        if (!criteriaControl || document.getElementById('analysis-pane')?.classList.contains('active') === false) return;
-
-        const group = criteriaControl.closest('.criteria-group');
-        if (!group) return;
-
-        const checkbox = group.querySelector('.criteria-checkbox');
-        if (!checkbox || !checkbox.checked) return;
-        
-        const featureType = checkbox.value;
-        let featureValue = null;
-
-        if(featureType === 'size') {
-            featureValue = document.getElementById('input-size')?.value;
-        } else {
-            const button = criteriaControl.closest('.t2-criteria-button');
-            if(button) featureValue = button.dataset.value;
+    checkDependencies() {
+        const dependencies = { 
+            state: window.state, 
+            t2CriteriaManager: window.t2CriteriaManager, 
+            studyT2CriteriaManager: window.studyT2CriteriaManager, 
+            dataProcessor: window.dataProcessor, 
+            statisticsService: window.statisticsService, 
+            bruteForceManager: window.bruteForceManager, 
+            exportService: window.exportService, 
+            publicationHelpers: window.publicationHelpers, 
+            titlePageGenerator: window.titlePageGenerator, 
+            abstractGenerator: window.abstractGenerator, 
+            introductionGenerator: window.introductionGenerator, 
+            methodsGenerator: window.methodsGenerator, 
+            resultsGenerator: window.resultsGenerator, 
+            discussionGenerator: window.discussionGenerator, 
+            referencesGenerator: window.referencesGenerator, 
+            stardGenerator: window.stardGenerator, 
+            publicationService: window.publicationService,
+            uiManager: window.uiManager, 
+            uiComponents: window.uiComponents, 
+            tableRenderer: window.tableRenderer, 
+            chartRenderer: window.chartRenderer, 
+            flowchartRenderer: window.flowchartRenderer, 
+            dataTab: window.dataTab, 
+            analysisTab: window.analysisTab, 
+            statisticsTab: window.statisticsTab, 
+            comparisonTab: window.comparisonTab, 
+            publicationTab: window.publicationTab, 
+            exportTab: window.exportTab, 
+            eventManager: window.eventManager, 
+            APP_CONFIG: window.APP_CONFIG, 
+            PUBLICATION_CONFIG: window.PUBLICATION_CONFIG
+        };
+        for (const dep in dependencies) {
+            if (typeof dependencies[dep] === 'undefined' || dependencies[dep] === null) {
+                throw new Error(`Core module or dependency '${dep}' is not available.`);
+            }
         }
-
-        if(featureType && featureValue !== null) {
-            highlightAnalysisTableRows(featureType, featureValue);
+        if (typeof window.patientDataRaw === 'undefined' || window.patientDataRaw === null) {
+            throw new Error("Global 'patientDataRaw' is not available.");
         }
     }
 
-    function handleBodyMouseOut(event) {
-        const criteriaControl = event.target.closest('.t2-criteria-button, .criteria-checkbox, .criteria-range, .criteria-input-manual');
-        if (!criteriaControl || document.getElementById('analysis-pane')?.classList.contains('active') === false) return;
-        
-        clearAnalysisTableHighlights();
-    }
-    
-    function highlightAnalysisTableRows(featureType, featureValue) {
-        const tableBody = document.getElementById('analysis-table-body');
-        if (!tableBody) return;
-    
-        tableBody.querySelectorAll('tr[data-patient-id]').forEach(row => {
-            const detailContent = document.querySelector(`#analysis-detail-${row.dataset.patientId} .sub-row-content`);
-            if (!detailContent) return;
-            
-            const matchingNodes = detailContent.querySelectorAll(`[data-t2-${featureType}]`);
-            let patientHasMatch = false;
-            
-            matchingNodes.forEach(nodeEl => {
-                let isMatch = false;
-                const nodeValue = nodeEl.dataset[`t2${featureType.charAt(0).toUpperCase() + featureType.slice(1)}`];
-
-                if (featureType === 'size') {
-                    if (parseFloat(nodeValue) >= parseFloat(featureValue)) {
-                        isMatch = true;
-                    }
+    initializeBruteForceManager() {
+        const bfCallbacks = {
+            onStarted: (payload) => window.uiManager.updateBruteForceUI('started', payload, true, window.state.getCurrentCohort()),
+            onProgress: (payload) => window.uiManager.updateBruteForceUI('progress', payload, true, window.state.getCurrentCohort()),
+            onResult: (payload) => {
+                const bfResults = window.bruteForceManager.getAllResults();
+                const cohortBfResults = bfResults[payload.cohort] || {};
+                window.uiManager.updateBruteForceUI('result', cohortBfResults[payload.metric], true, payload.cohort);
+                if (payload?.results?.length > 0) {
+                    this.showBruteForceDetails(payload.metric);
+                    window.uiManager.showToast('Optimization finished.', 'success');
+                    this.recalculateAllStats();
+                    this.refreshCurrentTab();
                 } else {
-                    if (nodeValue === featureValue) {
-                        isMatch = true;
-                    }
+                    window.uiManager.showToast('Optimization finished with no valid results.', 'warning');
                 }
-                
-                if (isMatch) {
-                    patientHasMatch = true;
-                    const featureSpan = nodeEl.querySelector(`[data-feature-type="${featureType}"]`);
-                    if(featureSpan) featureSpan.classList.add('live-highlight-feature');
-                }
-            });
+                this.updateUI();
+            },
+            onCancelled: (payload) => {
+                window.uiManager.updateBruteForceUI('cancelled', {}, window.bruteForceManager.isWorkerAvailable(), payload.cohort);
+                window.uiManager.showToast('Optimization cancelled.', 'warning');
+                this.updateUI();
+            },
+            onError: (payload) => {
+                window.uiManager.showToast(`Optimization Error: ${payload?.message || 'Unknown'}`, 'danger');
+                window.uiManager.updateBruteForceUI('error', payload, window.bruteForceManager.isWorkerAvailable(), payload.cohort);
+                this.updateUI();
+            }
+        };
+        window.bruteForceManager.init(bfCallbacks);
+    }
     
-            if (patientHasMatch) {
-                row.classList.add('live-highlight-row');
+    filterAndPrepareData() {
+        try {
+            const currentCohort = window.state.getCurrentCohort();
+            const filteredByCohort = window.dataProcessor.filterDataByCohort(this.processedData, currentCohort);
+            const appliedCriteria = window.t2CriteriaManager.getAppliedCriteria();
+            const appliedLogic = window.t2CriteriaManager.getAppliedLogic();
+            const evaluatedData = window.t2CriteriaManager.evaluateDataset(filteredByCohort, appliedCriteria, appliedLogic);
+
+            const activeTabId = window.state.getActiveTabId();
+            const sortState = activeTabId === 'data' ? window.state.getDataTableSort() : window.state.getAnalysisTableSort();
+            if(sortState && sortState.key) {
+                 evaluatedData.sort(getSortFunction(sortState.key, sortState.direction, sortState.subKey));
+            }
+            this.currentCohortData = evaluatedData;
+        } catch (error) {
+            this.currentCohortData = [];
+            window.uiManager.showToast("Error during data preparation.", "danger");
+        }
+    }
+    
+    recalculateAllStats() {
+        const criteria = window.t2CriteriaManager.getAppliedCriteria();
+        const logic = window.t2CriteriaManager.getAppliedLogic();
+        const bruteForceResults = window.bruteForceManager.getAllResults();
+        this.allPublicationStats = window.statisticsService.calculateAllPublicationStats(this.processedData, criteria, logic, bruteForceResults);
+    }
+    
+    _prepareComparisonData() {
+        const cohortForComparisonTab = window.state.getCurrentCohort(); 
+        const selectedStudyId = window.state.getComparisonStudyId();
+        
+        const statsCurrentCohort = this.allPublicationStats[cohortForComparisonTab];
+        const statsOverall = this.allPublicationStats[window.APP_CONFIG.COHORTS.OVERALL.id];
+        const statsSurgeryAlone = this.allPublicationStats[window.APP_CONFIG.COHORTS.SURGERY_ALONE.id];
+        const statsNeoadjuvantTherapy = this.allPublicationStats[window.APP_CONFIG.COHORTS.NEOADJUVANT.id];
+        const filteredDataForComparisonTab = window.dataProcessor.filterDataByCohort(this.processedData, cohortForComparisonTab);
+        
+        let performanceT2 = null, comparisonCriteriaSet = null, t2ShortName = null, comparisonASvsT2 = null;
+        let cohortForSet = cohortForComparisonTab;
+        let patientCountForSet = filteredDataForComparisonTab.length;
+
+        if (selectedStudyId === window.APP_CONFIG.SPECIAL_IDS.APPLIED_CRITERIA_STUDY_ID) {
+            performanceT2 = statsCurrentCohort?.performanceT2Applied;
+            const appliedCriteria = window.t2CriteriaManager.getAppliedCriteria();
+            const appliedLogic = window.t2CriteriaManager.getAppliedLogic();
+            comparisonCriteriaSet = {
+                id: window.APP_CONFIG.SPECIAL_IDS.APPLIED_CRITERIA_STUDY_ID, name: window.APP_CONFIG.SPECIAL_IDS.APPLIED_CRITERIA_DISPLAY_NAME,
+                displayShortName: window.APP_CONFIG.SPECIAL_IDS.APPLIED_CRITERIA_DISPLAY_NAME, criteria: appliedCriteria, logic: appliedLogic,
+                studyInfo: {
+                    reference: 'User-defined criteria', patientCohort: `Current: ${getCohortDisplayName(cohortForComparisonTab)} (N=${filteredDataForComparisonTab.length})`,
+                    keyCriteriaSummary: window.studyT2CriteriaManager.formatCriteriaForDisplay(appliedCriteria, appliedLogic, false)
+                }
+            };
+            t2ShortName = window.APP_CONFIG.SPECIAL_IDS.APPLIED_CRITERIA_DISPLAY_NAME;
+            comparisonASvsT2 = statsCurrentCohort?.comparisonASvsT2Applied;
+        } else if (selectedStudyId) {
+            const studySet = window.studyT2CriteriaManager.getStudyCriteriaSetById(selectedStudyId);
+            if (studySet) {
+                cohortForSet = studySet.applicableCohort || window.APP_CONFIG.COHORTS.OVERALL.id;
+                const statsForStudyCohort = this.allPublicationStats[cohortForSet];
+                patientCountForSet = window.dataProcessor.filterDataByCohort(this.processedData, cohortForSet).length;
+                performanceT2 = statsForStudyCohort?.performanceT2Literature?.[selectedStudyId];
+                comparisonCriteriaSet = studySet;
+                t2ShortName = studySet.displayShortName || studySet.name;
+                comparisonASvsT2 = statsForStudyCohort?.comparisonASvsT2Literature?.[selectedStudyId];
+            }
+        }
+
+        return {
+            cohort: cohortForComparisonTab, patientCount: filteredDataForComparisonTab.length, statsCurrentCohort,
+            statsGesamt: statsOverall, statsSurgeryAlone, statsNeoadjuvantTherapy,
+            performanceAS: statsCurrentCohort?.performanceAS, performanceT2, comparison: comparisonASvsT2,
+            comparisonCriteriaSet, cohortForComparison: cohortForSet, patientCountForComparison: patientCountForSet, t2ShortName
+        };
+    }
+
+    updateUI() {
+        const currentCohort = window.state.getCurrentCohort();
+        const headerStats = window.dataProcessor.calculateHeaderStats(this.currentCohortData, currentCohort);
+        window.uiManager.updateHeaderStatsUI(headerStats);
+
+        const activeTabId = window.state.getActiveTabId();
+        let isCohortSelectionLocked = false;
+        if (activeTabId === 'comparison' && window.state.getComparisonView() === 'as-vs-t2') {
+            const studyId = window.state.getComparisonStudyId();
+            if (studyId && studyId !== window.APP_CONFIG.SPECIAL_IDS.APPLIED_CRITERIA_STUDY_ID) {
+                const studySet = window.studyT2CriteriaManager.getStudyCriteriaSetById(studyId);
+                if (studySet?.applicableCohort) {
+                    isCohortSelectionLocked = true;
+                }
+            }
+        }
+        window.uiManager.updateCohortButtonsUI(currentCohort, isCohortSelectionLocked);
+        
+        if (activeTabId === 'statistics') {
+            window.uiManager.updateStatisticsSelectorsUI(window.state.getStatsLayout(), window.state.getStatsCohort1(), window.state.getStatsCohort2());
+        } else if (activeTabId === 'comparison') {
+            window.uiManager.updateComparisonViewUI(window.state.getComparisonView(), window.state.getComparisonStudyId());
+        } else if (activeTabId === 'publication') {
+            window.uiManager.updatePublicationUI(window.state.getPublicationSection(), window.state.getPublicationBruteForceMetric());
+        }
+        
+        const bfResults = window.bruteForceManager.getAllResults();
+        window.uiManager.updateExportButtonStates(activeTabId, !!bfResults && Object.keys(bfResults).length > 0, this.currentCohortData.length > 0);
+    }
+
+    processTabChange(tabId) {
+        if (window.state.setActiveTabId(tabId)) {
+            this.refreshCurrentTab();
+        }
+    }
+
+    renderCurrentTab() {
+        const tabId = window.state.getActiveTabId();
+        const cohort = window.state.getCurrentCohort();
+        const criteria = window.t2CriteriaManager.getAppliedCriteria();
+        const logic = window.t2CriteriaManager.getAppliedLogic();
+        const allBruteForceResults = window.bruteForceManager.getAllResults();
+        
+        const publicationData = {
+            rawData: this.rawData, allCohortStats: this.allPublicationStats, bruteForceResults: allBruteForceResults,
+            currentLanguage: window.state.getCurrentPublikationLang()
+        };
+
+        let currentComparisonData = null;
+        if (tabId === 'comparison') {
+            currentComparisonData = this._prepareComparisonData();
+            this.comparisonDataForExport = currentComparisonData;
+        }
+
+        switch (tabId) {
+            case 'data': window.uiManager.renderTabContent('data', () => window.dataTab.render(this.currentCohortData, window.state.getDataTableSort())); break;
+            case 'analysis': window.uiManager.renderTabContent('analysis', () => window.analysisTab.render(this.currentCohortData, window.t2CriteriaManager.getCurrentCriteria(), window.t2CriteriaManager.getCurrentLogic(), window.state.getAnalysisTableSort(), cohort, window.bruteForceManager.isWorkerAvailable(), this.allPublicationStats[cohort], allBruteForceResults)); break;
+            case 'statistics': window.uiManager.renderTabContent('statistics', () => window.statisticsTab.render(this.processedData, criteria, logic, window.state.getStatsLayout(), window.state.getStatsCohort1(), window.state.getStatsCohort2(), cohort)); break;
+            case 'comparison': window.uiManager.renderTabContent('comparison', () => window.comparisonTab.render(window.state.getComparisonView(), currentComparisonData, window.state.getComparisonStudyId(), cohort, this.processedData, criteria, logic)); break;
+            case 'publication': window.uiManager.renderTabContent('publication', () => window.publicationTab.render(publicationData, window.state.getPublicationSection())); break;
+            case 'export': window.uiManager.renderTabContent('export', () => window.exportTab.render(cohort)); break;
+        }
+    }
+
+    handleCohortChange(newCohort, source = "user") {
+        if (window.state.setCurrentCohort(newCohort)) {
+            this.refreshCurrentTab();
+            if (source === "user") {
+                window.uiManager.showToast(`Cohort '${getCohortDisplayName(newCohort)}' selected.`, 'info');
+            } else if (source === "auto_comparison") {
+                window.uiManager.showToast(`Global cohort automatically set to '${getCohortDisplayName(newCohort)}' to match the study selection.`, 'info', 4000);
+                window.uiManager.highlightElement(`btn-cohort-${newCohort}`);
+            }
+        }
+    }
+    
+    handleSortRequest(context, key, subKey) {
+        if (context === 'data') window.state.updateDataTableSort(key, subKey);
+        else if (context === 'analysis') window.state.updateAnalysisTableSort(key, subKey);
+        this.refreshCurrentTab();
+    }
+    
+    applyAndRefreshAll() {
+        window.t2CriteriaManager.applyCriteria();
+        this.recalculateAllStats();
+        this.refreshCurrentTab();
+        window.uiManager.markCriteriaSavedIndicator(false);
+        window.uiManager.showToast('T2 criteria applied & saved.', 'success');
+    }
+
+    startBruteForceAnalysis() {
+        const metric = document.getElementById('brute-force-metric')?.value || 'Balanced Accuracy';
+        const cohortId = window.state.getCurrentCohort();
+        const dataForWorker = window.dataProcessor.filterDataByCohort(this.processedData, cohortId).map(p => ({
+            id: p.id, nStatus: p.nStatus, t2Nodes: p.t2Nodes
+        }));
+        
+        if (dataForWorker.length > 0) {
+            window.bruteForceManager.startAnalysis(dataForWorker, metric, cohortId);
+        } else {
+            window.uiManager.showToast("No data for optimization in this cohort.", "warning");
+        }
+    }
+
+    applyBestBruteForceCriteria(metric) {
+        const cohortId = window.state.getCurrentCohort();
+        const bfResult = window.bruteForceManager.getResultsForCohortAndMetric(cohortId, metric);
+        if (!bfResult?.bestResult?.criteria) {
+            window.uiManager.showToast(`No valid brute-force result for metric '${metric}' to apply.`, 'warning');
+            return;
+        }
+        const best = bfResult.bestResult;
+        Object.keys(best.criteria).forEach(key => {
+            if (key === 'logic') return;
+            const criterion = best.criteria[key];
+            window.t2CriteriaManager.toggleCriterionActive(key, criterion.active);
+            if (criterion.active) {
+                if (key === 'size') window.t2CriteriaManager.updateCriterionThreshold(criterion.threshold);
+                else window.t2CriteriaManager.updateCriterionValue(key, criterion.value);
             }
         });
+        window.t2CriteriaManager.updateLogic(best.logic);
+        this.applyAndRefreshAll();
+        window.uiManager.showToast(`Best brute-force criteria for '${metric}' applied & saved.`, 'success');
     }
 
-    function clearAnalysisTableHighlights() {
-        document.querySelectorAll('.live-highlight-row').forEach(row => row.classList.remove('live-highlight-row'));
-        document.querySelectorAll('.live-highlight-feature').forEach(span => span.classList.remove('live-highlight-feature'));
+    showBruteForceDetails(metric) {
+        const cohortId = window.state.getCurrentCohort();
+        const resultData = window.bruteForceManager.getResultsForCohortAndMetric(cohortId, metric);
+        window.uiManager.updateElementHTML('brute-force-modal-body', window.uiComponents.createBruteForceModalContent(resultData));
+        window.uiManager.initializeTooltips(document.getElementById('brute-force-modal-body'));
+        if (this.bruteForceModal) {
+            this.bruteForceModal.show();
+        }
     }
-
-    function handleBodyClick(event) {
-        const target = event.target;
-        const button = target.closest('button');
-
-        if (button?.dataset.cohort) {
-            app.handleCohortChange(button.dataset.cohort, "user");
-            return;
-        }
-
-        if (target.closest('th[data-sort-key]')) {
-            const header = target.closest('th[data-sort-key]');
-            const subHeader = target.closest('.sortable-sub-header');
-            handleSortClick(header, subHeader);
-            return;
-        }
-
-        if (target.closest('.publication-section-link')) {
-            event.preventDefault();
-            handlePublicationSectionChange(target.closest('.publication-section-link').dataset.sectionId);
-            return;
-        }
-
-        if (!button || button.disabled) return;
-
-        const singleClickActions = {
-            'btn-quick-guide': () => window.uiManager.showQuickGuide(),
-            'data-toggle-details': () => window.uiManager.toggleAllDetails('data-table-body', button.id),
-            'analysis-toggle-details': () => window.uiManager.toggleAllDetails('analysis-table-body', button.id),
-            'btn-reset-criteria': () => {
-                window.t2CriteriaManager.resetCriteria();
-                window.uiManager.updateT2CriteriaControlsUI(window.t2CriteriaManager.getCurrentCriteria(), window.t2CriteriaManager.getCurrentLogic());
-                window.uiManager.markCriteriaSavedIndicator(window.t2CriteriaManager.isUnsaved());
-                window.uiManager.showToast('T2 criteria have been reset to default.', 'info');
+    
+    handleSingleExport(exportType) {
+        const cohort = window.state.getCurrentCohort();
+        const data = this.processedData;
+        const bfResults = window.bruteForceManager.getAllResults();
+        const criteria = window.t2CriteriaManager.getAppliedCriteria();
+        const logic = window.t2CriteriaManager.getAppliedLogic();
+        
+        const currentFilteredData = window.dataProcessor.filterDataByCohort(data, cohort);
+        const evaluatedCurrentFilteredData = window.t2CriteriaManager.evaluateDataset(currentFilteredData, criteria, logic);
+        
+        const exporter = {
+            'stats-csv': () => window.exportService.exportStatistikCSV(this.allPublicationStats[cohort], cohort, criteria, logic),
+            'bruteforce-txt': () => {
+                const metric = document.getElementById('brute-force-metric')?.value;
+                window.exportService.exportBruteForceReport(bfResults[cohort] ? bfResults[cohort][metric] : null)
             },
-            'btn-apply-criteria': () => app.applyAndRefreshAll(),
-            'btn-start-brute-force': () => app.startBruteForceAnalysis(),
-            'btn-cancel-brute-force': () => window.bruteForceManager.cancelAnalysis(),
-            'btn-apply-best-bf-criteria': () => {
-                const metricSelect = document.getElementById('brute-force-metric');
-                if (metricSelect) app.applyBestBruteForceCriteria(metricSelect.value);
-            },
-            'btn-show-bf-details': () => {
-                 const metricSelect = document.getElementById('brute-force-metric');
-                 if (metricSelect) app.showBruteForceDetails(metricSelect.value);
-            },
-            'statistics-toggle-comparison': () => handleStatsLayoutToggle(button),
-            'export-bruteforce-modal-txt': () => {
-                 const metricSelect = document.getElementById('brute-force-metric');
-                 if (metricSelect) {
-                    const cohortId = window.state.getCurrentCohort();
-                    const resultData = window.bruteForceManager.getResultsForCohortAndMetric(cohortId, metricSelect.value);
-                    window.exportService.exportBruteForceReport(resultData);
-                 }
-            }
+            'datatable-md': () => window.exportService.exportTableMarkdown(currentFilteredData, 'daten', cohort),
+            'analysistable-md': () => window.exportService.exportTableMarkdown(evaluatedCurrentFilteredData, 'auswertung', cohort, criteria, logic),
+            'filtered-data-csv': () => window.exportService.exportFilteredDataCSV(currentFilteredData, cohort),
+            'comprehensive-report-html': () => window.exportService.exportComprehensiveReportHTML(data, bfResults, cohort, criteria, logic)
         };
 
-        if (singleClickActions[button.id]) {
-            singleClickActions[button.id]();
-            return;
-        }
-        
-        if (button.classList.contains('t2-criteria-button')) {
-            if (window.t2CriteriaManager.updateCriterionValue(button.dataset.criterion, button.dataset.value)) {
-                window.uiManager.updateT2CriteriaControlsUI(window.t2CriteriaManager.getCurrentCriteria(), window.t2CriteriaManager.getCurrentLogic());
-                window.uiManager.markCriteriaSavedIndicator(window.t2CriteriaManager.isUnsaved());
-            }
-            return;
-        }
-
-        if (button.classList.contains('chart-download-btn')) {
-            window.exportService.exportSingleChart(
-                button.dataset.chartId, 
-                button.dataset.format, 
-                window.state.getCurrentCohort(), 
-                { chartName: button.dataset.chartName || button.dataset.defaultName }
-            );
-            return;
-        }
-
-        if (button.classList.contains('table-download-png-btn')) {
-            window.exportService.exportTablePNG(button.dataset.tableId, window.state.getCurrentCohort(), 'TABLE_PNG_EXPORT', button.dataset.tableName);
-            return;
-        }
-
-        if (button.closest('#export-pane') && button.id.startsWith('export-')) {
-            handleExportClick(button);
-            return;
-        }
-
-        if (button.closest('#comparison-tab-pane') && button.id.startsWith('download-')) {
-            window.exportService.exportComparisonData(button.id, app.getComparisonDataForExport(), window.state.getCurrentCohort());
-            return;
+        if (exporter[exportType]) {
+            exporter[exportType]();
+        } else {
+            window.uiManager.showToast(`Export type '${exportType}' not recognized.`, 'warning');
         }
     }
 
-    function handleBodyChange(event) {
-        const target = event.target;
-        if (target.classList.contains('criteria-checkbox')) {
-            handleT2CheckboxChange(target);
-            return;
-        }
-        
-        const changeActions = {
-            't2-logic-switch': () => handleT2LogicChange(target),
-            'brute-force-metric': () => app.refreshCurrentTab(),
-            'statistics-cohort-select-1': () => handleStatsCohortChange(target),
-            'statistics-cohort-select-2': () => handleStatsCohortChange(target),
-            'comp-study-select': () => handleComparisonStudyChange(target.value),
-            'publication-bf-metric-select': () => handlePublicationBfMetricChange(target.value)
-        };
-        
-        if (changeActions[target.id]) {
-            changeActions[target.id]();
-            return;
-        }
-
-        if (target.name === 'comparisonView') {
-            handleComparisonViewChange(target.value);
-            return;
-        }
+    refreshCurrentTab() {
+        this.filterAndPrepareData();
+        this.renderCurrentTab();
+        this.updateUI();
     }
-
-    function handleBodyInput(event) {
-        const target = event.target;
-        if (target.id === 'range-size' || target.id === 'input-size') {
-            const sizeValueDisplay = document.getElementById('value-size');
-            const sizeRangeInput = document.getElementById('range-size');
-            const sizeManualInput = document.getElementById('input-size');
-            const newValue = formatNumber(target.value, 1, '', true);
-
-            if (target.id === 'range-size') {
-                if(sizeValueDisplay) sizeValueDisplay.textContent = formatNumber(newValue, 1);
-                if(sizeManualInput) sizeManualInput.value = newValue;
-            } else {
-                if(sizeValueDisplay) sizeValueDisplay.textContent = formatNumber(newValue, 1);
-                if(sizeRangeInput) sizeRangeInput.value = parseFloat(newValue);
-            }
-            debouncedUpdateSizeInput(newValue);
-        }
-    }
-
-    function handleSortClick(header, subHeader) {
-        const key = header.dataset.sortKey;
-        if (!key) return;
-        const subKey = subHeader?.dataset.subKey || null;
-        const tableId = header.closest('table')?.id;
-        const context = tableId === 'data-table' ? 'data' : 'analysis';
-        app.handleSortRequest(context, key, subKey);
-    }
-
-    function handleT2CheckboxChange(checkbox) {
-        if (window.t2CriteriaManager.toggleCriterionActive(checkbox.value, checkbox.checked)) {
-            window.uiManager.updateT2CriteriaControlsUI(window.t2CriteriaManager.getCurrentCriteria(), window.t2CriteriaManager.getCurrentLogic());
-            window.uiManager.markCriteriaSavedIndicator(window.t2CriteriaManager.isUnsaved());
-        }
-    }
-
-    function handleT2LogicChange(logicSwitch) {
-        const newLogic = logicSwitch.checked ? 'OR' : 'AND';
-        if (window.t2CriteriaManager.updateLogic(newLogic)) {
-            window.uiManager.updateT2CriteriaControlsUI(window.t2CriteriaManager.getCurrentCriteria(), window.t2CriteriaManager.getCurrentLogic());
-            window.uiManager.markCriteriaSavedIndicator(window.t2CriteriaManager.isUnsaved());
-        }
-    }
-
-    function handleStatsLayoutToggle(button) {
-        const newLayout = button.classList.contains('active') ? 'einzel' : 'vergleich';
-        if (window.state.setStatsLayout(newLayout)) {
-            app.updateUI();
-            if (window.state.getActiveTabId() === 'statistics') app.refreshCurrentTab();
-        }
-    }
-
-    function handleStatsCohortChange(selectElement) {
-        const newValue = selectElement.value;
-        let needsRender = false;
-        if (selectElement.id === 'statistics-cohort-select-1') {
-            needsRender = window.state.setStatsCohort1(newValue);
-        } else if (selectElement.id === 'statistics-cohort-select-2') {
-            needsRender = window.state.setStatsCohort2(newValue);
-        }
-        if (needsRender && window.state.getStatsLayout() === 'vergleich' && window.state.getActiveTabId() === 'statistics') {
-            app.refreshCurrentTab();
-        }
-    }
-
-    function handleComparisonViewChange(view) {
-        if (window.state.setComparisonView(view)) {
-            app.updateUI();
-            if (window.state.getActiveTabId() === 'comparison') app.refreshCurrentTab();
-        }
-    }
-
-    function handleComparisonStudyChange(studyId) {
-        if (window.state.getComparisonStudyId() === studyId) return;
-        
-        const stateNeedsRefresh = window.state.setComparisonStudyId(studyId);
-        const studySet = window.studyT2CriteriaManager.getStudyCriteriaSetById(studyId);
-        
-        if (studySet?.applicableCohort && window.state.getCurrentCohort() !== studySet.applicableCohort) {
-            app.handleCohortChange(studySet.applicableCohort, "auto_comparison");
-        } else if (stateNeedsRefresh) {
-            app.refreshCurrentTab();
-        }
-    }
-
-    function handlePublicationSectionChange(sectionId) {
-        if (window.state.setPublicationSection(sectionId)) {
-            app.updateUI();
-            if (window.state.getActiveTabId() === 'publication') {
-                app.refreshCurrentTab();
-                setTimeout(() => {
-                    const element = document.getElementById(sectionId);
-                    if (element) {
-                        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    }
-                }, 100);
-            }
-        }
-    }
-
-    function handlePublicationBfMetricChange(newMetric) {
-        if (window.state.setPublicationBruteForceMetric(newMetric)) {
-            app.updateUI();
-            if (window.state.getActiveTabId() === 'publication') app.refreshCurrentTab();
-        }
-    }
-
-    return Object.freeze({
-        init
-    });
-})();
+    
+    getRawData() { return this.rawData; }
+    getProcessedData() { return this.processedData; }
+    getComparisonDataForExport() { return this.comparisonDataForExport; }
+}
