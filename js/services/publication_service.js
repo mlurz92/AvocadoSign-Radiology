@@ -12,7 +12,8 @@ window.publicationService = (() => {
         'ergebnisse_patientencharakteristika': window.resultsGenerator.generatePatientCharacteristicsHTML,
         'ergebnisse_vergleich_as_vs_t2': window.resultsGenerator.generateComparisonHTML,
         'discussion_main': window.discussionGenerator.generateDiscussionHTML,
-        'references_main': window.referencesGenerator.generateReferencesHTML
+        'references_main': window.referencesGenerator.generateReferencesHTML,
+        'stard_checklist': window.stardGenerator.renderStardChecklist
     };
 
     function _processAndNumberReferences(html, allReferences) {
@@ -82,10 +83,10 @@ window.publicationService = (() => {
             return '<div class="alert alert-warning">Statistical data or common configuration is missing for publication generation.</div>';
         }
 
-        let rawContentHTML = window.titlePageGenerator.generateTitlePageHTML(allCohortStats, commonData);
+        let rawContentHTML = generateSectionHTML('title_main', allCohortStats, commonData);
 
         window.PUBLICATION_CONFIG.sections.forEach(section => {
-            if (section.id === 'references_main' || section.id === 'title_main') return;
+            if (section.id === 'references_main' || section.id === 'title_main' || section.id === 'stard_checklist') return;
 
             const sectionLabel = window.APP_CONFIG.UI_TEXTS.publicationTab.sectionLabels[section.labelKey] || section.labelKey;
             
