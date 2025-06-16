@@ -571,7 +571,7 @@ window.statisticsService = (() => {
             ageData: ageData
         };
     }
-
+    
     function calculateAllPublicationStats(data, appliedT2Criteria, appliedT2Logic, allBruteForceResults) {
         if (!data || !Array.isArray(data)) return null;
         const results = {};
@@ -581,7 +581,7 @@ window.statisticsService = (() => {
         cohorts.forEach(cohortId => {
             const cohortData = window.dataProcessor.filterDataByCohort(data, cohortId);
             if (cohortData.length === 0) {
-                results[cohortId] = null;
+                results[cohortId] = { descriptive: { patientCount: 0 } };
                 return;
             }
 
@@ -630,6 +630,21 @@ window.statisticsService = (() => {
         if (results.Overall) {
             results.Overall.interobserverKappa = window.APP_CONFIG.STATISTICAL_CONSTANTS.INTEROBSERVER_KAPPA;
             results.Overall.interobserverKappaCI = window.APP_CONFIG.STATISTICAL_CONSTANTS.INTEROBSERVER_KAPPA_CI;
+        }
+
+        const statsSurgery = results[window.APP_CONFIG.COHORTS.SURGERY_ALONE.id];
+        const statsNeoadjuvant = results[window.APP_CONFIG.COHORTS.NEOADJUVANT.id];
+        if (statsSurgery && statsSurgery.descriptive.patientCount > 0 && statsNeoadjuvant && statsNeoadjuvant.descriptive.patientCount > 0) {
+            results.interCohortComparison = {
+                as: calculateZTestForAUCComparison(
+                    statsSurgery.performanceAS.auc.value, statsSurgery.performanceAS.auc.se, statsSurgery.descriptive.patientCount,
+                    statsNeoadjuvant.performanceAS.auc.value, statsNeoadjuvant.performanceAS.auc.se, statsNeoadjuvant.descriptive.patientCount
+                ),
+                t2Applied: calculateZTestForAUCComparison(
+                    statsSurgery.performanceT2Applied.auc.value, statsSurgery.performanceT2Applied.auc.se, statsSurgery.descriptive.patientCount,
+                    statsNeoadjuvant.performanceT2Applied.auc.value, statsNeoadjuvant.performanceT2Applied.auc.se, statsNeoadjuvant.descriptive.patientCount
+                )
+            };
         }
 
         return results;
