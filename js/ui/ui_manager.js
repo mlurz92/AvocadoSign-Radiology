@@ -1,14 +1,10 @@
 window.uiManager = (() => {
     let _tooltips = [];
     let _isQuickGuideOpen = false;
-    let _isCriteriaSaved = true; // Initially assume saved
+    let _isCriteriaSaved = true;
 
-    /**
-     * Updates the header statistics in the UI.
-     * @param {object} stats - Object containing patient count, N, AS, and T2 statuses.
-     */
     function updateHeaderStatsUI(stats) {
-        if (!window.utils || !window.APP_CONFIG) return; // Defensive check
+        if (!window.utils || !window.APP_CONFIG) return;
         document.getElementById('header-cohort').textContent = stats.cohort;
         document.getElementById('header-patient-count').textContent = stats.patientCount;
         document.getElementById('header-status-n').textContent = stats.statusN;
@@ -16,13 +12,8 @@ window.uiManager = (() => {
         document.getElementById('header-status-t2').textContent = stats.statusT2;
     }
 
-    /**
-     * Updates the UI state of cohort selection buttons.
-     * @param {string} currentCohortId - The ID of the currently active cohort.
-     * @param {boolean} isLocked - True if cohort selection should be disabled.
-     */
     function updateCohortButtonsUI(currentCohortId, isLocked) {
-        if (!window.APP_CONFIG) return; // Defensive check
+        if (!window.APP_CONFIG) return;
         Object.values(window.APP_CONFIG.COHORTS).forEach(cohort => {
             const button = document.getElementById(`btn-cohort-${cohort.id}`);
             if (button) {
@@ -32,67 +23,70 @@ window.uiManager = (() => {
         });
     }
 
-    /**
-     * Renders content into a specific tab pane.
-     * @param {string} tabId - The ID of the tab (e.g., 'data', 'analysis').
-     * @param {function} contentGenerator - A function that returns the HTML string for the tab's content.
-     */
     function renderTabContent(tabId, contentGenerator) {
         const paneId = `${tabId}-pane`;
         const paneElement = document.getElementById(paneId);
         if (paneElement) {
             paneElement.innerHTML = contentGenerator();
-            // Destroy existing tooltips before initializing new ones for the rendered content
             destroyTooltips();
             initializeTooltips(paneElement);
         }
     }
 
-    /**
-     * Attaches collapse event listeners to table rows.
-     * @param {string} tableBodyId - The ID of the tbody element.
-     */
     function attachRowCollapseListeners(tableBodyId) {
         const tableBody = document.getElementById(tableBodyId);
         if (!tableBody) return;
 
-        tableBody.querySelectorAll('tr.clickable-row').forEach(row => {
-            row.removeEventListener('click', handleRowClick); // Prevent duplicate listeners
-            row.addEventListener('click', handleRowClick);
-        });
-
         function handleRowClick(event) {
-            // Check if the click target is NOT the toggle button itself, if it exists
+            const row = event.currentTarget;
+            if (!row) return;
+
             const isToggleButton = event.target.closest('.row-toggle-button');
-            if (isToggleButton) return;
-
-            const target = event.currentTarget;
-            const targetId = target.dataset.bsTarget;
+            const targetId = row.dataset.bsTarget;
             const collapseElement = targetId ? document.querySelector(targetId) : null;
-            if (collapseElement) {
-                const isExpanded = target.getAttribute('aria-expanded') === 'true';
-                const icon = target.querySelector('.row-toggle-icon');
+            if (!collapseElement) return;
 
-                // Toggle logic is handled by Bootstrap's collapse, but we update the icon manually
-                // as the click is on the row, not the button directly
-                if (icon) {
-                    if (isExpanded) {
-                        icon.classList.remove('fa-chevron-up');
-                        icon.classList.add('fa-chevron-down');
-                    } else {
-                        icon.classList.remove('fa-chevron-down');
-                        icon.classList.add('fa-chevron-up');
-                    }
+            const bsCollapse = bootstrap.Collapse.getInstance(collapseElement);
+            if (!bsCollapse) return;
+
+            if (isToggleButton) {
+                bsCollapse.toggle();
+            } else {
+                const isExpanded = collapseElement.classList.contains('show');
+                if (isExpanded) {
+                    bsCollapse.hide();
+                } else {
+                    bsCollapse.show();
                 }
             }
         }
+    
+        tableBody.querySelectorAll('tr.clickable-row').forEach(row => {
+            row.removeEventListener('click', handleRowClick);
+            row.addEventListener('click', handleRowClick);
+            
+            const collapseElement = document.querySelector(row.dataset.bsTarget);
+            if (collapseElement) {
+                collapseElement.addEventListener('show.bs.collapse', () => {
+                    const icon = row.querySelector('.row-toggle-icon');
+                    if (icon) {
+                        icon.classList.remove('fa-chevron-down');
+                        icon.classList.add('fa-chevron-up');
+                    }
+                    row.setAttribute('aria-expanded', 'true');
+                });
+                collapseElement.addEventListener('hide.bs.collapse', () => {
+                    const icon = row.querySelector('.row-toggle-icon');
+                    if (icon) {
+                        icon.classList.remove('fa-chevron-up');
+                        icon.classList.add('fa-chevron-down');
+                    }
+                     row.setAttribute('aria-expanded', 'false');
+                });
+            }
+        });
     }
 
-    /**
-     * Toggles the expanded/collapsed state for all detail rows in a table.
-     * @param {string} tableBodyId - The ID of the tbody element.
-     * @param {string} toggleButtonId - The ID of the button that triggers this action.
-     */
     function toggleAllDetails(tableBodyId, toggleButtonId) {
         const tableBody = document.getElementById(tableBodyId);
         const toggleButton = document.getElementById(toggleButtonId);
@@ -104,27 +98,15 @@ window.uiManager = (() => {
         rows.forEach(row => {
             const targetId = row.dataset.bsTarget;
             const collapseElement = targetId ? document.querySelector(targetId) : null;
-            const icon = row.querySelector('.row-toggle-icon');
-
             if (collapseElement) {
                 const bsCollapse = bootstrap.Collapse.getInstance(collapseElement) || new bootstrap.Collapse(collapseElement, { toggle: false });
                 if (isExpanding) {
-                    if (!row.classList.contains('show')) { // Check if not already open
+                    if (!collapseElement.classList.contains('show')) {
                         bsCollapse.show();
-                        row.setAttribute('aria-expanded', 'true');
-                        if (icon) {
-                            icon.classList.remove('fa-chevron-down');
-                            icon.classList.add('fa-chevron-up');
-                        }
                     }
                 } else {
-                    if (row.classList.contains('show')) { // Check if not already closed
+                    if (collapseElement.classList.contains('show')) {
                         bsCollapse.hide();
-                        row.setAttribute('aria-expanded', 'false');
-                        if (icon) {
-                            icon.classList.remove('fa-chevron-up');
-                            icon.classList.add('fa-chevron-down');
-                        }
                     }
                 }
             }
@@ -134,11 +116,6 @@ window.uiManager = (() => {
         toggleButton.innerHTML = isExpanding ? 'Collapse All Details <i class="fas fa-chevron-up ms-1"></i>' : 'Expand All Details <i class="fas fa-chevron-down ms-1"></i>';
     }
 
-    /**
-     * Updates sort icons in table headers.
-     * @param {string} tableHeaderId - The ID of the thead element.
-     * @param {object} sortState - Current sort state ({key, direction, subKey}).
-     */
     function updateSortIcons(tableHeaderId, sortState) {
         const header = document.getElementById(tableHeaderId);
         if (!header) return;
@@ -155,17 +132,14 @@ window.uiManager = (() => {
             if (th.dataset.sortKey === sortState.key) {
                 const subHeaders = th.querySelectorAll('.sortable-sub-header');
                 if (subHeaders.length > 0) {
-                    // For multi-sort headers, keep a generic sort icon for the main header unless a sub-key matches
                     let subKeyMatched = false;
                     subHeaders.forEach(subH => {
                         if (subH.dataset.subKey === sortState.subKey) {
                             subKeyMatched = true;
-                            // Style active sub-header
                             subH.style.fontWeight = 'bold';
                             subH.style.textDecoration = 'underline';
                             subH.style.color = 'var(--primary-color)';
                         } else {
-                            // Reset other sub-headers
                             subH.style.fontWeight = '';
                             subH.style.textDecoration = '';
                             subH.style.color = '';
@@ -180,16 +154,13 @@ window.uiManager = (() => {
                         sortIcon.classList.remove('text-primary', 'fa-sort-up', 'fa-sort-down');
                     }
                 } else {
-                    // Single sort key header
                     sortIcon.classList.add(sortState.direction === 'asc' ? 'fa-sort-up' : 'fa-sort-down');
                     sortIcon.classList.remove('text-muted', 'opacity-50', 'fa-sort');
                     sortIcon.classList.add('text-primary');
                 }
             } else {
-                // Not the active sort key
                 sortIcon.classList.add('fa-sort', 'text-muted', 'opacity-50');
                 sortIcon.classList.remove('text-primary', 'fa-sort-up', 'fa-sort-down');
-                // Reset any sub-header styling if main key is not active
                 th.querySelectorAll('.sortable-sub-header').forEach(subH => {
                     subH.style.fontWeight = '';
                     subH.style.textDecoration = '';
@@ -199,33 +170,25 @@ window.uiManager = (() => {
         });
     }
 
-    /**
-     * Initializes Tippy.js tooltips for elements within a given container.
-     * Destroys previous tooltips if `_tooltips` array is used.
-     * @param {HTMLElement} containerElement - The DOM element within which to initialize tooltips.
-     */
     function initializeTooltips(containerElement) {
-        if (typeof tippy === 'undefined') return; // Defensive check for Tippy.js
+        if (typeof tippy === 'undefined') return;
 
-        // Destroy existing tooltips managed by this function to prevent duplicates
         if (_tooltips && Array.isArray(_tooltips)) {
             _tooltips.forEach(instance => {
                 if (instance && typeof instance.destroy === 'function') {
                     instance.destroy();
                 }
             });
-            _tooltips = []; // Clear the array
+            _tooltips = [];
         }
 
-        // Select all elements with data-tippy-content within the container
         const elementsWithTooltips = containerElement.querySelectorAll('[data-tippy-content]');
 
         elementsWithTooltips.forEach(element => {
             const content = element.getAttribute('data-tippy-content');
             if (content) {
-                // Determine theme based on content (e.g., error/warning messages)
                 let theme = 'glass';
-                if (content.includes('Warning') || content.includes('Error') || content.includes('fehler')) {
+                if (content.toLowerCase().includes('warning') || content.toLowerCase().includes('error')) {
                     theme = 'warning';
                 }
 
@@ -234,9 +197,9 @@ window.uiManager = (() => {
                     allowHTML: true,
                     animation: 'fade',
                     placement: 'auto',
-                    delay: window.APP_CONFIG?.UI_SETTINGS?.TOOLTIP_DELAY || [300, 100], // [showDelay, hideDelay]
+                    delay: window.APP_CONFIG?.UI_SETTINGS?.TOOLTIP_DELAY || [300, 100],
                     theme: theme,
-                    touch: ['hold', 500] // Hold for 500ms on touch devices
+                    touch: ['hold', 500]
                 });
                 if (instance) {
                     _tooltips.push(instance);
@@ -245,9 +208,6 @@ window.uiManager = (() => {
         });
     }
 
-    /**
-     * Destroys all currently active tooltips.
-     */
     function destroyTooltips() {
         if (_tooltips && Array.isArray(_tooltips)) {
             _tooltips.forEach(instance => {
@@ -259,14 +219,8 @@ window.uiManager = (() => {
         }
     }
 
-    /**
-     * Shows a toast notification.
-     * @param {string} message - The message to display.
-     * @param {string} type - 'success', 'info', 'warning', or 'danger'.
-     * @param {number} duration - Duration in ms before hiding.
-     */
     function showToast(message, type = 'info', duration = window.APP_CONFIG?.UI_SETTINGS?.TOAST_DURATION_MS || 4500) {
-        if (typeof bootstrap === 'undefined') return; // Defensive check
+        if (typeof bootstrap === 'undefined') return;
         const toastContainer = document.getElementById('toast-container');
         if (!toastContainer) return;
 
@@ -275,7 +229,7 @@ window.uiManager = (() => {
         toastElement.setAttribute('role', 'alert');
         toastElement.setAttribute('aria-live', 'assertive');
         toastElement.setAttribute('aria-atomic', 'true');
-        toastElement.style.maxWidth = '350px'; // Limit toast width
+        toastElement.style.maxWidth = '350px';
         toastElement.innerHTML = `
             <div class="d-flex">
                 <div class="toast-body">${message}</div>
@@ -286,7 +240,8 @@ window.uiManager = (() => {
         toastContainer.appendChild(toastElement);
 
         const bsToast = new bootstrap.Toast(toastElement, {
-            delay: duration
+            delay: duration,
+            autohide: true
         });
         bsToast.show();
 
@@ -295,15 +250,9 @@ window.uiManager = (() => {
         });
     }
 
-    /**
-     * Updates the UI for T2 criteria controls (checkboxes, buttons, inputs).
-     * @param {object} currentCriteria - The currently active criteria object.
-     * @param {string} currentLogic - The currently active logic ('AND' or 'OR').
-     */
     function updateT2CriteriaControlsUI(currentCriteria, currentLogic) {
-        if (!window.APP_CONFIG || !window.utils) return; // Defensive checks
+        if (!window.APP_CONFIG || !window.utils) return;
 
-        // Update checkboxes
         ['size', 'shape', 'border', 'homogeneity', 'signal'].forEach(key => {
             const checkbox = document.getElementById(`check-${key}`);
             if (checkbox) {
@@ -311,7 +260,6 @@ window.uiManager = (() => {
             }
         });
 
-        // Update size input/range
         const sizeThreshold = currentCriteria.size?.threshold ?? window.APP_CONFIG.DEFAULT_T2_CRITERIA.size.threshold;
         const formattedThreshold = window.utils.formatNumber(sizeThreshold, 1, '', true);
         const rangeSize = document.getElementById('range-size');
@@ -331,7 +279,6 @@ window.uiManager = (() => {
             valueSize.textContent = window.utils.formatNumber(sizeThreshold, 1);
         }
 
-        // Update other criteria buttons
         ['shape', 'border', 'homogeneity', 'signal'].forEach(key => {
             const optionsContainer = document.querySelector(`.criteria-group:has(#check-${key}) .criteria-options-container`);
             const isKeyActive = currentCriteria[key]?.active;
@@ -347,7 +294,6 @@ window.uiManager = (() => {
             }
         });
 
-        // Update logic switch
         const logicSwitch = document.getElementById('t2-logic-switch');
         const logicLabel = document.getElementById('t2-logic-label');
         if (logicSwitch) {
@@ -358,10 +304,6 @@ window.uiManager = (() => {
         }
     }
 
-    /**
-     * Marks the T2 criteria card with a visual indicator if unsaved changes are present.
-     * @param {boolean} isUnsaved - True if there are unsaved changes, false otherwise.
-     */
     function markCriteriaSavedIndicator(isUnsaved) {
         const criteriaCard = document.getElementById('t2-criteria-card');
         const applyButton = document.getElementById('btn-apply-criteria');
@@ -374,15 +316,8 @@ window.uiManager = (() => {
         _isCriteriaSaved = !isUnsaved;
     }
 
-    /**
-     * Updates the Brute-Force UI based on analysis state.
-     * @param {string} state - 'initial', 'started', 'progress', 'result', 'cancelled', 'error'
-     * @param {object} payload - Data related to the state (e.g., progress, best result)
-     * @param {boolean} bfWorkerAvailable - Indicates if the web worker is available.
-     * @param {string} currentCohort - The currently selected cohort.
-     */
     function updateBruteForceUI(state, payload, bfWorkerAvailable, currentCohort) {
-        if (!window.APP_CONFIG || !window.utils || !window.uiComponents) return; // Defensive checks
+        if (!window.APP_CONFIG || !window.utils || !window.uiComponents) return;
         
         const runnerCardContainer = document.getElementById('brute-force-runner-card-container');
         const overviewCardContainer = document.getElementById('brute-force-overview-card-container');
@@ -393,13 +328,13 @@ window.uiManager = (() => {
         
         let runnerCardHTML = '';
         let bfOverviewTableHTML = window.uiComponents.createBruteForceOverviewTableHTML(window.bruteForceManager.getAllResults());
-        window.updateElementHTML(overviewCardContainer.id, window.uiComponents.createStatisticsCard(
+        window.uiManager.updateElementHTML(overviewCardContainer.id, window.uiComponents.createStatisticsCard(
             'bf-overview-card',
             'Brute-Force Optima (Saved Results)',
             bfOverviewTableHTML,
-            false // no padding
+            false
         ));
-        initializeTooltips(overviewCardContainer); // Re-init tooltips for new content
+        initializeTooltips(overviewCardContainer);
 
         let startButtonDisabled = true;
         let cancelButtonDisabled = true;
@@ -427,8 +362,8 @@ window.uiManager = (() => {
             case 'progress':
                 startButtonDisabled = true;
                 cancelButtonDisabled = false;
-                applyBestButtonDisabled = true; // Cannot apply while running
-                showDetailsButtonDisabled = true; // Cannot show details while running
+                applyBestButtonDisabled = true;
+                showDetailsButtonDisabled = true;
                 const tested = payload?.tested || 0;
                 const total = payload?.total || 1;
                 const percent = total > 0 ? Math.floor((tested / total) * 100) : 0;
@@ -442,11 +377,11 @@ window.uiManager = (() => {
                 `;
                 break;
             case 'result':
-                startButtonDisabled = false;
+                startButtonDisabled = !bfWorkerAvailable;
                 cancelButtonDisabled = true;
-                applyBestButtonDisabled = true; // Will be re-enabled after data refresh
-                showDetailsButtonDisabled = false;
-                const best = payload; // payload is already the best result for the metric/cohort
+                applyBestButtonDisabled = !(payload && payload.bestResult);
+                showDetailsButtonDisabled = !(payload && payload.bestResult);
+                const best = payload;
                 const durationSeconds = (best?.duration || 0) / 1000;
                 progressHTML = `
                     <p class="mb-2 small text-muted">Optimization finished for cohort: <strong>${window.utils.getCohortDisplayName(best?.cohort || currentCohort)}</strong>, Metric: <strong>${best?.metric || selectedMetric}</strong></p>
@@ -499,26 +434,20 @@ window.uiManager = (() => {
                 </div>
             </div>
             `,
-            false // No default padding, content handles it
+            false
         );
         window.updateElementHTML(runnerCardContainer.id, runnerCardHTML);
-        initializeTooltips(runnerCardContainer); // Re-init tooltips for new content
+        initializeTooltips(runnerCardContainer);
     }
-
-    /**
-     * Updates the state of export buttons based on availability of data/results.
-     * @param {string} currentTabId - The ID of the currently active tab.
-     * @param {boolean} hasBruteForceResults - True if any brute-force results exist.
-     * @param {boolean} hasPatientData - True if patient data is loaded.
-     */
+    
     function updateExportButtonStates(currentTabId, hasBruteForceResults, hasPatientData) {
-        if (!window.APP_CONFIG) return; // Defensive check
+        if (!window.APP_CONFIG) return;
         const exportPane = document.getElementById('export-pane');
         if (!exportPane) return;
 
-        const isExportTab = currentTabId === 'export';
-
+        const isExportTab = currentTabId === 'export-tab';
         const buttons = exportPane.querySelectorAll('button[id^="export-"]');
+
         buttons.forEach(button => {
             const exportType = button.dataset.exportType;
             let shouldBeEnabled = false;
@@ -532,8 +461,8 @@ window.uiManager = (() => {
                 case 'all-zip':
                 case 'csv-zip':
                 case 'md-zip':
-                case 'png-zip': // These buttons will be enabled regardless of chart presence, but individual chart exports might fail.
-                case 'svg-zip': // Same as above.
+                case 'png-zip':
+                case 'svg-zip':
                 case 'radiology-submission-zip':
                     shouldBeEnabled = hasPatientData;
                     break;
@@ -541,33 +470,23 @@ window.uiManager = (() => {
                     shouldBeEnabled = hasBruteForceResults;
                     break;
                 default:
-                    // Any other export type not explicitly handled, e.g., comparison specific ones
-                    shouldBeEnabled = hasPatientData; // A reasonable default if data exists
+                    shouldBeEnabled = hasPatientData;
                     break;
             }
             button.disabled = !shouldBeEnabled;
-            // Only initialize tooltips if the button is enabled and if we are on the export tab to avoid performance issues
-            // tippy should be initialized once the element is added to DOM and has its content/attributes
-            // it's already done by renderTabContent for the whole tab, but for disabled state changes this is explicit
+
             if (isExportTab) {
                 const tooltipInstance = button._tippy;
-                if (!shouldBeEnabled && tooltipInstance) {
-                    tooltipInstance.disable();
-                } else if (shouldBeEnabled && tooltipInstance) {
-                    tooltipInstance.enable();
+                if (tooltipInstance) {
+                    if (!shouldBeEnabled) tooltipInstance.disable();
+                    else tooltipInstance.enable();
                 }
             }
         });
     }
 
-    /**
-     * Updates the UI selectors for the statistics tab (single/comparison view).
-     * @param {string} layout - 'einzel' or 'vergleich'.
-     * @param {string} cohort1 - ID of the first cohort.
-     * @param {string} cohort2 - ID of the second cohort.
-     */
     function updateStatisticsSelectorsUI(layout, cohort1, cohort2) {
-        if (!window.APP_CONFIG || !window.utils) return; // Defensive checks
+        if (!window.APP_CONFIG || !window.utils) return;
         
         const singleViewBtn = document.getElementById('statistics-toggle-single');
         const comparisonViewBtn = document.getElementById('statistics-toggle-comparison');
@@ -595,13 +514,8 @@ window.uiManager = (() => {
         }
     }
 
-    /**
-     * Updates the UI for the comparison tab view selection and study selection.
-     * @param {string} view - 'as-pur' or 'as-vs-t2'.
-     * @param {string} selectedStudyId - ID of the selected comparison study/criteria set.
-     */
     function updateComparisonViewUI(view, selectedStudyId) {
-        if (!window.APP_CONFIG || !window.utils) return; // Defensive checks
+        if (!window.APP_CONFIG || !window.utils || !window.studyT2CriteriaManager) return;
         
         const asPerfBtn = document.getElementById('view-as-perf');
         const asVsT2Btn = document.getElementById('view-as-vs-t2');
@@ -612,25 +526,19 @@ window.uiManager = (() => {
 
         if (compStudySelect) {
             compStudySelect.disabled = (view === 'as-pur');
-            const allStudySets = window.studyT2CriteriaManager?.getAllStudyCriteriaSets() || []; // Defensive check for studyT2CriteriaManager
+            const allStudySets = window.studyT2CriteriaManager.getAllStudyCriteriaSets();
             const appliedOptionHTML = `<option value="${window.APP_CONFIG.SPECIAL_IDS.APPLIED_CRITERIA_STUDY_ID}" ${selectedStudyId === window.APP_CONFIG.SPECIAL_IDS.APPLIED_CRITERIA_STUDY_ID ? 'selected' : ''}>-- ${window.APP_CONFIG.SPECIAL_IDS.APPLIED_CRITERIA_DISPLAY_NAME} --</option>`;
             const studyOptionsHTML = allStudySets.map(set => `<option value="${set.id}" ${selectedStudyId === set.id ? 'selected' : ''}>${set.name || set.id}</option>`).join('');
             compStudySelect.innerHTML = `<option value="" ${!selectedStudyId ? 'selected' : ''} disabled>-- Please select --</option>${appliedOptionHTML}<option value="" disabled>--- Published Criteria ---</option>${studyOptionsHTML}`;
         }
     }
 
-    /**
-     * Updates the UI for the publication tab's navigation and metric selection.
-     * @param {string} currentSectionId - The ID of the currently active publication section.
-     * @param {string} currentBruteForceMetric - The metric selected for brute-force citation.
-     */
     function updatePublicationUI(currentSectionId, currentBruteForceMetric) {
-        if (!window.APP_CONFIG || !window.PUBLICATION_CONFIG) return; // Defensive checks
+        if (!window.APP_CONFIG || !window.PUBLICATION_CONFIG) return;
         
         const navContainer = document.getElementById('publication-sections-nav');
         if (navContainer) {
             navContainer.innerHTML = window.uiComponents.createPublicationNav(currentSectionId);
-            // Re-initialize tooltips for the new navigation content
             initializeTooltips(navContainer);
         }
 
@@ -642,51 +550,31 @@ window.uiManager = (() => {
         }
     }
 
-    /**
-     * Shows the quick guide modal.
-     */
     function showQuickGuide() {
-        if (typeof bootstrap === 'undefined') return; // Defensive check
-        if (_isQuickGuideOpen) return;
+        if (typeof bootstrap === 'undefined') return;
+        
+        const modalElement = document.getElementById('quick-guide-modal');
+        if (!modalElement) return;
 
-        const quickGuideModal = new bootstrap.Modal(document.getElementById('quick-guide-modal'), {
-            backdrop: 'static',
-            keyboard: false
-        });
+        const quickGuideModal = bootstrap.Modal.getOrCreateInstance(modalElement);
         quickGuideModal.show();
-        _isQuickGuideOpen = true;
-
-        document.getElementById('quick-guide-modal').addEventListener('hidden.bs.modal', () => {
-            _isQuickGuideOpen = false;
-        }, { once: true });
     }
 
-    /**
-     * Updates the innerHTML of a specified DOM element.
-     * This function is crucial for dynamically updating content.
-     * @param {string} elementId - The ID of the DOM element to update.
-     * @param {string} htmlContent - The HTML string to set as content.
-     */
     function updateElementHTML(elementId, htmlContent) {
         const element = document.getElementById(elementId);
         if (element) {
             element.innerHTML = htmlContent;
-            // Reinitialize tooltips for newly inserted content
             initializeTooltips(element);
         }
     }
 
-    /**
-     * Adds a temporary visual highlight to an element.
-     * @param {string} elementId - The ID of the element to highlight.
-     */
     function highlightElement(elementId) {
         const element = document.getElementById(elementId);
         if (element) {
             element.classList.add('element-flash-highlight');
             setTimeout(() => {
                 element.classList.remove('element-flash-highlight');
-            }, 1500); // Duration of the animation
+            }, 1500);
         }
     }
 
@@ -698,7 +586,7 @@ window.uiManager = (() => {
         toggleAllDetails,
         updateSortIcons,
         initializeTooltips,
-        destroyTooltips, // Exposed for external use if needed (e.g., before major re-renders)
+        destroyTooltips,
         showToast,
         updateT2CriteriaControlsUI,
         markCriteriaSavedIndicator,
