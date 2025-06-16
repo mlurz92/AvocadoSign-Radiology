@@ -28,6 +28,31 @@ window.eventManager = (() => {
         }
     }
 
+    function handleExportClick(button) {
+        const exportType = button.id.replace('export-', '');
+        if (exportType.endsWith('-zip')) {
+            const category = exportType.replace('-zip', '');
+            if (category === 'radiology-submission') {
+                window.exportService.exportRadiologySubmissionPackage(
+                    app.getProcessedData(),
+                    app.allPublicationStats,
+                    window.bruteForceManager.getAllResults()
+                );
+            } else {
+                window.exportService.exportCategoryZip(
+                    category, 
+                    app.getProcessedData(), 
+                    window.bruteForceManager.getAllResults(), 
+                    window.state.getCurrentCohort(), 
+                    window.t2CriteriaManager.getAppliedCriteria(), 
+                    window.t2CriteriaManager.getAppliedLogic()
+                );
+            }
+        } else {
+            app.handleSingleExport(exportType);
+        }
+    }
+
     function handleBodyClick(event) {
         const target = event.target;
         const button = target.closest('button');
@@ -253,16 +278,6 @@ window.eventManager = (() => {
         if (window.state.setPublicationBruteForceMetric(newMetric)) {
             app.updateUI();
             if (window.state.getActiveTabId() === 'publication') app.refreshCurrentTab();
-        }
-    }
-
-    function handleExportClick(button) {
-        const exportType = button.id.replace('export-', '');
-        if (exportType.endsWith('-zip')) {
-            const category = exportType.replace('-zip', '');
-            window.exportService.exportCategoryZip(category, app.getProcessedData(), window.bruteForceManager.getAllResults(), window.state.getCurrentCohort(), window.t2CriteriaManager.getAppliedCriteria(), window.t2CriteriaManager.getAppliedLogic());
-        } else {
-            app.handleSingleExport(exportType);
         }
     }
 
