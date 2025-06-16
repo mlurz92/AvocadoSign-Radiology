@@ -143,17 +143,18 @@ window.statisticsTab = (() => {
 
         results.forEach(r => {
             const cohortInfo = (r.cohort !== getCohortDisplayName(globalCoh)) ? ` (${r.cohort}, n=${r.n})` : ``;
+            const pValueClass = r.pValue < 0.05 ? 'p-value-significant' : '';
             const pValueTooltip = r.pValue ? getInterpretationTooltip('pValue', {value: r.pValue, testName: 'DeLong'}, {comparisonName: 'AUC', method1: 'AS', method2: r.name}) : 'Comparison not applicable';
 
             tableHtml += `<tr>
                 <td>${r.name}${cohortInfo}</td>
-                <td>${formatPercent(r.sens?.value, 1, na_stat)}</td>
-                <td>${formatPercent(r.spec?.value, 1, na_stat)}</td>
-                <td>${formatPercent(r.ppv?.value, 1, na_stat)}</td>
-                <td>${formatPercent(r.npv?.value, 1, na_stat)}</td>
-                <td>${formatPercent(r.acc?.value, 1, na_stat)}</td>
+                <td><span class="metric-popover-trigger" data-bs-toggle="popover" title="Confusion Matrix: Sensitivity" data-bs-content="${window.uiComponents.createConfusionMatrixPopoverHTML(r.sens?.matrix)}">${formatPercent(r.sens?.value, 1, na_stat)}</span></td>
+                <td><span class="metric-popover-trigger" data-bs-toggle="popover" title="Confusion Matrix: Specificity" data-bs-content="${window.uiComponents.createConfusionMatrixPopoverHTML(r.spec?.matrix)}">${formatPercent(r.spec?.value, 1, na_stat)}</span></td>
+                <td><span class="metric-popover-trigger" data-bs-toggle="popover" title="Confusion Matrix: PPV" data-bs-content="${window.uiComponents.createConfusionMatrixPopoverHTML(r.ppv?.matrix)}">${formatPercent(r.ppv?.value, 1, na_stat)}</span></td>
+                <td><span class="metric-popover-trigger" data-bs-toggle="popover" title="Confusion Matrix: NPV" data-bs-content="${window.uiComponents.createConfusionMatrixPopoverHTML(r.npv?.matrix)}">${formatPercent(r.npv?.value, 1, na_stat)}</span></td>
+                <td><span class="metric-popover-trigger" data-bs-toggle="popover" title="Confusion Matrix: Accuracy" data-bs-content="${window.uiComponents.createConfusionMatrixPopoverHTML(r.acc?.matrix)}">${formatPercent(r.acc?.value, 1, na_stat)}</span></td>
                 <td>${formatNumber(r.auc?.value, 3, na_stat, true)}</td>
-                <td data-tippy-content="${pValueTooltip}">${r.pValue ? `${getPValueText(r.pValue, false)} ${getStatisticalSignificanceSymbol(r.pValue)}` : na_stat}</td>
+                <td data-tippy-content="${pValueTooltip}" class="${pValueClass}">${r.pValue ? `${getPValueText(r.pValue, false)}` : na_stat}</td>
             </tr>`;
         });
 
@@ -197,7 +198,7 @@ window.statisticsTab = (() => {
 
                 innerContainer.innerHTML += window.uiComponents.createStatisticsCard(`descriptive-stats-${i}`, 'Descriptive Statistics', createDescriptiveStatsContentHTML(stats, i, cohortId), true, null, [{id: `dl-desc-table-${i}-png`, icon: 'fa-image', format: 'png', tableId: `table-descriptive-demographics-${i}`, tableName: `Descriptive_Demographics_${cohortId.replace(/\s+/g, '_')}`}], `table-descriptive-demographics-${i}`);
 
-                const fCI_p_stat = (m, k) => { const d = (k === 'auc' || k ==='f1' || k==='youden') ? 3 : 1; const p = !(k === 'auc'||k==='f1'||k==='youden'); return formatCI(m?.value, m?.ci?.lower, m?.ci?.upper, d, p, na_stat); };
+                const fCI_p_stat = (m, k) => { const d = (k === 'auc' || k ==='f1' || k ==='youden' || k === 'balAcc') ? 3 : 1; const p = !(k === 'auc'||k==='f1'||k==='youden'|| k === 'balAcc'); return formatCI(m?.value, m?.ci?.lower, m?.ci?.upper, d, p, na_stat); };
                 
                 const createPerfTableHTML = (perfStats) => {
                     if (!perfStats || typeof perfStats.matrix !== 'object') return '<p class="text-muted small p-2">No diagnostic performance data.</p>';
@@ -205,11 +206,11 @@ window.statisticsTab = (() => {
                         <th data-tippy-content="The diagnostic metric being evaluated.">Metric</th>
                         <th data-tippy-content="The calculated value for the metric, with its 95% Confidence Interval in parentheses.">Value (95% CI)</th>
                         <th data-tippy-content="The statistical method used to calculate the confidence interval.">CI Method</th></tr></thead><tbody>
-                        <tr><td data-tippy-content="${getDefinitionTooltip('sens')}">Sensitivity</td><td data-tippy-content="${getInterpretationTooltip('sens', perfStats.sens)}">${fCI_p_stat(perfStats.sens, 'sens')}</td><td>${perfStats.sens?.method || na_stat}</td></tr>
-                        <tr><td data-tippy-content="${getDefinitionTooltip('spec')}">Specificity</td><td data-tippy-content="${getInterpretationTooltip('spec', perfStats.spec)}">${fCI_p_stat(perfStats.spec, 'spec')}</td><td>${perfStats.spec?.method || na_stat}</td></tr>
-                        <tr><td data-tippy-content="${getDefinitionTooltip('ppv')}">PPV</td><td data-tippy-content="${getInterpretationTooltip('ppv', perfStats.ppv)}">${fCI_p_stat(perfStats.ppv, 'ppv')}</td><td>${perfStats.ppv?.method || na_stat}</td></tr>
-                        <tr><td data-tippy-content="${getDefinitionTooltip('npv')}">NPV</td><td data-tippy-content="${getInterpretationTooltip('npv', perfStats.npv)}">${fCI_p_stat(perfStats.npv, 'npv')}</td><td>${perfStats.npv?.method || na_stat}</td></tr>
-                        <tr><td data-tippy-content="${getDefinitionTooltip('acc')}">Accuracy</td><td data-tippy-content="${getInterpretationTooltip('acc', perfStats.acc)}">${fCI_p_stat(perfStats.acc, 'acc')}</td><td>${perfStats.acc?.method || na_stat}</td></tr>
+                        <tr><td data-tippy-content="${getDefinitionTooltip('sens')}"><span class="metric-popover-trigger" data-bs-toggle="popover" title="Confusion Matrix: Sensitivity" data-bs-content="${window.uiComponents.createConfusionMatrixPopoverHTML(perfStats.sens?.matrix)}">Sensitivity</span></td><td data-tippy-content="${getInterpretationTooltip('sens', perfStats.sens)}">${fCI_p_stat(perfStats.sens, 'sens')}</td><td>${perfStats.sens?.method || na_stat}</td></tr>
+                        <tr><td data-tippy-content="${getDefinitionTooltip('spec')}"><span class="metric-popover-trigger" data-bs-toggle="popover" title="Confusion Matrix: Specificity" data-bs-content="${window.uiComponents.createConfusionMatrixPopoverHTML(perfStats.spec?.matrix)}">Specificity</span></td><td data-tippy-content="${getInterpretationTooltip('spec', perfStats.spec)}">${fCI_p_stat(perfStats.spec, 'spec')}</td><td>${perfStats.spec?.method || na_stat}</td></tr>
+                        <tr><td data-tippy-content="${getDefinitionTooltip('ppv')}"><span class="metric-popover-trigger" data-bs-toggle="popover" title="Confusion Matrix: PPV" data-bs-content="${window.uiComponents.createConfusionMatrixPopoverHTML(perfStats.ppv?.matrix)}">PPV</span></td><td data-tippy-content="${getInterpretationTooltip('ppv', perfStats.ppv)}">${fCI_p_stat(perfStats.ppv, 'ppv')}</td><td>${perfStats.ppv?.method || na_stat}</td></tr>
+                        <tr><td data-tippy-content="${getDefinitionTooltip('npv')}"><span class="metric-popover-trigger" data-bs-toggle="popover" title="Confusion Matrix: NPV" data-bs-content="${window.uiComponents.createConfusionMatrixPopoverHTML(perfStats.npv?.matrix)}">NPV</span></td><td data-tippy-content="${getInterpretationTooltip('npv', perfStats.npv)}">${fCI_p_stat(perfStats.npv, 'npv')}</td><td>${perfStats.npv?.method || na_stat}</td></tr>
+                        <tr><td data-tippy-content="${getDefinitionTooltip('acc')}"><span class="metric-popover-trigger" data-bs-toggle="popover" title="Confusion Matrix: Accuracy" data-bs-content="${window.uiComponents.createConfusionMatrixPopoverHTML(perfStats.acc?.matrix)}">Accuracy</span></td><td data-tippy-content="${getInterpretationTooltip('acc', perfStats.acc)}">${fCI_p_stat(perfStats.acc, 'acc')}</td><td>${perfStats.acc?.method || na_stat}</td></tr>
                         <tr><td data-tippy-content="${getDefinitionTooltip('balAcc')}">Balanced Accuracy</td><td data-tippy-content="${getInterpretationTooltip('balAcc', perfStats.balAcc)}">${fCI_p_stat(perfStats.balAcc, 'balAcc')}</td><td>${perfStats.balAcc?.method || na_stat}</td></tr>
                         <tr><td data-tippy-content="${getDefinitionTooltip('f1')}">F1-Score</td><td data-tippy-content="${getInterpretationTooltip('f1', perfStats.f1)}">${fCI_p_stat(perfStats.f1, 'f1')}</td><td>${perfStats.f1?.method || na_stat}</td></tr>
                         <tr><td data-tippy-content="${getDefinitionTooltip('auc')}">AUC</td><td data-tippy-content="${getInterpretationTooltip('auc', perfStats.auc)}">${fCI_p_stat(perfStats.auc, 'auc')}</td><td>${perfStats.auc?.method || na_stat}</td></tr>
@@ -220,14 +221,16 @@ window.statisticsTab = (() => {
                     if (!compStats) return '<p class="text-muted small p-2">No comparison data.</p>';
                     const mcnemarTooltip = getInterpretationTooltip('pValue', {value: compStats.mcnemar?.pValue, testName: 'McNemar'}, { method1: 'AS', method2: formattedAppliedT2Short, metricName: 'Accuracy'});
                     const delongTooltip = getInterpretationTooltip('pValue', {value: compStats.delong?.pValue, testName: 'DeLong'}, { method1: 'AS', method2: formattedAppliedT2Short, metricName: 'AUC'});
+                    const mcnemarPValueClass = compStats.mcnemar?.pValue < 0.05 ? 'p-value-significant' : '';
+                    const delongPValueClass = compStats.delong?.pValue < 0.05 ? 'p-value-significant' : '';
                     
                     return `<div class="table-responsive"><table class="table table-sm table-striped small mb-0"><thead><tr>
                         <th data-tippy-content="Statistical test used to compare the two methods.">Test</th>
                         <th data-tippy-content="The calculated value of the test statistic.">Statistic</th>
                         <th data-tippy-content="${getDefinitionTooltip('pValue')}">p-Value</th>
                         <th data-tippy-content="Name of the statistical test and any corrections applied.">Method</th></tr></thead><tbody>
-                        <tr><td data-tippy-content="${getDefinitionTooltip('mcnemar')}">McNemar (Acc)</td><td>${formatNumber(compStats.mcnemar?.statistic, 3, na_stat, true)} (df=${compStats.mcnemar?.df || na_stat})</td><td data-tippy-content="${mcnemarTooltip}">${getPValueText(compStats.mcnemar?.pValue, false)} ${getStatisticalSignificanceSymbol(compStats.mcnemar?.pValue)}</td><td>${compStats.mcnemar?.method || na_stat}</td></tr>
-                        <tr><td data-tippy-content="${getDefinitionTooltip('delong')}">DeLong (AUC)</td><td>Z=${formatNumber(compStats.delong?.Z, 3, na_stat, true)}</td><td data-tippy-content="${delongTooltip}">${getPValueText(compStats.delong?.pValue, false)} ${getStatisticalSignificanceSymbol(compStats.delong?.pValue)}</td><td>${compStats.delong?.method || na_stat}</td></tr>
+                        <tr><td data-tippy-content="${getDefinitionTooltip('mcnemar')}">McNemar (Acc)</td><td>${formatNumber(compStats.mcnemar?.statistic, 3, na_stat, true)} (df=${compStats.mcnemar?.df || na_stat})</td><td class="${mcnemarPValueClass}" data-tippy-content="${mcnemarTooltip}">${getPValueText(compStats.mcnemar?.pValue, false)}</td><td>${compStats.mcnemar?.method || na_stat}</td></tr>
+                        <tr><td data-tippy-content="${getDefinitionTooltip('delong')}">DeLong (AUC)</td><td>Z=${formatNumber(compStats.delong?.Z, 3, na_stat, true)}</td><td class="${delongPValueClass}" data-tippy-content="${delongTooltip}">${getPValueText(compStats.delong?.pValue, false)}</td><td>${compStats.delong?.method || na_stat}</td></tr>
                     </tbody></table></div>`;
                 };
 
@@ -247,18 +250,20 @@ window.statisticsTab = (() => {
 
                     const addRow = (key, name, obj) => {
                         const pValueTooltip = getInterpretationTooltip('pValue', { ...obj, value: obj.pValue, testName: obj.testName }, { featureName: escapeHTML(name) });
+                        const pValueClass = obj.pValue < 0.05 ? 'p-value-significant' : '';
                         html += `<tr><td>${escapeHTML(name)}</td>
                             <td data-tippy-content="${getInterpretationTooltip('or', {...obj.or, featureName: escapeHTML(name)})}">${fORCI(obj.or)}</td>
                             <td data-tippy-content="${getInterpretationTooltip('rd', {...obj.rd, featureName: escapeHTML(name)})}">${fRDCI(obj.rd)}</td>
                             <td data-tippy-content="${getInterpretationTooltip('phi', {...obj.phi, featureName: escapeHTML(name)})}">${fPhi(obj.phi)}</td>
-                            <td data-tippy-content="${pValueTooltip}">${getPValueText(obj.pValue, false)} ${getStatisticalSignificanceSymbol(obj.pValue)}</td>
+                            <td class="${pValueClass}" data-tippy-content="${pValueTooltip}">${getPValueText(obj.pValue, false)}</td>
                             <td>${obj.testName || na_stat}</td></tr>`;
                     };
 
                     if (assocStats.as) addRow('as', 'AS Positive', assocStats.as);
                     if (assocStats.size_mwu) {
                          const mwuTooltip = getInterpretationTooltip('pValue', { ...assocStats.size_mwu, value: assocStats.size_mwu.pValue, testName: assocStats.size_mwu.testName }, { comparisonName: 'median LN size between N+ and N- groups' });
-                        html += `<tr><td>${assocStats.size_mwu.featureName}</td><td>${na_stat}</td><td>${na_stat}</td><td>${na_stat}</td><td data-tippy-content="${mwuTooltip}">${getPValueText(assocStats.size_mwu.pValue, false)} ${getStatisticalSignificanceSymbol(assocStats.size_mwu.pValue)}</td><td>${assocStats.size_mwu.testName || na_stat}</td></tr>`;
+                         const mwuPValueClass = assocStats.size_mwu.pValue < 0.05 ? 'p-value-significant' : '';
+                        html += `<tr><td>${assocStats.size_mwu.featureName}</td><td>${na_stat}</td><td>${na_stat}</td><td>${na_stat}</td><td class="${mwuPValueClass}" data-tippy-content="${mwuTooltip}">${getPValueText(assocStats.size_mwu.pValue, false)}</td><td>${assocStats.size_mwu.testName || na_stat}</td></tr>`;
                     }
 
                     ['size', 'shape', 'border', 'homogeneity', 'signal'].forEach(fKey => {
@@ -291,6 +296,8 @@ window.statisticsTab = (() => {
              let compContent = '<p class="text-muted small p-2">Not enough data for cohort comparison.</p>';
              
              if(interComp.as && interComp.t2Applied) {
+                 const pValueAsClass = interComp.as.pValue < 0.05 ? 'p-value-significant' : '';
+                 const pValueT2Class = interComp.t2Applied.pValue < 0.05 ? 'p-value-significant' : '';
                  compContent = `<div class="table-responsive"><table class="table table-sm table-striped small mb-0">
                     <thead><tr>
                         <th>Method</th>
@@ -300,8 +307,8 @@ window.statisticsTab = (() => {
                         <th data-tippy-content="P-value from Z-Test for two independent AUCs.">p-Value (unpaired)</th>
                     </tr></thead>
                     <tbody>
-                        <tr><td>Avocado Sign</td><td>AUC</td><td>${formatNumber(c1Stats.performanceAS.auc.value, 3, na_stat, true)}</td><td>${formatNumber(c2Stats.performanceAS.auc.value, 3, na_stat, true)}</td><td>${getPValueText(interComp.as.pValue, false)}</td></tr>
-                        <tr><td>${formattedAppliedT2Short}</td><td>AUC</td><td>${formatNumber(c1Stats.performanceT2Applied.auc.value, 3, na_stat, true)}</td><td>${formatNumber(c2Stats.performanceT2Applied.auc.value, 3, na_stat, true)}</td><td>${getPValueText(interComp.t2Applied.pValue, false)}</td></tr>
+                        <tr><td>Avocado Sign</td><td>AUC</td><td>${formatNumber(c1Stats.performanceAS.auc.value, 3, na_stat, true)}</td><td>${formatNumber(c2Stats.performanceAS.auc.value, 3, na_stat, true)}</td><td class="${pValueAsClass}">${getPValueText(interComp.as.pValue, false)}</td></tr>
+                        <tr><td>${formattedAppliedT2Short}</td><td>AUC</td><td>${formatNumber(c1Stats.performanceT2Applied.auc.value, 3, na_stat, true)}</td><td>${formatNumber(c2Stats.performanceT2Applied.auc.value, 3, na_stat, true)}</td><td class="${pValueT2Class}">${getPValueText(interComp.t2Applied.pValue, false)}</td></tr>
                     </tbody>
                  </table></div>`;
              }
@@ -339,6 +346,7 @@ window.statisticsTab = (() => {
                 }
             });
             window.uiManager.initializeTooltips(outerRow);
+            window.uiManager.initializePopovers(outerRow);
         }, 50);
         return outerRow.outerHTML;
     }
