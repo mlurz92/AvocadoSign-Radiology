@@ -44,6 +44,8 @@ window.publicationService = (() => {
                 return `<li>${formattedText}</li>`;
             }).join('');
             referencesHtml = `<section id="references_main"><h2>References</h2><ol>${listItems}</ol></section>`;
+        } else {
+             referencesHtml = `<section id="references_main"><h2>References</h2><p class="text-muted">No references cited in the text.</p></section>`;
         }
 
         return { processedHtml, referencesHtml };
