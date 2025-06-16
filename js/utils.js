@@ -470,16 +470,13 @@ function getT2IconSVG(type, value) {
 function formatStatusBadge(status, tooltipContent = '') {
     let badgeClass = 'bg-secondary-light';
     let iconClass = 'fa-question';
-    let text = '?';
 
     if (status === '+') {
         badgeClass = 'bg-danger-light';
         iconClass = 'fa-plus';
-        text = '+';
     } else if (status === '-') {
         badgeClass = 'bg-success-light';
         iconClass = 'fa-check';
-        text = '−';
     }
     
     return `<span class="status-badge ${badgeClass}" data-tippy-content="${tooltipContent}"><i class="fas ${iconClass} fa-fw"></i></span>`;
