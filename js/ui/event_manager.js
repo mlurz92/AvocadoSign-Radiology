@@ -31,7 +31,7 @@ window.eventManager = (() => {
     function handleBodyClick(event) {
         const target = event.target;
         const button = target.closest('button');
-        
+
         if (button?.dataset.cohort) {
             app.handleCohortChange(button.dataset.cohort, "user");
             return;
@@ -50,7 +50,7 @@ window.eventManager = (() => {
             return;
         }
 
-        if (!button) return;
+        if (!button || button.disabled) return;
 
         const singleClickActions = {
             'btn-quick-guide': () => window.uiManager.showQuickGuide(),
@@ -67,15 +67,11 @@ window.eventManager = (() => {
             'btn-cancel-brute-force': () => window.bruteForceManager.cancelAnalysis(),
             'btn-apply-best-bf-criteria': () => {
                 const metricSelect = document.getElementById('brute-force-metric');
-                if (metricSelect) {
-                    app.applyBestBruteForceCriteria(metricSelect.value);
-                }
+                if (metricSelect) app.applyBestBruteForceCriteria(metricSelect.value);
             },
             'btn-show-bf-details': () => {
                  const metricSelect = document.getElementById('brute-force-metric');
-                 if (metricSelect) {
-                     app.showBruteForceDetails(metricSelect.value);
-                 }
+                 if (metricSelect) app.showBruteForceDetails(metricSelect.value);
             },
             'statistics-toggle-comparison': () => handleStatsLayoutToggle(button),
             'export-bruteforce-modal-txt': () => {
@@ -88,12 +84,12 @@ window.eventManager = (() => {
             }
         };
 
-        if (singleClickActions[button.id] && !button.disabled) {
+        if (singleClickActions[button.id]) {
             singleClickActions[button.id]();
             return;
         }
         
-        if (button.classList.contains('t2-criteria-button') && !button.disabled) {
+        if (button.classList.contains('t2-criteria-button')) {
             if (window.t2CriteriaManager.updateCriterionValue(button.dataset.criterion, button.dataset.value)) {
                 window.uiManager.updateT2CriteriaControlsUI(window.t2CriteriaManager.getCurrentCriteria(), window.t2CriteriaManager.getCurrentLogic());
                 window.uiManager.markCriteriaSavedIndicator(window.t2CriteriaManager.isUnsaved());
@@ -101,7 +97,7 @@ window.eventManager = (() => {
             return;
         }
 
-        if (button.classList.contains('chart-download-btn') && !button.disabled) {
+        if (button.classList.contains('chart-download-btn')) {
             window.exportService.exportSingleChart(
                 button.dataset.chartId, 
                 button.dataset.format, 
@@ -111,17 +107,17 @@ window.eventManager = (() => {
             return;
         }
 
-        if (button.classList.contains('table-download-png-btn') && !button.disabled) {
+        if (button.classList.contains('table-download-png-btn')) {
             window.exportService.exportTablePNG(button.dataset.tableId, window.state.getCurrentCohort(), 'TABLE_PNG_EXPORT', button.dataset.tableName);
             return;
         }
 
-        if (button.closest('#export-pane') && button.id.startsWith('export-') && !button.disabled) {
+        if (button.closest('#export-pane') && button.id.startsWith('export-')) {
             handleExportClick(button);
             return;
         }
 
-        if (button.closest('#comparison-tab-pane') && button.id.startsWith('download-') && !button.disabled) {
+        if (button.closest('#comparison-tab-pane') && button.id.startsWith('download-')) {
             window.exportService.exportComparisonData(button.id, app.getComparisonDataForExport(), window.state.getCurrentCohort());
             return;
         }
@@ -227,15 +223,14 @@ window.eventManager = (() => {
 
     function handleComparisonStudyChange(studyId) {
         if (window.state.getComparisonStudyId() === studyId) return;
+        
+        const stateNeedsRefresh = window.state.setComparisonStudyId(studyId);
         const studySet = window.studyT2CriteriaManager.getStudyCriteriaSetById(studyId);
-        let refreshNeeded = window.state.setComparisonStudyId(studyId);
+        
         if (studySet?.applicableCohort && window.state.getCurrentCohort() !== studySet.applicableCohort) {
             app.handleCohortChange(studySet.applicableCohort, "auto_comparison");
-            refreshNeeded = false;
-        }
-        if (refreshNeeded) {
-            app.updateUI();
-            if (window.state.getActiveTabId() === 'comparison') app.refreshCurrentTab();
+        } else if (stateNeedsRefresh) {
+            app.refreshCurrentTab();
         }
     }
 
