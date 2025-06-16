@@ -1,8 +1,44 @@
 window.uiManager = (() => {
     let _tooltips = [];
+    let _popovers = [];
     let _isQuickGuideOpen = false;
     let _isCriteriaSaved = true;
 
+    function initializePopovers(containerElement) {
+        if (typeof bootstrap === 'undefined') return;
+
+        destroyPopovers();
+        
+        const popoverTriggers = containerElement.querySelectorAll('.metric-popover-trigger');
+        popoverTriggers.forEach(el => {
+            const popover = new bootstrap.Popover(el, {
+                container: 'body',
+                html: true,
+                placement: 'auto',
+                trigger: 'click',
+                fallbackPlacements: ['bottom', 'top', 'right', 'left'],
+                customClass: 'metrics-popover'
+            });
+            _popovers.push(popover);
+        });
+
+        document.addEventListener('click', function (event) {
+            const isPopoverTrigger = event.target.closest('.metric-popover-trigger');
+            _popovers.forEach(popover => {
+                if (popover._element !== isPopoverTrigger && !popover._element.contains(isPopoverTrigger)) {
+                     popover.hide();
+                }
+            });
+        }, true);
+    }
+
+    function destroyPopovers() {
+        if (_popovers && Array.isArray(_popovers)) {
+            _popovers.forEach(popover => popover.dispose());
+            _popovers = [];
+        }
+    }
+    
     function updateHeaderStatsUI(stats) {
         if (!window.utils || !window.APP_CONFIG) return;
         document.getElementById('header-cohort').textContent = stats.cohort;
@@ -30,6 +66,7 @@ window.uiManager = (() => {
             paneElement.innerHTML = contentGenerator();
             destroyTooltips();
             initializeTooltips(paneElement);
+            initializePopovers(paneElement);
         }
     }
 
@@ -445,7 +482,7 @@ window.uiManager = (() => {
         const exportPane = document.getElementById('export-pane');
         if (!exportPane) return;
 
-        const isExportTab = currentTabId === 'export-tab';
+        const isExportTab = currentTabId === 'export';
         const buttons = exportPane.querySelectorAll('button[id^="export-"]');
 
         buttons.forEach(button => {
@@ -587,6 +624,8 @@ window.uiManager = (() => {
         updateSortIcons,
         initializeTooltips,
         destroyTooltips,
+        initializePopovers,
+        destroyPopovers,
         showToast,
         updateT2CriteriaControlsUI,
         markCriteriaSavedIndicator,
