@@ -173,11 +173,13 @@ window.uiComponents = (() => {
             }
             
             const mainLinkClass = (mainSection.subSections && mainSection.subSections.length > 0) ? 'nav-link-main' : '';
+            const wordCountSpan = mainSection.wordCountLimit ? '<span class="word-count-indicator"></span>' : '';
 
             return `
                 <li class="nav-item">
-                    <a class="nav-link py-2 publication-section-link ${mainLinkClass} ${isMainActive && !subNavHTML ? 'active' : ''}" href="#" data-section-id="${mainSection.id}" data-tippy-content="${sectionLabel}">
+                    <a class="nav-link py-2 publication-section-link d-flex justify-content-between align-items-center ${mainLinkClass} ${isMainActive && !subNavHTML ? 'active' : ''}" href="#" data-section-id="${mainSection.id}" data-tippy-content="${sectionLabel}">
                         ${sectionLabel}
+                        ${wordCountSpan}
                     </a>
                     ${subNavHTML}
                 </li>`;
