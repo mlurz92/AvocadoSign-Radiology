@@ -68,6 +68,8 @@ function saveToLocalStorage(key, value) {
     try {
         localStorage.setItem(key, JSON.stringify(value));
     } catch (e) {
+        // Handle potential QuotaExceededError or other issues
+        console.error(`Failed to save to localStorage for key "${key}":`, e);
     }
 }
 
@@ -75,11 +77,18 @@ function loadFromLocalStorage(key) {
     if (typeof key !== 'string' || key.length === 0) return null;
     try {
         const item = localStorage.getItem(key);
-        return (item !== null && item !== undefined) ? JSON.parse(item) : null;
+        // Explicitly check for null/undefined and empty string before parsing
+        if (item === null || item === undefined || item === 'undefined' || item === 'null' || item === '') {
+            return null;
+        }
+        return JSON.parse(item);
     } catch (e) {
+        console.warn(`Failed to parse localStorage item for key "${key}", attempting to remove it:`, e);
+        // If parsing fails, the stored data is corrupt; remove it to prevent future errors
         try {
             localStorage.removeItem(key);
         } catch (removeError) {
+            console.error(`Failed to remove corrupt localStorage item for key "${key}":`, removeError);
         }
         return null;
     }
@@ -102,28 +111,35 @@ function isObject(item) {
 }
 
 function cloneDeep(obj) {
-    if (obj === null || typeof obj !== 'object') return obj;
-    try {
-        if (typeof self !== 'undefined' && self.structuredClone) {
-            return self.structuredClone(obj);
-        }
-        return JSON.parse(JSON.stringify(obj));
-    } catch (e) {
-        if (Array.isArray(obj)) {
-            return obj.map(item => cloneDeep(item));
-        }
-        if (isObject(obj)) {
-            const objCopy = {};
-            for (const key in obj) {
-                if (Object.prototype.hasOwnProperty.call(obj, key)) {
-                    objCopy[key] = cloneDeep(obj[key]);
-                }
-            }
-            return objCopy;
-        }
+    if (obj === null || typeof obj !== 'object') {
         return obj;
     }
+
+    // Handle Date objects
+    if (obj instanceof Date) {
+        return new Date(obj.getTime());
+    }
+
+    // Handle Array
+    if (Array.isArray(obj)) {
+        return obj.map(item => cloneDeep(item));
+    }
+
+    // Handle Object
+    if (isObject(obj)) {
+        const copy = {};
+        for (const key in obj) {
+            if (Object.prototype.hasOwnProperty.call(obj, key)) {
+                copy[key] = cloneDeep(obj[key]);
+            }
+        }
+        return copy;
+    }
+
+    // For primitive types, just return the value
+    return obj;
 }
+
 
 function deepMerge(target, ...sources) {
     let output = cloneDeep(target);
@@ -212,13 +228,38 @@ function getStatisticalSignificanceSymbol(pValue) {
     return 'ns';
 }
 
-function getPValueText(pValue) {
+function getPValueText(pValue, includeLeadingZero = true) {
     const p = parseFloat(pValue);
     if (p === null || p === undefined || isNaN(p) || !isFinite(p)) return 'N/A';
 
-    const prefix = 'p';
-    if (p < 0.001) return `${prefix} < 0.001`;
-    return `${prefix} = ${p.toFixed(3)}`;
+    const prefix = ''; // 'p' is not needed as per Radiology style in numerical display, only in text 'P value'
+    if (p < 0.001) return `${prefix}<.001`; // Use <.001 for very small p-values
+    
+    // Round to 3 decimal places for p < 0.01
+    if (p < 0.01) {
+        let formattedP = p.toFixed(3);
+        // Ensure no leading zero if not required by style for this format
+        if (!includeLeadingZero && formattedP.startsWith('0.')) {
+            formattedP = formattedP.substring(1);
+        }
+        return `${prefix}${formattedP}`;
+    }
+
+    // Round to 2 decimal places for p >= 0.01, but keep 3 if rounding would change significance (e.g., .046 to .05)
+    let formattedP = p.toFixed(2);
+    if (parseFloat(formattedP) >= 0.05 && p < 0.05) { // Check if rounding to 2 digits makes it >= 0.05 when it was < 0.05
+        formattedP = p.toFixed(3);
+    }
+    
+    if (parseFloat(formattedP) > 0.99) { // P-values close to 1 should be >.99
+        return `${prefix}>.99`;
+    }
+
+    // Remove leading zero if not required
+    if (!includeLeadingZero && formattedP.startsWith('0.')) {
+        formattedP = formattedP.substring(1);
+    }
+    return `${prefix}${formattedP}`;
 }
 
 
@@ -283,9 +324,17 @@ function getORInterpretation(orValue) {
 
 function escapeHTML(text) {
     if (typeof text !== 'string') return text === null ? '' : String(text);
-    const map = { '&': '&', '<': '<', '>': '>', '"': '"', "'": ''' };
+    // Use named HTML entities or hex for broader compatibility
+    const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#x27;', // Numeric character reference for apostrophe
+    };
     return text.replace(/[&<>"']/g, match => map[match]);
 }
+
 
 function getDefinitionTooltip(metricKey) {
     const definition = window.APP_CONFIG.UI_TEXTS.tooltips.definition[metricKey];
@@ -333,7 +382,7 @@ function getInterpretationTooltip(metricKey, data, context = {}) {
              break;
 
         case 'pValue':
-            const pValueFormatted = getPValueText(value);
+            const pValueFormatted = getPValueText(value, false); // No leading zero for tooltips
             const significance = value < window.APP_CONFIG.STATISTICAL_CONSTANTS.SIGNIFICANCE_LEVEL;
             const significanceText = significance ? templates.significance.significant : templates.significance.not_significant;
             const pStrength = significance ? templates.strength.strong : templates.strength.very_weak;
