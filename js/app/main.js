@@ -10,6 +10,16 @@ class App {
 
     init() {
         try {
+            // Explicit check for uiManager at the very beginning to catch early loading issues
+            if (typeof window.uiManager === 'undefined' || window.uiManager === null) {
+                // Attempt a basic DOM manipulation if uiManager is not ready
+                const appContainer = document.getElementById('app-container');
+                if (appContainer) {
+                    appContainer.innerHTML = `<div class="alert alert-danger m-5"><strong>Initialisierungsfehler:</strong> Das 'uiManager'-Modul konnte nicht geladen werden. Bitte stellen Sie sicher, dass alle JavaScript-Dateien korrekt verknüpft sind und keine schwerwiegenden Fehler enthalten.</div>`;
+                }
+                throw new Error("UI Manager (uiManager.js) is not available. Check script loading order or module integrity.");
+            }
+
             this.checkDependencies();
             
             window.state.init();
@@ -42,7 +52,11 @@ class App {
             window.uiManager.showToast('Application initialized.', 'success', 2500);
 
         } catch (error) {
-            window.uiManager.updateElementHTML('app-container', `<div class="alert alert-danger m-5"><strong>Initialization Error:</strong> ${error.message}.<br>Please check the browser console for more details.</div>`);
+            // This catch block will now be reached if checkDependencies() or the initial uiManager check fails.
+            // If uiManager is truly undefined at this point (due to an underlying, unhandled error),
+            // this line will still fail. The explicit check above should prevent reaching this line
+            // with an undefined uiManager.
+            window.uiManager.updateElementHTML('app-container', `<div class="alert alert-danger m-5"><strong>Initialisierungsfehler:</strong> ${error.message}.<br>Bitte überprüfen Sie die Browserkonsole für weitere Details.</div>`);
         }
     }
 
