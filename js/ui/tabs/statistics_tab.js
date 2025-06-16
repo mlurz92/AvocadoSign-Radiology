@@ -5,8 +5,8 @@ window.statisticsTab = (() => {
         const d = stats.descriptive;
         const total = d.patientCount;
         const na = window.APP_CONFIG.NA_PLACEHOLDER;
-        const fv = (val, dig = 1, useStd = true) => formatNumber(val, dig, na, useStd);
-        const fP = (val, dig = 1) => formatPercent(val, dig, na);
+        const fv = (val, dig = 1, useStd = true) => window.utils.formatNumber(val, dig, na, useStd);
+        const fP = (val, dig = 1) => window.utils.formatPercent(val, dig, na);
         const fLK = (lkData) => `${fv(lkData?.median,1)} (${fv(lkData?.min,0)}–${fv(lkData?.max,0)}) [${fv(lkData?.mean,1)} ± ${fv(lkData?.sd,1)}]`;
         const appliedCriteria = window.t2CriteriaManager.getAppliedCriteria();
         const appliedLogic = window.t2CriteriaManager.getAppliedLogic();
@@ -25,8 +25,8 @@ window.statisticsTab = (() => {
             lnCounts_as_plus: `Number of Avocado Sign positive lymph nodes per patient, evaluated only in AS+ patients (n=${d.asStatus?.plus ?? 0}).`,
             lnCounts_t2_total: "Total number of lymph nodes visible on T2-MRI per patient.",
             lnCounts_t2_plus: `Number of T2-positive lymph nodes (based on applied criteria) per patient, evaluated only in T2+ patients (n=${d.t2Status?.plus ?? 0}).`,
-            chartAge: `Histogram showing the distribution of patient ages in the <strong>${getCohortDisplayName(cohortId)}</strong> cohort.`,
-            chartGender: `Pie chart illustrating the distribution of male and female patients in the <strong>${getCohortDisplayName(cohortId)}</strong> cohort.`
+            chartAge: `Histogram showing the distribution of patient ages in the <strong>${window.utils.getCohortDisplayName(cohortId)}</strong> cohort.`,
+            chartGender: `Pie chart illustrating the distribution of male and female patients in the <strong>${window.utils.getCohortDisplayName(cohortId)}</strong> cohort.`
         };
 
         return `
@@ -76,7 +76,7 @@ window.statisticsTab = (() => {
         if(asPerf) {
             results.push({
                 name: window.APP_CONFIG.SPECIAL_IDS.AVOCADO_SIGN_DISPLAY_NAME,
-                cohort: getCohortDisplayName(globalCoh),
+                cohort: window.utils.getCohortDisplayName(globalCoh),
                 n: allStats[globalCoh]?.descriptive?.patientCount || '?',
                 ...asPerf
             });
@@ -87,7 +87,7 @@ window.statisticsTab = (() => {
         if(appliedPerf) {
             results.push({
                 name: `Applied T2 (${window.studyT2CriteriaManager.formatCriteriaForDisplay(appliedCriteria, appliedLogic, true)})`,
-                cohort: getCohortDisplayName(globalCoh),
+                cohort: window.utils.getCohortDisplayName(globalCoh),
                 n: allStats[globalCoh]?.descriptive?.patientCount || '?',
                 pValue: appliedComp?.delong?.pValue,
                 ...appliedPerf
@@ -102,7 +102,7 @@ window.statisticsTab = (() => {
             if (perf) {
                 results.push({
                     name: set.name,
-                    cohort: getCohortDisplayName(cohortForSet),
+                    cohort: window.utils.getCohortDisplayName(cohortForSet),
                     n: allStats[cohortForSet]?.descriptive?.patientCount || '?',
                     pValue: comp?.delong?.pValue,
                     ...perf
@@ -119,7 +119,7 @@ window.statisticsTab = (() => {
                 if(perf && def) {
                     results.push({
                         name: `Optimized T2 (${metricName}): ${window.studyT2CriteriaManager.formatCriteriaForDisplay(def.criteria, def.logic, true)}`,
-                        cohort: getCohortDisplayName(globalCoh),
+                        cohort: window.utils.getCohortDisplayName(globalCoh),
                         n: allStats[globalCoh]?.descriptive?.patientCount || '?',
                         pValue: comp?.delong?.pValue,
                         ...perf
@@ -132,29 +132,29 @@ window.statisticsTab = (() => {
 
         let tableHtml = `<div class="table-responsive"><table class="table table-sm table-striped small mb-0"><thead><tr>
             <th data-tippy-content="Method or criteria set being evaluated.">Set</th>
-            <th data-tippy-content="${getDefinitionTooltip('sens')}">Sens.</th>
-            <th data-tippy-content="${getDefinitionTooltip('spec')}">Spec.</th>
-            <th data-tippy-content="${getDefinitionTooltip('ppv')}">PPV</th>
-            <th data-tippy-content="${getDefinitionTooltip('npv')}">NPV</th>
-            <th data-tippy-content="${getDefinitionTooltip('acc')}">Acc.</th>
-            <th data-tippy-content="${getDefinitionTooltip('auc')}">AUC</th>
-            <th data-tippy-content="${getDefinitionTooltip('pValue')}">p-Value (vs AS)</th>
+            <th data-tippy-content="${window.utils.getDefinitionTooltip('sens')}">Sens.</th>
+            <th data-tippy-content="${window.utils.getDefinitionTooltip('spec')}">Spec.</th>
+            <th data-tippy-content="${window.utils.getDefinitionTooltip('ppv')}">PPV</th>
+            <th data-tippy-content="${window.utils.getDefinitionTooltip('npv')}">NPV</th>
+            <th data-tippy-content="${window.utils.getDefinitionTooltip('acc')}">Acc.</th>
+            <th data-tippy-content="${window.utils.getDefinitionTooltip('auc')}">AUC</th>
+            <th data-tippy-content="${window.utils.getDefinitionTooltip('pValue')}">p-Value (vs AS)</th>
         </tr></thead><tbody>`;
 
         results.forEach(r => {
-            const cohortInfo = (r.cohort !== getCohortDisplayName(globalCoh)) ? ` (${r.cohort}, n=${r.n})` : ``;
+            const cohortInfo = (r.cohort !== window.utils.getCohortDisplayName(globalCoh)) ? ` (${r.cohort}, n=${r.n})` : ``;
             const pValueClass = r.pValue < 0.05 ? 'p-value-significant' : '';
-            const pValueTooltip = r.pValue ? getInterpretationTooltip('pValue', {value: r.pValue, testName: 'DeLong'}, {comparisonName: 'AUC', method1: 'AS', method2: r.name}) : 'Comparison not applicable';
+            const pValueTooltip = r.pValue ? window.utils.getInterpretationTooltip('pValue', {value: r.pValue, testName: 'DeLong'}, {comparisonName: 'AUC', method1: 'AS', method2: r.name}) : 'Comparison not applicable';
 
             tableHtml += `<tr>
                 <td>${r.name}${cohortInfo}</td>
-                <td><span class="metric-popover-trigger" data-bs-toggle="popover" title="Confusion Matrix: Sensitivity" data-bs-content="${window.uiComponents.createConfusionMatrixPopoverHTML(r.sens?.matrix)}">${formatPercent(r.sens?.value, 1, na_stat)}</span></td>
-                <td><span class="metric-popover-trigger" data-bs-toggle="popover" title="Confusion Matrix: Specificity" data-bs-content="${window.uiComponents.createConfusionMatrixPopoverHTML(r.spec?.matrix)}">${formatPercent(r.spec?.value, 1, na_stat)}</span></td>
-                <td><span class="metric-popover-trigger" data-bs-toggle="popover" title="Confusion Matrix: PPV" data-bs-content="${window.uiComponents.createConfusionMatrixPopoverHTML(r.ppv?.matrix)}">${formatPercent(r.ppv?.value, 1, na_stat)}</span></td>
-                <td><span class="metric-popover-trigger" data-bs-toggle="popover" title="Confusion Matrix: NPV" data-bs-content="${window.uiComponents.createConfusionMatrixPopoverHTML(r.npv?.matrix)}">${formatPercent(r.npv?.value, 1, na_stat)}</span></td>
-                <td><span class="metric-popover-trigger" data-bs-toggle="popover" title="Confusion Matrix: Accuracy" data-bs-content="${window.uiComponents.createConfusionMatrixPopoverHTML(r.acc?.matrix)}">${formatPercent(r.acc?.value, 1, na_stat)}</span></td>
-                <td>${formatNumber(r.auc?.value, 3, na_stat, true)}</td>
-                <td data-tippy-content="${pValueTooltip}" class="${pValueClass}">${r.pValue ? `${getPValueText(r.pValue, false)}` : na_stat}</td>
+                <td><span class="metric-popover-trigger" data-bs-toggle="popover" title="Confusion Matrix: Sensitivity" data-bs-content="${window.uiComponents.createConfusionMatrixPopoverHTML(r.sens?.matrix)}">${window.utils.formatPercent(r.sens?.value, 1, na_stat)}</span></td>
+                <td><span class="metric-popover-trigger" data-bs-toggle="popover" title="Confusion Matrix: Specificity" data-bs-content="${window.uiComponents.createConfusionMatrixPopoverHTML(r.spec?.matrix)}">${window.utils.formatPercent(r.spec?.value, 1, na_stat)}</span></td>
+                <td><span class="metric-popover-trigger" data-bs-toggle="popover" title="Confusion Matrix: PPV" data-bs-content="${window.uiComponents.createConfusionMatrixPopoverHTML(r.ppv?.matrix)}">${window.utils.formatPercent(r.ppv?.value, 1, na_stat)}</span></td>
+                <td><span class="metric-popover-trigger" data-bs-toggle="popover" title="Confusion Matrix: NPV" data-bs-content="${window.uiComponents.createConfusionMatrixPopoverHTML(r.npv?.matrix)}">${window.utils.formatPercent(r.npv?.value, 1, na_stat)}</span></td>
+                <td><span class="metric-popover-trigger" data-bs-toggle="popover" title="Confusion Matrix: Accuracy" data-bs-content="${window.uiComponents.createConfusionMatrixPopoverHTML(r.acc?.matrix)}">${window.utils.formatPercent(r.acc?.value, 1, na_stat)}</span></td>
+                <td>${window.utils.formatNumber(r.auc?.value, 3, na_stat, true)}</td>
+                <td data-tippy-content="${pValueTooltip}" class="${pValueClass}">${r.pValue ? `${window.utils.getPValueText(r.pValue, false)}` : na_stat}</td>
             </tr>`;
         });
 
@@ -162,10 +162,9 @@ window.statisticsTab = (() => {
         return tableHtml;
     }
 
-    function render(processedData, appliedCriteria, appliedLogic, layout, cohort1, cohort2, globalCohort) {
-        if (!processedData) throw new Error("Statistics data not available.");
+    function render(allCohortStats, appliedCriteria, appliedLogic, layout, cohort1, cohort2, globalCohort) {
+        if (!allCohortStats) throw new Error("Statistics data not available.");
         
-        const allCohortStats = window.statisticsService.calculateAllPublicationStats(processedData, appliedCriteria, appliedLogic, window.bruteForceManager.getAllResults());
         const na_stat = window.APP_CONFIG.NA_PLACEHOLDER;
         
         let cohortIdsToShow = [];
@@ -192,13 +191,13 @@ window.statisticsTab = (() => {
             const innerRowId = `inner-stat-row-${i}`;
             
             if (stats && stats.descriptive.patientCount > 0) {
-                col.innerHTML = `<h4 class="mb-3">Cohort: ${getCohortDisplayName(cohortId)} (N=${stats.descriptive.patientCount})</h4><div class="row g-3" id="${innerRowId}"></div>`;
+                col.innerHTML = `<h4 class="mb-3">Cohort: ${window.utils.getCohortDisplayName(cohortId)} (N=${stats.descriptive.patientCount})</h4><div class="row g-3" id="${innerRowId}"></div>`;
                 outerRow.appendChild(col);
                 const innerContainer = col.querySelector(`#${innerRowId}`);
 
                 innerContainer.innerHTML += window.uiComponents.createStatisticsCard(`descriptive-stats-${i}`, 'Descriptive Statistics', createDescriptiveStatsContentHTML(stats, i, cohortId), true, null, [{id: `dl-desc-table-${i}-png`, icon: 'fa-image', format: 'png', tableId: `table-descriptive-demographics-${i}`, tableName: `Descriptive_Demographics_${cohortId.replace(/\s+/g, '_')}`}], `table-descriptive-demographics-${i}`);
 
-                const fCI_p_stat = (m, k) => { const d = (k === 'auc' || k ==='f1' || k ==='youden' || k === 'balAcc') ? 3 : 1; const p = !(k === 'auc'||k==='f1'||k==='youden'|| k === 'balAcc'); return formatCI(m?.value, m?.ci?.lower, m?.ci?.upper, d, p, na_stat); };
+                const fCI_p_stat = (m, k) => { const d = (k === 'auc' || k ==='f1' || k ==='youden' || k === 'balAcc') ? 3 : 1; const p = !(k === 'auc'||k==='f1'||k==='youden'|| k === 'balAcc'); return window.utils.formatCI(m?.value, m?.ci?.lower, m?.ci?.upper, d, p, na_stat); };
                 
                 const createPerfTableHTML = (perfStats) => {
                     if (!perfStats || typeof perfStats.matrix !== 'object') return '<p class="text-muted small p-2">No diagnostic performance data.</p>';
@@ -206,64 +205,64 @@ window.statisticsTab = (() => {
                         <th data-tippy-content="The diagnostic metric being evaluated.">Metric</th>
                         <th data-tippy-content="The calculated value for the metric, with its 95% Confidence Interval in parentheses.">Value (95% CI)</th>
                         <th data-tippy-content="The statistical method used to calculate the confidence interval.">CI Method</th></tr></thead><tbody>
-                        <tr><td data-tippy-content="${getDefinitionTooltip('sens')}"><span class="metric-popover-trigger" data-bs-toggle="popover" title="Confusion Matrix: Sensitivity" data-bs-content="${window.uiComponents.createConfusionMatrixPopoverHTML(perfStats.sens?.matrix)}">Sensitivity</span></td><td data-tippy-content="${getInterpretationTooltip('sens', perfStats.sens)}">${fCI_p_stat(perfStats.sens, 'sens')}</td><td>${perfStats.sens?.method || na_stat}</td></tr>
-                        <tr><td data-tippy-content="${getDefinitionTooltip('spec')}"><span class="metric-popover-trigger" data-bs-toggle="popover" title="Confusion Matrix: Specificity" data-bs-content="${window.uiComponents.createConfusionMatrixPopoverHTML(perfStats.spec?.matrix)}">Specificity</span></td><td data-tippy-content="${getInterpretationTooltip('spec', perfStats.spec)}">${fCI_p_stat(perfStats.spec, 'spec')}</td><td>${perfStats.spec?.method || na_stat}</td></tr>
-                        <tr><td data-tippy-content="${getDefinitionTooltip('ppv')}"><span class="metric-popover-trigger" data-bs-toggle="popover" title="Confusion Matrix: PPV" data-bs-content="${window.uiComponents.createConfusionMatrixPopoverHTML(perfStats.ppv?.matrix)}">PPV</span></td><td data-tippy-content="${getInterpretationTooltip('ppv', perfStats.ppv)}">${fCI_p_stat(perfStats.ppv, 'ppv')}</td><td>${perfStats.ppv?.method || na_stat}</td></tr>
-                        <tr><td data-tippy-content="${getDefinitionTooltip('npv')}"><span class="metric-popover-trigger" data-bs-toggle="popover" title="Confusion Matrix: NPV" data-bs-content="${window.uiComponents.createConfusionMatrixPopoverHTML(perfStats.npv?.matrix)}">NPV</span></td><td data-tippy-content="${getInterpretationTooltip('npv', perfStats.npv)}">${fCI_p_stat(perfStats.npv, 'npv')}</td><td>${perfStats.npv?.method || na_stat}</td></tr>
-                        <tr><td data-tippy-content="${getDefinitionTooltip('acc')}"><span class="metric-popover-trigger" data-bs-toggle="popover" title="Confusion Matrix: Accuracy" data-bs-content="${window.uiComponents.createConfusionMatrixPopoverHTML(perfStats.acc?.matrix)}">Accuracy</span></td><td data-tippy-content="${getInterpretationTooltip('acc', perfStats.acc)}">${fCI_p_stat(perfStats.acc, 'acc')}</td><td>${perfStats.acc?.method || na_stat}</td></tr>
-                        <tr><td data-tippy-content="${getDefinitionTooltip('balAcc')}">Balanced Accuracy</td><td data-tippy-content="${getInterpretationTooltip('balAcc', perfStats.balAcc)}">${fCI_p_stat(perfStats.balAcc, 'balAcc')}</td><td>${perfStats.balAcc?.method || na_stat}</td></tr>
-                        <tr><td data-tippy-content="${getDefinitionTooltip('f1')}">F1-Score</td><td data-tippy-content="${getInterpretationTooltip('f1', perfStats.f1)}">${fCI_p_stat(perfStats.f1, 'f1')}</td><td>${perfStats.f1?.method || na_stat}</td></tr>
-                        <tr><td data-tippy-content="${getDefinitionTooltip('auc')}">AUC</td><td data-tippy-content="${getInterpretationTooltip('auc', perfStats.auc)}">${fCI_p_stat(perfStats.auc, 'auc')}</td><td>${perfStats.auc?.method || na_stat}</td></tr>
+                        <tr><td data-tippy-content="${window.utils.getDefinitionTooltip('sens')}"><span class="metric-popover-trigger" data-bs-toggle="popover" title="Confusion Matrix: Sensitivity" data-bs-content="${window.uiComponents.createConfusionMatrixPopoverHTML(perfStats.sens?.matrix)}">Sensitivity</span></td><td data-tippy-content="${window.utils.getInterpretationTooltip('sens', perfStats.sens)}">${fCI_p_stat(perfStats.sens, 'sens')}</td><td>${perfStats.sens?.method || na_stat}</td></tr>
+                        <tr><td data-tippy-content="${window.utils.getDefinitionTooltip('spec')}"><span class="metric-popover-trigger" data-bs-toggle="popover" title="Confusion Matrix: Specificity" data-bs-content="${window.uiComponents.createConfusionMatrixPopoverHTML(perfStats.spec?.matrix)}">Specificity</span></td><td data-tippy-content="${window.utils.getInterpretationTooltip('spec', perfStats.spec)}">${fCI_p_stat(perfStats.spec, 'spec')}</td><td>${perfStats.spec?.method || na_stat}</td></tr>
+                        <tr><td data-tippy-content="${window.utils.getDefinitionTooltip('ppv')}"><span class="metric-popover-trigger" data-bs-toggle="popover" title="Confusion Matrix: PPV" data-bs-content="${window.uiComponents.createConfusionMatrixPopoverHTML(perfStats.ppv?.matrix)}">PPV</span></td><td data-tippy-content="${window.utils.getInterpretationTooltip('ppv', perfStats.ppv)}">${fCI_p_stat(perfStats.ppv, 'ppv')}</td><td>${perfStats.ppv?.method || na_stat}</td></tr>
+                        <tr><td data-tippy-content="${window.utils.getDefinitionTooltip('npv')}"><span class="metric-popover-trigger" data-bs-toggle="popover" title="Confusion Matrix: NPV" data-bs-content="${window.uiComponents.createConfusionMatrixPopoverHTML(perfStats.npv?.matrix)}">NPV</span></td><td data-tippy-content="${window.utils.getInterpretationTooltip('npv', perfStats.npv)}">${fCI_p_stat(perfStats.npv, 'npv')}</td><td>${perfStats.npv?.method || na_stat}</td></tr>
+                        <tr><td data-tippy-content="${window.utils.getDefinitionTooltip('acc')}"><span class="metric-popover-trigger" data-bs-toggle="popover" title="Confusion Matrix: Accuracy" data-bs-content="${window.uiComponents.createConfusionMatrixPopoverHTML(perfStats.acc?.matrix)}">Accuracy</span></td><td data-tippy-content="${window.utils.getInterpretationTooltip('acc', perfStats.acc)}">${fCI_p_stat(perfStats.acc, 'acc')}</td><td>${perfStats.acc?.method || na_stat}</td></tr>
+                        <tr><td data-tippy-content="${window.utils.getDefinitionTooltip('balAcc')}">Balanced Accuracy</td><td data-tippy-content="${window.utils.getInterpretationTooltip('balAcc', perfStats.balAcc)}">${fCI_p_stat(perfStats.balAcc, 'balAcc')}</td><td>${perfStats.balAcc?.method || na_stat}</td></tr>
+                        <tr><td data-tippy-content="${window.utils.getDefinitionTooltip('f1')}">F1-Score</td><td data-tippy-content="${window.utils.getInterpretationTooltip('f1', perfStats.f1)}">${fCI_p_stat(perfStats.f1, 'f1')}</td><td>${perfStats.f1?.method || na_stat}</td></tr>
+                        <tr><td data-tippy-content="${window.utils.getDefinitionTooltip('auc')}">AUC</td><td data-tippy-content="${window.utils.getInterpretationTooltip('auc', perfStats.auc)}">${fCI_p_stat(perfStats.auc, 'auc')}</td><td>${perfStats.auc?.method || na_stat}</td></tr>
                     </tbody></table></div>`;
                 };
 
                 const createCompTableHTML = (compStats) => {
                     if (!compStats) return '<p class="text-muted small p-2">No comparison data.</p>';
-                    const mcnemarTooltip = getInterpretationTooltip('pValue', {value: compStats.mcnemar?.pValue, testName: 'McNemar'}, { method1: 'AS', method2: formattedAppliedT2Short, metricName: 'Accuracy'});
-                    const delongTooltip = getInterpretationTooltip('pValue', {value: compStats.delong?.pValue, testName: 'DeLong'}, { method1: 'AS', method2: formattedAppliedT2Short, metricName: 'AUC'});
+                    const mcnemarTooltip = window.utils.getInterpretationTooltip('pValue', {value: compStats.mcnemar?.pValue, testName: 'McNemar'}, { method1: 'AS', method2: formattedAppliedT2Short, metricName: 'Accuracy'});
+                    const delongTooltip = window.utils.getInterpretationTooltip('pValue', {value: compStats.delong?.pValue, testName: 'DeLong'}, { method1: 'AS', method2: formattedAppliedT2Short, metricName: 'AUC'});
                     const mcnemarPValueClass = compStats.mcnemar?.pValue < 0.05 ? 'p-value-significant' : '';
                     const delongPValueClass = compStats.delong?.pValue < 0.05 ? 'p-value-significant' : '';
                     
                     return `<div class="table-responsive"><table class="table table-sm table-striped small mb-0"><thead><tr>
                         <th data-tippy-content="Statistical test used to compare the two methods.">Test</th>
                         <th data-tippy-content="The calculated value of the test statistic.">Statistic</th>
-                        <th data-tippy-content="${getDefinitionTooltip('pValue')}">p-Value</th>
+                        <th data-tippy-content="${window.utils.getDefinitionTooltip('pValue')}">p-Value</th>
                         <th data-tippy-content="Name of the statistical test and any corrections applied.">Method</th></tr></thead><tbody>
-                        <tr><td data-tippy-content="${getDefinitionTooltip('mcnemar')}">McNemar (Acc)</td><td>${formatNumber(compStats.mcnemar?.statistic, 3, na_stat, true)} (df=${compStats.mcnemar?.df || na_stat})</td><td class="${mcnemarPValueClass}" data-tippy-content="${mcnemarTooltip}">${getPValueText(compStats.mcnemar?.pValue, false)}</td><td>${compStats.mcnemar?.method || na_stat}</td></tr>
-                        <tr><td data-tippy-content="${getDefinitionTooltip('delong')}">DeLong (AUC)</td><td>Z=${formatNumber(compStats.delong?.Z, 3, na_stat, true)}</td><td class="${delongPValueClass}" data-tippy-content="${delongTooltip}">${getPValueText(compStats.delong?.pValue, false)}</td><td>${compStats.delong?.method || na_stat}</td></tr>
+                        <tr><td data-tippy-content="${window.utils.getDefinitionTooltip('mcnemar')}">McNemar (Acc)</td><td>${window.utils.formatNumber(compStats.mcnemar?.statistic, 3, na_stat, true)} (df=${compStats.mcnemar?.df || na_stat})</td><td class="${mcnemarPValueClass}" data-tippy-content="${mcnemarTooltip}">${window.utils.getPValueText(compStats.mcnemar?.pValue, false)}</td><td>${compStats.mcnemar?.method || na_stat}</td></tr>
+                        <tr><td data-tippy-content="${window.utils.getDefinitionTooltip('delong')}">DeLong (AUC)</td><td>Z=${window.utils.formatNumber(compStats.delong?.Z, 3, na_stat, true)}</td><td class="${delongPValueClass}" data-tippy-content="${delongTooltip}">${window.utils.getPValueText(compStats.delong?.pValue, false)}</td><td>${compStats.delong?.method || na_stat}</td></tr>
                     </tbody></table></div>`;
                 };
 
                 const createAssocTableHTML = (assocStats, appliedCrit) => {
                     if (!assocStats || Object.keys(assocStats).length === 0) return '<p class="text-muted small p-2">No association data.</p>';
-                    const fORCI = (orObj) => { const val = formatNumber(orObj?.value, 2, na_stat, true); const ciL = formatNumber(orObj?.ci?.lower, 2, na_stat, true); const ciU = formatNumber(orObj?.ci?.upper, 2, na_stat, true); return (val !== na_stat && ciL !== na_stat && ciU !== na_stat) ? `${val} (${ciL}-${ciU})` : val; };
-                    const fRDCI = (rdObj) => { const val = formatNumber(rdObj?.value * 100, 1, na_stat, true); const ciL = formatNumber(rdObj?.ci?.lower * 100, 1, na_stat, true); const ciU = formatNumber(rdObj?.ci?.upper * 100, 1, na_stat, true); return (val !== na_stat && ciL !== na_stat && ciU !== na_stat) ? `${val}% (${ciL}%-${ciU}%)` : (val !== na_stat ? `${val}%` : na_stat); };
-                    const fPhi = (phiObj) => formatNumber(phiObj?.value, 2, na_stat, true);
+                    const fORCI = (orObj) => { const val = window.utils.formatNumber(orObj?.value, 2, na_stat, true); const ciL = window.utils.formatNumber(orObj?.ci?.lower, 2, na_stat, true); const ciU = window.utils.formatNumber(orObj?.ci?.upper, 2, na_stat, true); return (val !== na_stat && ciL !== na_stat && ciU !== na_stat) ? `${val} (${ciL}-${ciU})` : val; };
+                    const fRDCI = (rdObj) => { const val = window.utils.formatNumber(rdObj?.value * 100, 1, na_stat, true); const ciL = window.utils.formatNumber(rdObj?.ci?.lower * 100, 1, na_stat, true); const ciU = window.utils.formatNumber(rdObj?.ci?.upper * 100, 1, na_stat, true); return (val !== na_stat && ciL !== na_stat && ciU !== na_stat) ? `${val}% (${ciL}%-${ciU}%)` : (val !== na_stat ? `${val}%` : na_stat); };
+                    const fPhi = (phiObj) => window.utils.formatNumber(phiObj?.value, 2, na_stat, true);
 
                     let html = `<div class="table-responsive"><table class="table table-sm table-striped small mb-0"><thead><tr>
                         <th data-tippy-content="The specific imaging feature being tested for association with N-Status.">Feature</th>
-                        <th data-tippy-content="${getDefinitionTooltip('or')}">OR (95% CI)</th>
-                        <th data-tippy-content="${getDefinitionTooltip('rd')}">RD (95% CI)</th>
-                        <th data-tippy-content="${getDefinitionTooltip('phi')}">Phi</th>
-                        <th data-tippy-content="${getDefinitionTooltip('pValue')}">p-Value</th>
+                        <th data-tippy-content="${window.utils.getDefinitionTooltip('or')}">OR (95% CI)</th>
+                        <th data-tippy-content="${window.utils.getDefinitionTooltip('rd')}">RD (95% CI)</th>
+                        <th data-tippy-content="${window.utils.getDefinitionTooltip('phi')}">Phi</th>
+                        <th data-tippy-content="${window.utils.getDefinitionTooltip('pValue')}">p-Value</th>
                         <th data-tippy-content="The statistical test used to calculate the p-value.">Test</th></tr></thead><tbody>`;
 
                     const addRow = (key, name, obj) => {
-                        const pValueTooltip = getInterpretationTooltip('pValue', { ...obj, value: obj.pValue, testName: obj.testName }, { featureName: escapeHTML(name) });
+                        const pValueTooltip = window.utils.getInterpretationTooltip('pValue', { ...obj, value: obj.pValue, testName: obj.testName }, { featureName: window.utils.escapeHTML(name) });
                         const pValueClass = obj.pValue < 0.05 ? 'p-value-significant' : '';
-                        html += `<tr><td>${escapeHTML(name)}</td>
-                            <td data-tippy-content="${getInterpretationTooltip('or', {...obj.or, featureName: escapeHTML(name)})}">${fORCI(obj.or)}</td>
-                            <td data-tippy-content="${getInterpretationTooltip('rd', {...obj.rd, featureName: escapeHTML(name)})}">${fRDCI(obj.rd)}</td>
-                            <td data-tippy-content="${getInterpretationTooltip('phi', {...obj.phi, featureName: escapeHTML(name)})}">${fPhi(obj.phi)}</td>
-                            <td class="${pValueClass}" data-tippy-content="${pValueTooltip}">${getPValueText(obj.pValue, false)}</td>
+                        html += `<tr><td>${window.utils.escapeHTML(name)}</td>
+                            <td data-tippy-content="${window.utils.getInterpretationTooltip('or', {...obj.or, featureName: window.utils.escapeHTML(name)})}">${fORCI(obj.or)}</td>
+                            <td data-tippy-content="${window.utils.getInterpretationTooltip('rd', {...obj.rd, featureName: window.utils.escapeHTML(name)})}">${fRDCI(obj.rd)}</td>
+                            <td data-tippy-content="${window.utils.getInterpretationTooltip('phi', {...obj.phi, featureName: window.utils.escapeHTML(name)})}">${fPhi(obj.phi)}</td>
+                            <td class="${pValueClass}" data-tippy-content="${pValueTooltip}">${window.utils.getPValueText(obj.pValue, false)}</td>
                             <td>${obj.testName || na_stat}</td></tr>`;
                     };
 
                     if (assocStats.as) addRow('as', 'AS Positive', assocStats.as);
                     if (assocStats.size_mwu) {
-                         const mwuTooltip = getInterpretationTooltip('pValue', { ...assocStats.size_mwu, value: assocStats.size_mwu.pValue, testName: assocStats.size_mwu.testName }, { comparisonName: 'median LN size between N+ and N- groups' });
+                         const mwuTooltip = window.utils.getInterpretationTooltip('pValue', { ...assocStats.size_mwu, value: assocStats.size_mwu.pValue, testName: assocStats.size_mwu.testName }, { comparisonName: 'median LN size between N+ and N- groups' });
                          const mwuPValueClass = assocStats.size_mwu.pValue < 0.05 ? 'p-value-significant' : '';
-                        html += `<tr><td>${assocStats.size_mwu.featureName}</td><td>${na_stat}</td><td>${na_stat}</td><td>${na_stat}</td><td class="${mwuPValueClass}" data-tippy-content="${mwuTooltip}">${getPValueText(assocStats.size_mwu.pValue, false)}</td><td>${assocStats.size_mwu.testName || na_stat}</td></tr>`;
+                        html += `<tr><td>${assocStats.size_mwu.featureName}</td><td>${na_stat}</td><td>${na_stat}</td><td>${na_stat}</td><td class="${mwuPValueClass}" data-tippy-content="${mwuTooltip}">${window.utils.getPValueText(assocStats.size_mwu.pValue, false)}</td><td>${assocStats.size_mwu.testName || na_stat}</td></tr>`;
                     }
 
                     ['size', 'shape', 'border', 'homogeneity', 'signal'].forEach(fKey => {
@@ -281,7 +280,7 @@ window.statisticsTab = (() => {
                 innerContainer.innerHTML += window.uiComponents.createStatisticsCard(`comparison-as-t2-${i}`, `Statistical Comparison: AS vs. ${formattedAppliedT2Short}`, createCompTableHTML(stats.comparisonASvsT2Applied), false, null, [{id: `dl-comp-as-t2-table-${i}-png`, icon: 'fa-image', format: 'png', tableId: `comparison-as-t2-${i}-content table`, tableName: `Comp_AS_T2_Applied_${cohortId.replace(/\s+/g, '_')}`}], `comparison-as-t2-${i}-content table`);
                 innerContainer.innerHTML += window.uiComponents.createStatisticsCard(`associations-${i}`, 'Association with N-Status', createAssocTableHTML(stats.associationsApplied, appliedCriteria), false, null, [{id: `dl-assoc-table-${i}-png`, icon: 'fa-image', format: 'png', tableId: `associations-${i}-content table`, tableName: `Associations_${cohortId.replace(/\s+/g, '_')}`}], `associations-${i}-content table`);
             } else {
-                 col.innerHTML = `<h4 class="mb-3">Cohort: ${getCohortDisplayName(cohortId)}</h4><div class="alert alert-warning small p-2">No data for this cohort.</div>`;
+                 col.innerHTML = `<h4 class="mb-3">Cohort: ${window.utils.getCohortDisplayName(cohortId)}</h4><div class="alert alert-warning small p-2">No data for this cohort.</div>`;
                  outerRow.appendChild(col);
             }
         });
@@ -302,17 +301,17 @@ window.statisticsTab = (() => {
                     <thead><tr>
                         <th>Method</th>
                         <th>Metric</th>
-                        <th>${getCohortDisplayName(cohort1)}</th>
-                        <th>${getCohortDisplayName(cohort2)}</th>
+                        <th>${window.utils.getCohortDisplayName(cohort1)}</th>
+                        <th>${window.utils.getCohortDisplayName(cohort2)}</th>
                         <th data-tippy-content="P-value from Z-Test for two independent AUCs.">p-Value (unpaired)</th>
                     </tr></thead>
                     <tbody>
-                        <tr><td>Avocado Sign</td><td>AUC</td><td>${formatNumber(c1Stats.performanceAS.auc.value, 3, na_stat, true)}</td><td>${formatNumber(c2Stats.performanceAS.auc.value, 3, na_stat, true)}</td><td class="${pValueAsClass}">${getPValueText(interComp.as.pValue, false)}</td></tr>
-                        <tr><td>${formattedAppliedT2Short}</td><td>AUC</td><td>${formatNumber(c1Stats.performanceT2Applied.auc.value, 3, na_stat, true)}</td><td>${formatNumber(c2Stats.performanceT2Applied.auc.value, 3, na_stat, true)}</td><td class="${pValueT2Class}">${getPValueText(interComp.t2Applied.pValue, false)}</td></tr>
+                        <tr><td>Avocado Sign</td><td>AUC</td><td>${window.utils.formatNumber(c1Stats.performanceAS.auc.value, 3, na_stat, true)}</td><td>${window.utils.formatNumber(c2Stats.performanceAS.auc.value, 3, na_stat, true)}</td><td class="${pValueAsClass}">${window.utils.getPValueText(interComp.as.pValue, false)}</td></tr>
+                        <tr><td>${formattedAppliedT2Short}</td><td>AUC</td><td>${window.utils.formatNumber(c1Stats.performanceT2Applied.auc.value, 3, na_stat, true)}</td><td>${window.utils.formatNumber(c2Stats.performanceT2Applied.auc.value, 3, na_stat, true)}</td><td class="${pValueT2Class}">${window.utils.getPValueText(interComp.t2Applied.pValue, false)}</td></tr>
                     </tbody>
                  </table></div>`;
              }
-             compCard.innerHTML = window.uiComponents.createStatisticsCard('cohort-comparison', `Cohort Comparison: ${getCohortDisplayName(cohort1)} vs. ${getCohortDisplayName(cohort2)}`, compContent, false, null, [{id: 'dl-cohort-comp-table-png', icon: 'fa-image', format: 'png', tableId: 'cohort-comparison-content table', tableName: `Cohort_Comparison_${cohort1}_vs_${cohort2}`}], 'cohort-comparison-content table');
+             compCard.innerHTML = window.uiComponents.createStatisticsCard('cohort-comparison', `Cohort Comparison: ${window.utils.getCohortDisplayName(cohort1)} vs. ${window.utils.getCohortDisplayName(cohort2)}`, compContent, false, null, [{id: 'dl-cohort-comp-table-png', icon: 'fa-image', format: 'png', tableId: 'cohort-comparison-content table', tableName: `Cohort_Comparison_${cohort1}_vs_${cohort2}`}], 'cohort-comparison-content table');
              outerRow.appendChild(compCard);
         }
 
@@ -321,7 +320,7 @@ window.statisticsTab = (() => {
             criteriaComparisonCard.className = 'col-12';
             criteriaComparisonCard.innerHTML = window.uiComponents.createStatisticsCard(
                 'criteria-comparison',
-                `Criteria Comparison Table (Cohort: ${getCohortDisplayName(globalCohort)})`,
+                `Criteria Comparison Table (Cohort: ${window.utils.getCohortDisplayName(globalCohort)})`,
                 createCriteriaComparisonTableHTML(allCohortStats, globalCohort, appliedCriteria, appliedLogic),
                 false,
                 'criteriaComparisonTable',
