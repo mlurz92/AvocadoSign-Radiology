@@ -53,7 +53,7 @@ class App {
             exportService: window.exportService, 
             publicationHelpers: window.publicationHelpers, titlePageGenerator: window.titlePageGenerator, abstractGenerator: window.abstractGenerator, 
             introductionGenerator: window.introductionGenerator, methodsGenerator: window.methodsGenerator, resultsGenerator: window.resultsGenerator, 
-            discussionGenerator: window.discussionGenerator, referencesGenerator: window.referencesGenerator, publicationService: window.publicationService,
+            discussionGenerator: window.discussionGenerator, referencesGenerator: window.referencesGenerator, stardGenerator: window.stardGenerator, publicationService: window.publicationService,
             uiManager: window.uiManager, uiComponents: window.uiComponents, tableRenderer: window.tableRenderer, chartRenderer: window.chartRenderer, 
             flowchartRenderer: window.flowchartRenderer, dataTab: window.dataTab, analysisTab: window.analysisTab, statisticsTab: window.statisticsTab, 
             comparisonTab: window.comparisonTab, publicationTab: window.publicationTab, exportTab: window.exportTab, 
