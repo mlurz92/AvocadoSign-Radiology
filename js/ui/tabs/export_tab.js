@@ -5,18 +5,14 @@ window.exportTab = (() => {
         const tooltipConfigKey = config.tooltipKey || config.id.replace(/-/g, '');
         const tooltipConfig = window.APP_CONFIG.UI_TEXTS.tooltips.exportTab[tooltipConfigKey];
         
-        if (!tooltipConfig) {
-            return '';
-        }
-
-        const description = tooltipConfig.description || 'No description available.';
-        const type = tooltipConfig.type || 'UNKNOWN';
-        const ext = tooltipConfig.ext || 'EXT';
+        const description = config.description || tooltipConfig?.description || 'No description available.';
+        const type = config.type || tooltipConfig?.type || 'UNKNOWN';
+        const ext = config.ext || tooltipConfig?.ext || 'EXT';
 
         return `
             <div class="col-md-6 mb-3">
                 <div class="d-flex align-items-center">
-                    <button id="export-${config.id}" class="btn btn-primary btn-sm me-3" data-export-type="${config.id}" data-tippy-content="${description}">
+                    <button id="export-${config.id}" class="btn ${config.btnClass || 'btn-primary'} btn-sm me-3" data-export-type="${config.id}" data-tippy-content="${description}">
                         <i class="fas ${config.icon} fa-fw me-2"></i>${config.label}
                     </button>
                     <div>
@@ -46,7 +42,16 @@ window.exportTab = (() => {
             { id: 'csv-zip', label: 'CSV Files Package', icon: 'fa-file-csv', tooltipKey: 'csvzip' },
             { id: 'md-zip', label: 'Markdown Files Package', icon: 'fa-file-alt', tooltipKey: 'mdzip' },
             { id: 'png-zip', label: 'PNG Graphics Package', icon: 'fa-images', tooltipKey: 'pngzip' },
-            { id: 'svg-zip', label: 'SVG Graphics Package', icon: 'fa-vector-square', tooltipKey: 'svgzip' }
+            { id: 'svg-zip', label: 'SVG Graphics Package', icon: 'fa-vector-square', tooltipKey: 'svgzip' },
+            { 
+                id: 'radiology-submission-zip', 
+                label: 'Radiology Submission Package', 
+                icon: 'fa-paper-plane', 
+                btnClass: 'btn-success',
+                description: 'Generates a complete, structured ZIP archive ready for submission to the *Radiology* journal, including the manuscript as a .docx file and all figures.',
+                type: 'SUBMISSION_PACKAGE',
+                ext: 'zip'
+            }
         ];
 
         const singleExportsHTML = singleExports.map(createExportButton).join('');
