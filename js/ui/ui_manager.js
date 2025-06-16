@@ -1,552 +1,490 @@
-window.uiManager = (() => {
+window.DEFAULT_T2_CRITERIA = Object.freeze({
+    logic: 'AND',
+    size: { active: true, threshold: 5.0, condition: '>=' },
+    shape: { active: false, value: 'round' },
+    border: { active: false, value: 'irregular' },
+    homogeneity: { active: false, value: 'heterogeneous' },
+    signal: { active: false, value: 'lowSignal' }
+});
 
-    let tippyInstances = [];
-    let collapseEventListenersAttached = new Set();
-    let quickGuideModalInstance = null;
-    let bruteForceModal = null;
-
-    function showToast(message, type = 'info', duration = 3000) {
-        if (typeof window.APP_CONFIG !== 'undefined' && window.APP_CONFIG.UI_SETTINGS?.TOAST_DURATION_MS) {
-            duration = window.APP_CONFIG.UI_SETTINGS.TOAST_DURATION_MS;
-        }
-        const toastContainer = document.getElementById('toast-container');
-        if (!toastContainer) return;
-        if (!message) return;
-        if (typeof bootstrap === 'undefined' || !bootstrap.Toast) return;
-
-        const toastId = `toast-${generateUUID()}`;
-        let bgClass = 'bg-secondary', iconClass = 'fa-info-circle', textClass = 'text-white';
-        switch (type) {
-            case 'success': bgClass = 'bg-success'; iconClass = 'fa-check-circle'; break;
-            case 'warning': bgClass = 'bg-warning'; iconClass = 'fa-exclamation-triangle'; textClass = 'text-dark'; break;
-            case 'danger': bgClass = 'bg-danger'; iconClass = 'fa-exclamation-circle'; break;
-            case 'info':
-            default: bgClass = 'bg-info'; iconClass = 'fa-info-circle'; textClass = 'text-dark'; break;
-        }
-
-        const toastElement = document.createElement('div');
-        toastElement.id = toastId;
-        toastElement.className = `toast align-items-center ${textClass} ${bgClass} border-0 fade`;
-        toastElement.setAttribute('role', 'alert');
-        toastElement.setAttribute('aria-live', 'assertive');
-        toastElement.setAttribute('aria-atomic', 'true');
-        toastElement.innerHTML = `<div class="d-flex"><div class="toast-body"><i class="fas ${iconClass} fa-fw me-2"></i> ${escapeHTML(message)}</div><button type="button" class="btn-close me-2 m-auto ${textClass === 'text-white' ? 'btn-close-white' : ''}" data-bs-dismiss="toast" aria-label="Close"></button></div>`;
-        toastContainer.appendChild(toastElement);
-
-        try {
-            const toastInstance = new bootstrap.Toast(toastElement, { delay: duration, autohide: true });
-            toastElement.addEventListener('hidden.bs.toast', () => toastElement.remove(), { once: true });
-            toastInstance.show();
-        } catch (e) {
-            toastElement.remove();
-        }
-    }
-
-    function initializeTooltips(scope = document.body) {
-        if (!window.tippy || typeof scope?.querySelectorAll !== 'function') return;
-
-        const newInstances = tippy(scope.querySelectorAll('[data-tippy-content]'), {
-            allowHTML: true, theme: 'glass', placement: 'top', animation: 'fade',
-            interactive: false, appendTo: () => document.body,
-            delay: (window.APP_CONFIG && window.APP_CONFIG.UI_SETTINGS) ? window.APP_CONFIG.UI_SETTINGS.TOOLTIP_DELAY : [200, 100],
-            maxWidth: 400, duration: [150, 150], zIndex: 3050,
-            onCreate(instance) { if (!instance.props.content || String(instance.props.content).trim() === '') { instance.disable(); } },
-            onShow(instance) { const content = instance.reference.getAttribute('data-tippy-content'); return !!content && String(content).trim() !== ''; }
-        });
-        if (Array.isArray(newInstances)) tippyInstances = tippyInstances.concat(newInstances);
-        else if (newInstances) tippyInstances.push(newInstances);
-    }
-
-    function updateElementText(elementId, text) {
-        const element = document.getElementById(elementId);
-        if (element) {
-            element.textContent = text ?? '';
-        }
-    }
-
-    function updateElementHTML(elementId, html) {
-        const element = document.getElementById(elementId);
-        if (element) {
-            element.innerHTML = html ?? '';
-            initializeTooltips(element);
-        }
-    }
-
-    function toggleElementClass(elementId, className, add) {
-        const element = document.getElementById(elementId);
-        if (element && className) {
-            element.classList.toggle(className, add);
-        }
-    }
-
-    function setElementDisabled(elementId, isDisabled) {
-        const element = document.getElementById(elementId);
-        if (element) {
-            element.disabled = !!isDisabled;
-        }
-    }
-
-    function highlightElement(elementId, highlightClass = 'element-flash-highlight', duration = 1500) {
-        const element = document.getElementById(elementId);
-        if (element) {
-            element.classList.remove(highlightClass);
-            void element.offsetWidth;
-            element.classList.add(highlightClass);
-            setTimeout(() => element.classList.remove(highlightClass), duration);
-        }
-    }
-
-    function attachRowCollapseListeners(tableBodyId) {
-        if (!tableBodyId || collapseEventListenersAttached.has(tableBodyId)) return;
-        const tableBodyElement = document.getElementById(tableBodyId);
-        if (!tableBodyElement) return;
-        const handleCollapseEvent = (event) => {
-            const triggerRow = event.target.closest('tr.sub-row')?.previousElementSibling;
-            if (!triggerRow) return;
-            const icon = triggerRow.querySelector('.row-toggle-icon');
-            if (icon) {
-                const isShowing = event.type.startsWith('show');
-                icon.classList.toggle('fa-chevron-up', isShowing);
-                icon.classList.toggle('fa-chevron-down', !isShowing);
+window.APP_CONFIG = Object.freeze({
+    APP_NAME: "Nodal Staging: Avocado Sign vs. T2 Criteria",
+    APP_VERSION: "3.2.1",
+    NA_PLACEHOLDER: '--',
+    COHORTS: Object.freeze({
+        OVERALL: { id: 'Overall', therapyValue: null, displayName: 'Overall' },
+        SURGERY_ALONE: { id: 'surgeryAlone', therapyValue: 'surgeryAlone', displayName: 'Surgery alone' },
+        NEOADJUVANT: { id: 'neoadjuvantTherapy', therapyValue: 'neoadjuvantTherapy', displayName: 'Neoadjuvant therapy' }
+    }),
+    DEFAULT_SETTINGS: Object.freeze({
+        COHORT: 'Overall',
+        T2_LOGIC: 'AND',
+        DATA_TABLE_SORT: Object.freeze({ key: 'id', direction: 'asc', subKey: null }),
+        ANALYSIS_TABLE_SORT: Object.freeze({ key: 'id', direction: 'asc', subKey: null }),
+        STATS_LAYOUT: 'einzel',
+        STATS_COHORT1: 'Overall',
+        STATS_COHORT2: 'neoadjuvantTherapy',
+        COMPARISON_VIEW: 'as-vs-t2',
+        COMPARISON_STUDY_ID: 'rutegard_et_al_esgar',
+        PUBLICATION_SECTION: 'title_main',
+        PUBLICATION_BRUTE_FORCE_METRIC: 'Balanced Accuracy',
+        PUBLICATION_LANG: 'en'
+    }),
+    AVAILABLE_BRUTE_FORCE_METRICS: Object.freeze([
+        { value: 'Balanced Accuracy', label: 'Balanced Accuracy' },
+        { value: 'Accuracy', label: 'Accuracy' },
+        { value: 'F1-Score', label: 'F1-Score' },
+        { value: 'PPV', label: 'PPV' },
+        { value: 'NPV', label: 'NPV' }
+    ]),
+    STORAGE_KEYS: Object.freeze({
+        APPLIED_CRITERIA: 'appliedT2Criteria_v4.2_detailed',
+        APPLIED_LOGIC: 'appliedT2Logic_v4.2_detailed',
+        BRUTE_FORCE_RESULTS: 'bruteForceResults_v3.2_detailed',
+        CURRENT_COHORT: 'currentCohort_v4.3_unified',
+        PUBLICATION_SECTION: 'currentPublicationSection_v4.4_detailed',
+        PUBLICATION_BRUTE_FORCE_METRIC: 'currentPublicationBfMetric_v4.4_detailed',
+        PUBLICATION_LANG: 'publicationLang_v4.4_detailed',
+        STATS_LAYOUT: 'currentStatsLayout_v4.2_detailed',
+        STATS_COHORT1: 'currentStatsCohort1_v4.3_unified',
+        STATS_COHORT2: 'currentStatsCohort2_v4.3_unified',
+        COMPARISON_VIEW: 'currentComparisonView_v4.2_detailed',
+        COMPARISON_STUDY_ID: 'currentComparisonStudyId_v4.2_detailed',
+        CHART_COLOR_SCHEME: 'chartColorScheme_v4.2_detailed',
+        FIRST_APP_START: 'appFirstStart_v3.2.1'
+    }),
+    PATHS: Object.freeze({
+        BRUTE_FORCE_WORKER: 'workers/brute_force_worker.js'
+    }),
+    PERFORMANCE_SETTINGS: Object.freeze({
+        DEBOUNCE_DELAY_MS: 250
+    }),
+    STATISTICAL_CONSTANTS: Object.freeze({
+        BOOTSTRAP_CI_REPLICATIONS: 1000,
+        BOOTSTRAP_CI_ALPHA: 0.05,
+        SIGNIFICANCE_LEVEL: 0.05,
+        SIGNIFICANCE_SYMBOLS: Object.freeze([
+            { threshold: 0.001, symbol: '***' },
+            { threshold: 0.01, symbol: '**' },
+            { threshold: 0.05, symbol: '*' }
+        ]),
+        DEFAULT_CI_METHOD_PROPORTION: 'Wilson Score',
+        DEFAULT_CI_METHOD_EFFECTSIZE: 'Bootstrap Percentile',
+        FISHER_EXACT_THRESHOLD: 5,
+        INTEROBSERVER_KAPPA: 0.92,
+        INTEROBSERVER_KAPPA_CI: { lower: 0.85, upper: 0.99 }
+    }),
+    T2_CRITERIA_SETTINGS: Object.freeze({
+        SIZE_RANGE: Object.freeze({ min: 0.1, max: 25.0, step: 0.1 }),
+        SHAPE_VALUES: Object.freeze(['round', 'oval']),
+        BORDER_VALUES: Object.freeze(['sharp', 'irregular']),
+        HOMOGENEITY_VALUES: Object.freeze(['homogeneous', 'heterogeneous']),
+        SIGNAL_VALUES: Object.freeze(['lowSignal', 'intermediateSignal', 'highSignal'])
+    }),
+    UI_SETTINGS: Object.freeze({
+        ICON_SIZE: 20,
+        ICON_STROKE_WIDTH: 1.5,
+        ICON_COLOR: 'var(--text-dark)',
+        TOOLTIP_DELAY: Object.freeze([300, 100]),
+        TOAST_DURATION_MS: 4500,
+        TRANSITION_DURATION_MS: 350,
+        STICKY_HEADER_OFFSET: '111px'
+    }),
+    CHART_SETTINGS: Object.freeze({
+        DEFAULT_WIDTH: 450,
+        DEFAULT_HEIGHT: 350,
+        DEFAULT_MARGIN: Object.freeze({ top: 30, right: 40, bottom: 70, left: 70 }),
+        COMPACT_PIE_MARGIN: Object.freeze({ top: 15, right: 15, bottom: 50, left: 15 }),
+        AS_COLOR: '#4472C4',
+        T2_COLOR: '#E0DC2C',
+        ANIMATION_DURATION_MS: 750,
+        AXIS_LABEL_FONT_SIZE: '11px',
+        TICK_LABEL_FONT_SIZE: '10px',
+        LEGEND_FONT_SIZE: '10px',
+        TOOLTIP_FONT_SIZE: '11px',
+        PLOT_BACKGROUND_COLOR: '#ffffff',
+        ENABLE_GRIDLINES: true
+    }),
+    EXPORT_SETTINGS: Object.freeze({
+        DATE_FORMAT: 'YYYYMMDD',
+        FILENAME_TEMPLATE: 'AvocadoSignT2_{TYPE}_{KOLLEKTIV}_{DATE}.{EXT}',
+        TABLE_PNG_EXPORT_SCALE: 2,
+        ENABLE_TABLE_PNG_EXPORT: true,
+        CSV_DELIMITER: ';',
+        FILENAME_TYPES: Object.freeze({
+            STATS_CSV: 'Statistics_CSV',
+            BRUTEFORCE_TXT: 'BruteForce_Report_TXT',
+            DESCRIPTIVE_MD: 'Descriptive_Statistics_MD',
+            DATEN_MD: 'Data_List_MD',
+            AUSWERTUNG_MD: 'Analysis_Table_MD',
+            FILTERED_DATA_CSV: 'Filtered_Data_CSV',
+            COMPREHENSIVE_REPORT_HTML: 'Comprehensive_Report_HTML',
+            CHART_SINGLE_PNG: '{ChartName}_PNG',
+            CHART_SINGLE_SVG: '{ChartName}_SVG',
+            TABLE_PNG_EXPORT: '{TableName}_PNG',
+            COMP_AS_PERF_CSV: 'Comp_AS_Performance_CSV',
+            COMP_AS_PERF_MD: 'Comp_AS_Performance_MD',
+            COMP_AS_VS_T2_PERF_CSV: 'Comp_Performance_ASvsT2_{StudyID}_CSV',
+            COMP_AS_VS_T2_COMP_MD: 'Comp_Metrics_ASvsT2_{StudyID}_MD',
+            COMP_AS_VS_T2_TESTS_MD: 'Comp_Tests_ASvsT2_{StudyID}_MD',
+            CRITERIA_COMPARISON_MD: 'Criteria_Comparison_MD',
+            PUBLICATION_SECTION_MD: 'Publication_Section_{SectionName}_MD',
+            ALL_ZIP: 'Complete_Export_ZIP',
+            CSV_ZIP: 'CSV_Package_ZIP',
+            MD_ZIP: 'Markdown_Package_ZIP',
+            PNG_ZIP: 'Image_Package_PNG_ZIP',
+            SVG_ZIP: 'Vector_Package_SVG_ZIP'
+        })
+    }),
+    REPORT_SETTINGS: Object.freeze({
+        REPORT_TITLE: 'Comprehensive Analysis Report',
+        REPORT_AUTHOR: 'Generated by AvocadoSign Analysis Tool',
+        INCLUDE_APP_VERSION: true,
+        INCLUDE_GENERATION_TIMESTAMP: true,
+        INCLUDE_KOLLEKTIV_INFO: true,
+        INCLUDE_T2_CRITERIA: true,
+        INCLUDE_DESCRIPTIVES_TABLE: true,
+        INCLUDE_DESCRIPTIVES_CHARTS: true,
+        INCLUDE_AS_PERFORMANCE_TABLE: true,
+        INCLUDE_T2_PERFORMANCE_TABLE: true,
+        INCLUDE_AS_VS_T2_COMPARISON_TABLE: true,
+        INCLUDE_AS_VS_T2_COMPARISON_CHART: true,
+        INCLUDE_ASSOCIATIONS_TABLE: true,
+        INCLUDE_BRUTEFORCE_BEST_RESULT: true
+    }),
+    SPECIAL_IDS: Object.freeze({
+        APPLIED_CRITERIA_STUDY_ID: 'applied_criteria',
+        APPLIED_CRITERIA_DISPLAY_NAME: 'Applied T2',
+        AVOCADO_SIGN_ID: 'avocado_sign',
+        AVOCADO_SIGN_DISPLAY_NAME: 'Avocado Sign'
+    }),
+    REFERENCES_FOR_PUBLICATION: Object.freeze({
+        Lurz_Schaefer_2025: { id: 1, text: "Lurz M, Schäfer AO. The Avocado Sign: A novel imaging marker for nodal staging in rectal cancer. Eur Radiol 2025. doi: 10.1007/s00330-025-11462-y" },
+        Sauer_2004: { id: 2, text: "Sauer R, Becker H, Hohenberger W, et al. Preoperative versus postoperative chemoradiotherapy for rectal cancer. N Engl J Med 2004;351:1731–1740. doi: 10.1056/NEJMoa040694" },
+        Habr_Gama_2019: { id: 3, text: "Habr-Gama A, São Julião GP, Vailati BB, et al. Organ preservation in cT2N0 rectal cancer after neoadjuvant chemoradiation therapy: the impact of radiation therapy dose-escalation and consolidation chemotherapy. Ann Surg 2019;269:102–107. doi: 10.1097/SLA.0000000000002447" },
+        Beets_Tan_2018: { id: 4, text: "Beets-Tan RGH, Lambregts DMJ, Maas M, et al. Magnetic resonance imaging for clinical management of rectal cancer: updated recommendations from the 2016 European Society of Gastrointestinal and Abdominal Radiology (ESGAR) consensus meeting. Eur Radiol 2018;28:1465–1475. doi: 10.1007/s00330-017-5026-2" },
+        Al_Sukhni_2012: { id: 5, text: "Al-Sukhni E, Milot L, Fruitman M, et al. Diagnostic accuracy of MRI for assessment of T category, lymph node metastases, and circumferential resection margin involvement in patients with rectal cancer: a systematic review and meta-analysis. Ann Surg Oncol 2012;19:2212–2223. doi: 10.1245/s10434-011-2210-5" },
+        Rutegard_2025: { id: 6, text: "Rutegård J, Hallberg L, Carlsson J, Olsson J, Jarnheimer A. Anatomically matched mesorectal nodal structures: evaluation of the 2016 ESGAR consensus criteria. Eur Radiol 2025. doi: 10.1007/s00330-024-11357-1" },
+        Hao_2025: { id: 7, text: "Hao Y, Zheng J, Li W, et al. Ultra-high b-value DWI in rectal cancer: image quality assessment and regional lymph node prediction based on radiomics. Eur Radiol 2025;35:49–60. doi: 10.1007/s00330-024-10958-3" },
+        Koh_2008: { id: 8, text: "Koh DM, Chau I, Tait D, Wotherspoon A, Cunningham D, Brown G. Evaluating mesorectal lymph nodes in rectal cancer before and after neoadjuvant chemoradiation using thin-section T2-weighted magnetic resonance imaging. Int J Radiat Oncol Biol Phys 2008;71:456–461. doi: 10.1016/j.ijrobp.2007.10.016" },
+        Barbaro_2024: { id: 9, text: "Barbaro B, Carafa MRP, Minordi LM, et al. Magnetic resonance imaging for assessment of rectal cancer nodes after chemoradiotherapy: a single center experience. Radiother Oncol 2024;193:110124. doi: 10.1016/j.radonc.2024.110124" }
+    }),
+    UI_TEXTS: Object.freeze({
+        t2LogicDisplayNames: {
+            'AND': 'AND',
+            'OR': 'OR',
+            'KOMBINIERT': 'COMBINED (ESGAR Logic)'
+        },
+        publicationTab: {
+            bfMetricSelectLabel: 'BF Optimization Metric for Publication:',
+            sectionLabels: {
+                title_main: 'Title Page',
+                abstract_main: 'Abstract',
+                introduction_main: 'Introduction',
+                methoden_main: 'Materials and Methods',
+                ergebnisse_main: 'Results',
+                discussion_main: 'Discussion',
+                references_main: 'References',
+                stard_checklist: 'STARD Checklist'
             }
-        };
-        tableBodyElement.addEventListener('show.bs.collapse', handleCollapseEvent);
-        tableBodyElement.addEventListener('hide.bs.collapse', handleCollapseEvent);
-        collapseEventListenersAttached.add(tableBodyId);
-    }
-
-    function renderTabContent(tabId, renderFunction) {
-        const containerId = `${tabId}-pane`;
-        const container = document.getElementById(containerId);
-        if (!container) return;
-        updateElementHTML(containerId, '<div class="text-center p-5"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>');
-        try {
-            const contentHTML = renderFunction();
-            updateElementHTML(containerId, contentHTML || '<p class="text-muted p-3">No content generated.</p>');
-        } catch (error) {
-            const errorMessage = `<div class="alert alert-danger m-3">Error loading tab: ${error.message}</div>`;
-            updateElementHTML(containerId, errorMessage);
-            showToast(`Error loading tab '${tabId}'.`, 'danger');
-        }
-    }
-
-    function showQuickGuide() {
-        if (quickGuideModalInstance) {
-            quickGuideModalInstance.show();
-            return;
-        }
-        let modalElement = document.getElementById('quick-guide-modal');
-        if (!modalElement) {
-            const appVersion = (typeof window.APP_CONFIG !== 'undefined') ? window.APP_CONFIG.APP_VERSION : '?.?.?';
-            const lastUpdatedDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-            const quickGuideContent = `
-                <h2>1. Introduction</h2>
-                <p>The <strong>Nodal Staging: Avocado Sign vs. T2 Criteria</strong> analysis tool is a client-side web application designed for scientific research in the radiological diagnosis of rectal cancer. It enables in-depth analyses and detailed comparisons of diagnostic performance for various MRI-based criteria for assessing mesorectal lymph node status (N-status). The application focuses on evaluating the novel "Avocado Sign" (AS) against established T2-weighted (T2w) morphological criteria. It is intended solely as a <strong>research instrument</strong>. The results are <strong>not for clinical diagnosis or direct patient treatment decisions</strong>.</p>
-                <h3>Core functionalities include:</h3>
-                <ul>
-                    <li>Interactive exploration and visualization of pseudonymized patient data.</li>
-                    <li>Flexible definition and immediate application of complex T2w criteria sets.</li>
-                    <li>Automated identification of optimal T2w criteria combinations via an integrated brute-force optimization algorithm.</li>
-                    <li>Comprehensive statistical evaluation of diagnostic performance (sensitivity, specificity, predictive values, accuracy, AUC with CIs and p-values).</li>
-                    <li>Creation of content for scientific presentations and comparisons.</li>
-                    <li>Generation of manuscript drafts and materials for scientific publications (specifically tailored to <em>Radiology</em> journal requirements).</li>
-                    <li>Versatile export options for data, results, and graphics.</li>
-                </ul>
-                <p>The application operates on a fixed, integrated, pseudonymized dataset of <strong>106 patient cases</strong>.
-                </p>
-                <h2>2. Global UI Elements</h2>
-                <ul>
-                    <li><strong>Application Title:</strong> "Nodal Staging: Avocado Sign vs. T2".</li>
-                    <li><strong>Global Cohort Selection:</strong> Buttons ("Overall", "Surgery alone", "Neoadjuvant therapy") to select the patient cohort, affecting all analyses and displays.</li>
-                    <li><strong>Dynamic Meta-Statistics:</strong> Displays key metrics for the current cohort (total patients, N+, AS+, T2+ percentages).</li>
-                    <li><strong>Main Navigation (Tab Bar):</strong> Switches between Data, Analysis, Statistics, Comparison, Publication, and Export tabs.</li>
-                    <li><strong>Quick Guide Button:</strong> Opens this modal.</li>
-                </ul>
-                <h2>3. Core Concepts</h2>
-                <ul>
-                    <li><strong>Patient Cohort Selection:</strong> Filters data globally based on "Overall" (all 106 patients), "Surgery alone" (primary surgery), or "Neoadjuvant therapy" (neoadjuvant chemoradiotherapy).</li>
-                    <li><strong>Interactive Tooltips:</strong> Hover over UI elements for explanations.</li>
-                </ul>
-                <h2>4. Tab Descriptions</h2>
-                <h3>4.1 Data Tab</h3>
-                <ul>
-                    <li><strong>Purpose:</strong> Display and explore underlying patient data.</li>
-                    <li><strong>Features:</strong> Patient table with ID, Name, Sex, Age, Therapy, N/AS/T2 status, Notes. Sortable columns. Expandable rows for T2 lymph node details (size, shape, border, homogeneity, signal). "Expand All Details" button.</li>
-                </ul>
-                <h3>4.2 Analysis Tab</h3>
-                <ul>
-                    <li><strong>Purpose:</strong> Define T2 criteria, run brute-force optimization, evaluate criteria at patient level.</li>
-                    <li><strong>Features:</strong> Dashboard (age, sex, therapy, N/AS/T2 distributions). "Define T2 Malignancy Criteria" card (interactive controls for Size, Shape, Border, Homogeneity, Signal, with AND/OR logic). "Apply & Save" button (persists settings). "Diagnostic Performance (Applied T2)" card (Sens, Spec, PPV, NPV, Acc, AUC). "Criteria Optimization (Brute-Force)" card (select target metric, "Start Optimization" with Web Worker, real-time progress, "Apply Best Criteria"). Analysis table with patient N, AS, T2 status and expandable T2 lymph node evaluation.</li>
-                </ul>
-                <h3>4.3 Statistics Tab</h3>
-                <ul>
-                    <li><strong>Purpose:</strong> Comprehensive statistical evaluation of AS and T2 criteria.</li>
-                    <li><strong>Features:</strong> "Single View" / "Comparison" layout toggle. Displays Descriptive Statistics, Diagnostic Performance (AS vs. N and T2 vs. N), Statistical Comparison (AS vs. T2 via McNemar's and DeLong's tests), Association Analyses (OR, RD, Phi), and Cohort Comparison (unpaired tests). Criteria Comparison table with AS, applied T2, and literature-based sets.</li>
-                </ul>
-                <h3>4.4 Comparison Tab</h3>
-                <ul>
-                    <li><strong>Purpose:</strong> Formats selected analysis results for scientific presentations and direct comparisons.</li>
-                    <li><strong>Features:</strong> "AS Performance" / "AS vs. T2 Comparison" view selection. T2 Comparison Basis Selection (applied or literature). Dynamic content (info cards, comparison tables, statistical tests, bar charts). Download functions (CSV, MD, PNG, SVG).</li>
-                </ul>
-                <h3>4.5 Publication Tab</h3>
-                <ul>
-                    <li><strong>Purpose:</strong> Assists in writing scientific manuscripts, generating text, tables, and figures adhering to <em>Radiology</em> journal style.</li>
-                    <li><strong>Features:</strong> Section Navigation (Abstract, Intro, Methods, Results, Discussion, References). BF Target Metric Selection. Dynamically generated, professionally formulated English text integrating data and results (e.g., P < .001). Embedded tables and figures. Stylistic adherence (abbreviations, reporting language).</li>
-                </ul>
-                <h3>4.6 Export Tab</h3>
-                <ul>
-                    <li><strong>Purpose:</strong> Exports raw data, analysis results, tables, figures, and publication texts.</li>
-                    <li><strong>Features:</strong> "Single Exports" and "Export Packages (.zip)" categories. Available exports: Raw data (CSV), data lists (MD), analysis tables (MD), comprehensive statistics (CSV), brute-force report (TXT), all charts/tables (PNG, SVG in ZIP), comprehensive HTML analysis report, bundled Markdown publication sections. All exports are context-aware (current cohort, applied T2 criteria).</li>
-                </ul>
-                <h2>5. Technical Appendix</h2>
-                <ul>
-                    <li><strong>Configuration:</strong> <code>js/config.js</code> centralizes settings, UI texts, statistical constants, and publication configurations.</li>
-                    <li><strong>Glossary of Key Terms:</strong> AS (Avocado Sign), AUC (Area Under the Curve), BF (Brute-Force), CI (Confidence Interval), nRCT (Neoadjuvant Chemoradiotherapy), NPV (Negative Predictive Value), OR (Odds Ratio), PPV (Positive Predictive Value), RD (Risk Difference), T2w (T2-weighted).</li>
-                </ul>
-                <p class="small text-muted text-end"><em>Description generated for Application Version ${appVersion}. Last updated: ${lastUpdatedDate}.</em></p>
-            `;
-            const modalHTML = `
-                <div class="modal fade" id="quick-guide-modal" tabindex="-1" aria-labelledby="quickGuideModalLabel" aria-hidden="true">
-                  <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-                    <div class="modal-content modal-glass">
-                      <div class="modal-header">
-                        <h5 class="modal-title" id="quickGuideModalLabel">Quick Guide & Notes</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                      </div>
-                      <div class="modal-body">${quickGuideContent}</div>
-                      <div class="modal-footer"><button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button></div>
-                    </div>
-                  </div>
-                </div>`;
-            document.body.insertAdjacentHTML('beforeend', modalHTML);
-            modalElement = document.getElementById('quick-guide-modal');
-        }
-        if (modalElement && !quickGuideModalInstance) {
-             quickGuideModalInstance = new bootstrap.Modal(modalElement);
-        }
-        if (quickGuideModalInstance) quickGuideModalInstance.show();
-    }
-
-    function updateHeaderStatsUI(stats) {
-        if (!stats) return;
-        updateElementText('header-cohort', stats.cohort);
-        updateElementText('header-patient-count', stats.patientCount);
-        updateElementText('header-status-n', stats.statusN);
-        updateElementText('header-status-as', stats.statusAS);
-        updateElementText('header-status-t2', stats.statusT2);
-    }
-
-    function updateCohortButtonsUI(currentCohort, isSelectionLocked = false) {
-        const defaultTooltip = "Select the patient cohort for analysis.";
-        const lockedTooltip = `Selection locked. Comparison is active for the '${getCohortDisplayName(currentCohort)}' cohort.`;
-
-        Object.values(window.APP_CONFIG.COHORTS).forEach(cohort => {
-            const button = document.getElementById(`btn-cohort-${cohort.id}`);
-            if (button) {
-                const isActive = cohort.id === currentCohort;
-                button.classList.toggle('active', isActive);
-
-                if (isSelectionLocked) {
-                    button.disabled = !isActive;
-                    const tooltipInstance = button._tippy;
-                    if(tooltipInstance) {
-                        tooltipInstance.setContent(lockedTooltip);
-                    } else {
-                        tippy(button, { content: lockedTooltip });
-                    }
-                } else {
-                    button.disabled = false;
-                    const tooltipInstance = button._tippy;
-                     if(tooltipInstance) {
-                        tooltipInstance.setContent(defaultTooltip);
-                    }
+        },
+        PUBLICATION_TEXTS: Object.freeze({
+            MIM_REGULATORY_STATEMENT: "This retrospective, single-institution study was performed in compliance with the Health Insurance Portability and Accountability Act and received approval from the institutional review board. The requirement for written informed consent was waived for this retrospective analysis.",
+            STATISTICAL_ANALYSIS_METHODS: "Descriptive statistics were used to summarize patient characteristics. Diagnostic performance metrics—including sensitivity, specificity, positive predictive value, negative predictive value, and accuracy—were calculated for each diagnostic method. Wilson score method was used for 95% confidence intervals (CIs) of proportions, and the bootstrap percentile method ([N_BOOTSTRAP] replications) was used for CIs of the area under the receiver operating characteristic curve (AUC).",
+            STATISTICAL_ANALYSIS_COMPARISON: "The primary comparison between the AUC of the Avocado Sign and other criteria was performed using the method described by DeLong et al. for correlated ROC curves. McNemar’s test was used to compare accuracies. For associations between individual categorical features and N-status, Fisher's exact test was used. All statistical analyses were performed using custom scripts developed in JavaScript (ES2020) and integrated within a dedicated web-based analysis tool (Version [APP_VERSION]). A two-sided P value of less than [P_LEVEL] was considered to indicate statistical significance."
+        }),
+        chartTitles: {
+            ageDistribution: 'Age Distribution',
+            genderDistribution: 'Sex',
+            therapyDistribution: 'Therapy',
+            statusN: 'N-Status (Pathology)',
+            statusAS: 'AS-Status',
+            statusT2: 'T2-Status'
+        },
+        axisLabels: {
+            age: 'Age (Years)',
+            patientCount: 'Number of Patients',
+            lymphNodeCount: 'Number of Lymph Nodes',
+            metricValue: 'Value',
+            metric: 'Diagnostic Metric',
+            sensitivity: 'Sensitivity (True Positive Rate)',
+            oneMinusSpecificity: '1 - Specificity (False Positive Rate)'
+        },
+        legendLabels: {
+            male: 'Male',
+            female: 'Female',
+            unknownGender: 'Unknown',
+            surgeryAlone: 'Surgery alone',
+            neoadjuvantTherapy: 'Neoadjuvant therapy',
+            nPositive: 'N+',
+            nNegative: 'N-',
+            asPositive: 'AS+',
+            asNegative: 'AS-',
+            t2Positive: 'T2+',
+            t2Negative: 'T2-',
+            avocadoSign: 'Avocado Sign'
+        },
+        tooltips: Object.freeze({
+            definition: {
+                sens: { title: 'Sensitivity (True Positive Rate)', text: 'The ability of a test to correctly identify patients with the disease.<br><strong>Formula:</strong> TP / (TP + FN)' },
+                spec: { title: 'Specificity (True Negative Rate)', text: 'The ability of a test to correctly identify patients without the disease.<br><strong>Formula:</strong> TN / (TN + FP)' },
+                ppv: { title: 'Positive Predictive Value (Precision)', text: 'The probability that a patient with a positive test result actually has the disease.<br><strong>Formula:</strong> TP / (TP + FP)' },
+                npv: { title: 'Negative Predictive Value', text: 'The probability that a patient with a negative test result actually does not have the disease.<br><strong>Formula:</strong> TN / (TN + FN)' },
+                acc: { title: 'Accuracy', text: 'The proportion of all tests that are correct.<br><strong>Formula:</strong> (TP + TN) / Total' },
+                balAcc: { title: 'Balanced Accuracy', text: 'The average of sensitivity and specificity. Useful for imbalanced datasets.<br><strong>Formula:</strong> (Sensitivity + Specificity) / 2' },
+                f1: { title: 'F1-Score', text: 'The harmonic mean of PPV and sensitivity. It provides a single score that balances both concerns.<br><strong>Formula:</strong> 2 * (PPV * Sensitivity) / (PPV + Sensitivity)' },
+                auc: { title: 'Area Under the ROC Curve', text: 'A measure of the overall performance of a diagnostic test. A value of 1.0 represents a perfect test, while 0.5 represents a test with no discriminative ability.' },
+                or: { title: 'Odds Ratio', text: 'Represents the odds that an outcome will occur given a particular exposure, compared to the odds of the outcome occurring in the absence of that exposure.<br><strong>Formula:</strong> (TP*TN) / (FP*FN)' },
+                rd: { title: 'Risk Difference (Absolute Risk Reduction)', text: 'The absolute difference in the outcome rates between the exposed and unexposed groups.<br><strong>Formula:</strong> (TP / (TP+FP)) - (FN / (FN+TN))' },
+                phi: { title: 'Phi Coefficient (Matthews Correlation Coefficient)', text: 'A measure of the quality of a binary classification, ranging from -1 (total disagreement) to +1 (perfect agreement). 0 indicates a random guess.' },
+                mcnemar: { title: 'McNemar\'s Test', text: 'A statistical test used on paired nominal data to determine if there are significant differences between two dependent diagnostic tests.' },
+                delong: { title: 'DeLong\'s Test', text: 'A non-parametric statistical test used to compare the Area Under the Curve (AUC) of two correlated ROC curves.' },
+                pValue: { title: 'P value', text: 'The probability of obtaining test results at least as extreme as the results actually observed, under the assumption that the null hypothesis is correct. A smaller P value (typically < .05) indicates strong evidence against the null hypothesis.' }
+            },
+            interpretation: {
+                notAvailable: 'Data for this metric is not available or could not be calculated for the current selection.',
+                sens: 'A Sensitivity of <strong>{value}</strong> indicates that the test correctly identified <strong>{value}</strong> of all true positive cases (N+).<br>The 95% CI from <strong>{lower}</strong> to <strong>{upper}</strong> suggests the true sensitivity is likely within this range.',
+                spec: 'A Specificity of <strong>{value}</strong> indicates that the test correctly identified <strong>{value}</strong> of all true negative cases (N-).<br>The 95% CI from <strong>{lower}</strong> to <strong>{upper}</strong> suggests the true specificity is likely within this range.',
+                ppv: 'A Positive Predictive Value of <strong>{value}</strong> means that if a patient tests positive, there is a <strong>{value}</strong> probability they are truly N+.<br>The 95% CI from <strong>{lower}</strong> to <strong>{upper}</strong>.',
+                npv: 'A Negative Predictive Value of <strong>{value}</strong> means that if a patient tests negative, there is a <strong>{value}</strong> probability they are truly N-.<br>The 95% CI from <strong>{lower}</strong> to <strong>{upper}</strong>.',
+                acc: 'An Accuracy of <strong>{value}</strong> means the test provided the correct classification for <strong>{value}</strong> of all patients.<br>The 95% CI from <strong>{lower}</strong> to <strong>{upper}</strong>.',
+                balAcc: 'A Balanced Accuracy of <strong>{value}</strong> represents the averaged proportion of correctly classified positive and negative cases. An AUC of <strong>{value}</strong> indicates a <strong>{strength}</strong> discriminatory ability for this binary test.',
+                f1: 'An F1-Score of <strong>{value}</strong> indicates the harmonic mean of PPV and sensitivity. A score of 1.0 is perfect.',
+                auc: 'An AUC of <strong>{value}</strong> indicates a <strong>{strength}</strong> overall ability of the test to discriminate between N+ and N- patients.',
+                pValue: {
+                    default: "A P value of {pValue} indicates that {significanceText}. This means there is a {strength} statistical evidence of a difference between {comparison} for the metric '{metric}'.",
+                    mcnemar: "A P value of {pValue} for McNemar's test suggests that the difference in accuracy between {method1} and {method2} is {significanceText}. This indicates a {strength} evidence of a difference in their classification agreement with the reference standard.",
+                    delong: "A P value of {pValue} for DeLong's test suggests that the difference in AUC between {method1} and {method2} is {significanceText}. This indicates a {strength} evidence of a difference in their overall diagnostic performance.",
+                    fisher: "A P value of {pValue} from Fisher's exact test indicates that the association between having feature '{featureName}' and being N-positive is {significanceText}. This suggests a {strength} evidence of a non-random association."
+                },
+                or: {
+                    value: "An Odds Ratio of {value} means the odds of a patient being N-positive are {value} times {direction} for patients with '{featureName}' compared to those without it. This indicates a {strength} association.",
+                    ci: "The 95% Confidence Interval from {lower} to {upper} {ciInterpretationText}."
+                },
+                rd: {
+                    value: "A Risk Difference of {value} indicates that the absolute risk of being N-positive is {value} {direction} for patients with feature '{featureName}' compared to those without it.",
+                    ci: "The 95% Confidence Interval from {lower} to {upper} {ciInterpretationText}."
+                },
+                phi: {
+                    value: "A Phi coefficient of {value} indicates a {strength} positive correlation between the presence of feature '{featureName}' and a positive N-status.",
+                },
+                ci: {
+                    includesOne: "does not exclude an odds ratio of 1, so the association is not statistically significant at the P < .05 level",
+                    excludesOne: "excludes an odds ratio of 1, suggesting a statistically significant association at the P < .05 level",
+                    includesZero: "crosses zero, indicating the observed risk difference is not statistically significant at the P < .05 level",
+                    excludesZero: "does not cross zero, suggesting a statistically significant risk difference at the P < .05 level"
+                },
+                strength: {
+                    very_strong: "very strong",
+                    strong: "strong",
+                    moderate: "moderate",
+                    weak: "weak",
+                    very_weak: "very weak",
+                    undetermined: "undetermined"
+                },
+                direction: {
+                    increased: "higher",
+                    decreased: "lower",
+                    unchanged: "unchanged"
+                },
+                significance: {
+                    significant: "statistically significant",
+                    not_significant: "not statistically significant"
                 }
+            },
+            descriptiveStatistics: {
+                ageDistribution: { description: "Histogram showing the distribution of patient ages in the [COHORT] cohort." },
+                genderDistribution: { description: "Pie chart illustrating the distribution of male and female patients in the [COHORT] cohort." },
+                therapyDistribution: { description: "Pie chart showing the distribution of treatment approaches in the [COHORT] cohort." },
+                statusN: { description: "Distribution of final pathological N-Status in the [COHORT] cohort." },
+                statusAS: { description: "Distribution of the Avocado Sign status in the [COHORT] cohort." },
+                statusT2: { description: "Distribution of the T2-criteria status based on current settings in the [COHORT] cohort." }
+            },
+            dataTab: {
+                nr: "Patient's sequential ID number.",
+                name: "Patient's last name (anonymized/coded).",
+                firstName: "Patient's first name (anonymized/coded).",
+                sex: "Patient's sex (male/female/unknown).",
+                age: "Patient's age in years at the time of MRI.",
+                therapy: "Therapy administered before surgery (Neoadjuvant therapy, Surgery alone).",
+                n_as_t2: "Direct status comparison: N (Histopathology reference), AS (Avocado Sign prediction), T2 (current criteria prediction). Click N, AS, or T2 in the column header for sub-sorting.",
+                notes: "Additional clinical or radiological notes on the case, if available.",
+                expandAll: "Expand or collapse the detail view of T2-weighted lymph node features for all patients in the current table view.",
+                expandRow: "Click here or the arrow button to show/hide details on the morphological properties of this patient's T2-weighted lymph nodes. Only available if T2 node data exists."
+            },
+            analysisTab: {
+                nr: "Patient's sequential ID number.",
+                name: "Patient's last name (anonymized/coded).",
+                therapy: "Therapy administered before surgery.",
+                n_as_t2: "Direct status comparison: N (Histopathology reference), AS (Avocado Sign prediction), T2 (current criteria prediction). Click N, AS, or T2 in the column header for sub-sorting.",
+                n_counts: "Number of pathologically positive (N+) lymph nodes / Total number of histopathologically examined lymph nodes for this patient.",
+                as_counts: "Number of Avocado Sign positive (AS+) lymph nodes / Total number of lymph nodes visible on T1-CE MRI for this patient.",
+                t2_counts: "Number of T2-positive lymph nodes (based on current criteria) / Total number of lymph nodes visible on T2-MRI for this patient.",
+                expandAll: "Expand or collapse the detail view of the evaluated T2-weighted lymph nodes and the fulfilled criteria for all patients in the current table view.",
+                expandRow: "Click here or the arrow button to show/hide the detailed evaluation of this patient's individual T2-weighted lymph nodes according to the currently applied criteria. Fulfilled positive criteria are highlighted."
+            },
+            t2Logic: { description: "Logical operator for active T2 criteria: <strong>AND</strong> (A lymph node is positive only if ALL active criteria are met). <strong>OR</strong> (A lymph node is positive if AT LEAST ONE active criterion is met). The choice affects the T2 status calculation." },
+            t2Size: { description: "Size criterion (short axis): Lymph nodes with a diameter <strong>greater than or equal to (≥)</strong> the set threshold are considered suspicious. Adjustable range: [MIN] - [MAX] mm (step: [STEP] mm). Enable/disable with checkbox." },
+            t2Shape: { description: "Shape criterion: Select which shape ('round' or 'oval') is considered suspicious. Enable/disable with checkbox." },
+            t2Border: { description: "Border criterion: Select which border ('sharp' or 'irregular') is considered suspicious. Enable/disable with checkbox." },
+            t2Homogeneity: { description: "Homogeneity criterion: Select whether 'homogeneous' or 'heterogeneous' internal signal on T2w is considered suspicious. Enable/disable with checkbox." },
+            t2Signal: { description: "Signal criterion: Select which T2 signal intensity ('low', 'intermediate', or 'high') relative to surrounding muscle is considered suspicious. Nodes with non-assessable signal (value 'null') never fulfill this criterion. Enable/disable with checkbox." },
+            t2Actions: {
+                reset: "Resets the logic and all criteria to their default settings. The changes are not yet applied.",
+                apply: "Apply the currently set T2 criteria and logic to the entire dataset. This updates the T2 columns in the tables, all statistical analyses, and charts. The setting is also saved for future sessions."
+            },
+            exportTab: {
+                description: "Allows exporting analysis results, tables, and charts based on the currently selected global cohort ([COHORT]) and the currently applied T2 criteria.",
+                statscsv: { description: "Detailed table of all calculated statistical metrics (descriptive, AS & T2 performance, comparisons, associations) from the Statistics tab as a CSV file.", type: 'STATS_CSV', ext: "csv" },
+                bruteforcetxt: { description: "Detailed report of the last brute-force optimization for the current cohort (Top 10 results, configuration) as a text file (.txt), if performed.", type: 'BRUTEFORCE_TXT', ext: "txt" },
+                datamd: { description: "Current data list (Data tab) as a Markdown table (.md).", type: 'DATA_MD', ext: "md" },
+                analysismd: { description: "Current analysis table (Analysis tab, incl. T2 results) as a Markdown (.md) file.", type: 'ANALYSIS_MD', ext: "md" },
+                filtereddatacsv: { description: "Raw data of the currently selected cohort (incl. T2 evaluation) as a CSV file (.csv).", type: 'FILTERED_DATA_CSV', ext: "csv" },
+                comprehensivereport_html: { description: "Comprehensive analysis report as an HTML file (statistics, configurations, charts), printable.", type: 'COMPREHENSIVE_REPORT_HTML', ext: "html" },
+                allzip: { description: "All available single files (Statistics CSV, BruteForce TXT, all MDs, Raw Data CSV, HTML Report) in one ZIP archive.", type: 'ALL_ZIP', ext: "zip"},
+                csvzip: { description: "All available CSV files (Statistics, Raw Data) in one ZIP archive.", type: 'CSV_ZIP', ext: "zip"},
+                mdzip: { description: "All available Markdown files (Descriptive, Data, Analysis, Publication Texts) in one ZIP archive.", type: 'MD_ZIP', ext: "md"},
+                pngzip: { description: "All currently visible charts (Statistics, Analysis, Comparison) and selected tables as individual PNG files (ZIP archive).", type: 'PNG_ZIP', ext: "zip" },
+                svgzip: { description: "All currently visible charts (Statistics, Analysis, Comparison) as individual SVG files (ZIP archive).", type: 'SVG_ZIP', ext: "zip"}
             }
-        });
-    }
+        })
+    }),
+    TABLE_COLUMN_DEFINITIONS: Object.freeze({
+        DATA_TABLE_COLUMNS: Object.freeze([
+            { key: 'id', label: 'ID', tooltipKey: 'nr', width: 'auto' },
+            { key: 'lastName', label: 'Last Name', tooltipKey: 'name', width: 'auto' },
+            { key: 'firstName', label: 'First Name', tooltipKey: 'firstName', width: 'auto' },
+            { key: 'sex', label: 'Sex', tooltipKey: 'sex', width: 'auto' },
+            { key: 'age', label: 'Age', tooltipKey: 'age', width: 'auto' },
+            { key: 'therapy', label: 'Therapy', tooltipKey: 'therapy', width: 'auto' },
+            { key: 'status', label: 'N/AS/T2', tooltipKey: 'n_as_t2', subKeys: [{key: 'nStatus', label: 'N'}, {key: 'asStatus', label: 'AS'}, {key: 't2Status', label: 'T2'}], width: 'auto' },
+            { key: 'notes', label: 'Notes', tooltipKey: 'notes', width: '150px' },
+            { key: 'details', label: '', width: '30px', tooltipKey: 'expandRow'}
+        ]),
+        ANALYSIS_TABLE_COLUMNS: Object.freeze([
+            { key: 'id', label: 'ID', tooltipKey: 'nr', width: 'auto' },
+            { key: 'lastName', label: 'Name', tooltipKey: 'name', width: 'auto' },
+            { key: 'therapy', label: 'Therapy', tooltipKey: 'therapy', width: 'auto' },
+            { key: 'status', label: 'N/AS/T2', tooltipKey: 'n_as_t2', subKeys: [{key: 'nStatus', label: 'N'}, {key: 'asStatus', label: 'AS'}, {key: 't2Status', label: 'T2'}], width: 'auto' },
+            { key: 'countPathologyNodes', label: 'N+/N total', tooltipKey: 'n_counts', textAlign: 'center', width: 'auto' },
+            { key: 'countASNodes', label: 'AS+/AS total', tooltipKey: 'as_counts', textAlign: 'center', width: 'auto' },
+            { key: 'countT2Nodes', label: 'T2+/T2 total', tooltipKey: 't2_counts', textAlign: 'center', width: 'auto' },
+            { key: 'details', label: '', width: '30px', tooltipKey: 'expandRow'}
+        ])
+    }),
+    T2_ICON_SVGS: Object.freeze({
+        SIZE_DEFAULT: (s, sw, iconColor, c, r, sq, sqPos) => `<path d="M${sw/2} ${c} H${s-sw/2} M${c} ${sw/2} V${s-sw/2}" stroke="${iconColor}" stroke-width="${sw/2}" stroke-linecap="round"/>`,
+        SHAPE_ROUND: (s, sw, iconColor, c, r, sq, sqPos) => `<circle cx="${c}" cy="${c}" r="${r}" fill="none" stroke="${iconColor}" stroke-width="${sw}"/>`,
+        SHAPE_OVAL: (s, sw, iconColor, c, r, sq, sqPos) => `<ellipse cx="${c}" cy="${c}" rx="${r}" ry="${r * 0.65}" fill="none" stroke="${iconColor}" stroke-width="${sw}"/>`,
+        BORDER_SHARP: (s, sw, iconColor, c, r, sq, sqPos) => `<circle cx="${c}" cy="${c}" r="${r}" fill="none" stroke="${iconColor}" stroke-width="${sw * 1.2}"/>`,
+        BORDER_IRREGULAR: (s, sw, iconColor, c, r, sq, sqPos) => `<path d="M ${c + r} ${c} A ${r} ${r} 0 0 1 ${c} ${c + r} A ${r*0.8} ${r*1.2} 0 0 1 ${c-r*0.9} ${c-r*0.3} A ${r*1.1} ${r*0.7} 0 0 1 ${c+r} ${c} Z" fill="none" stroke="${iconColor}" stroke-width="${sw * 1.2}"/>`,
+        HOMOGENEITY_HOMOGENEOUS: (s, sw, iconColor, c, r, sq, sqPos) => `<rect x="${sqPos}" y="${sqPos}" width="${sq}" height="${sq}" fill="${iconColor}" stroke="none" rx="1" ry="1"/>`,
+        HOMOGENEITY_HETEROGENEOUS: (s, sw, iconColor, c, r, sq, sqPos) => {
+            let svgContent = `<rect x="${sqPos}" y="${sqPos}" width="${sq}" height="${sq}" fill="none" stroke="${iconColor}" stroke-width="${sw/2}" rx="1" ry="1"/>`;
+            const pSize = sq / 4;
+            for(let i=0;i<3;i++){for(let j=0;j<3;j++){if((i+j)%2===0){svgContent+=`<rect x="${sqPos+i*pSize+pSize/2}" y="${sqPos+j*pSize+pSize/2}" width="${pSize}" height="${pSize}" fill="${iconColor}" style="opacity:0.6;"/>`;}}}
+            return svgContent;
+        },
+        SIGNAL_LOWSIGNAL: (s, sw, iconColor, c, r, sq, sqPos) => `<circle cx="${c}" cy="${c}" r="${r}" fill="#555555" stroke="rgba(0,0,0,0.1)" stroke-width="${sw * 0.75}"/>`,
+        SIGNAL_INTERMEDIATESIGNAL: (s, sw, iconColor, c, r, sq, sqPos) => `<circle cx="${c}" cy="${c}" r="${r}" fill="#aaaaaa" stroke="rgba(0,0,0,0.1)" stroke-width="${sw * 0.75}"/>`,
+        SIGNAL_HIGHSIGNAL: (s, sw, iconColor, c, r, sq, sqPos) => `<circle cx="${c}" cy="${c}" r="${r}" fill="#f0f0f0" stroke="#333333" stroke-width="${sw * 0.75}"/>`,
+        UNKNOWN: (s, sw, iconColor, c, r, sq, sqPos) => `<rect x="${sqPos}" y="${sqPos}" width="${sq}" height="${sq}" fill="none" stroke="${iconColor}" stroke-width="${sw/2}" stroke-dasharray="2 2" /><line x1="${sqPos}" y1="${sqPos}" x2="${sqPos+sq}" y2="${sqPos+sq}" stroke="${iconColor}" stroke-width="${sw/2}" stroke-linecap="round"/><line x1="${sqPos+sq}" y1="${sqPos}" x2="${sqPos}" y2="${sqPos+sq}" stroke="${iconColor}" stroke-width="${sw/2}" stroke-linecap="round"/>`
+    })
+});
 
-    function updateExportButtonStates(activeTabId, hasBruteForceResults, hasData) {
-        const bfModalExportBtn = document.getElementById('export-bruteforce-modal-txt');
-        if (bfModalExportBtn) {
-            setElementDisabled(bfModalExportBtn.id, !hasBruteForceResults);
-        }
-        const exportTabButtons = document.querySelectorAll('#export-pane button[id^="export-"]');
-        exportTabButtons.forEach(button => {
-            if (button.id.includes('bruteforce')) {
-                setElementDisabled(button.id, !hasBruteForceResults);
-            } else {
-                setElementDisabled(button.id, !hasData);
+window.PUBLICATION_CONFIG = Object.freeze({
+    sections: [
+        { id: 'title_main', labelKey: 'title_main', subSections: [] },
+        { id: 'abstract_main', labelKey: 'abstract_main', subSections: [] },
+        { id: 'introduction_main', labelKey: 'introduction_main', subSections: [], wordCountLimit: 400 },
+        {
+            id: 'methoden_main', labelKey: 'methoden_main', subSections: [
+                { id: 'methoden_studienanlage_ethik', label: 'Study Design and Patients' },
+                { id: 'methoden_mrt_protokoll_akquisition', label: 'MRI Protocol and Image Analysis' },
+                { id: 'methoden_vergleichskriterien_t2', label: 'Comparative T2w Criteria Sets' },
+                { id: 'methoden_referenzstandard_histopathologie', label: 'Reference Standard' },
+                { id: 'methoden_statistische_analyse_methoden', label: 'Statistical Analysis' }
+            ],
+            wordCountLimit: 800
+        },
+        {
+            id: 'ergebnisse_main', labelKey: 'ergebnisse_main', subSections: [
+                { id: 'ergebnisse_patientencharakteristika', label: 'Patient Characteristics' },
+                { id: 'ergebnisse_vergleich_as_vs_t2', label: 'Diagnostic Performance and Comparison' }
+            ],
+            wordCountLimit: 1000
+        },
+        { id: 'discussion_main', labelKey: 'discussion_main', subSections: [], wordCountLimit: 800 },
+        { id: 'references_main', labelKey: 'references_main', subSections: [] },
+        { id: 'stard_checklist', labelKey: 'stard_checklist', subSections: [] }
+    ],
+    literatureCriteriaSets: [
+        {
+            id: 'koh_2008',
+            name: 'Koh et al. (2008)',
+            displayShortName: 'Koh 2008',
+            logic: 'OR',
+            applicableCohort: 'Overall',
+            criteria: {
+                size: { active: false },
+                shape: { active: false },
+                border: { active: true, value: 'irregular' },
+                homogeneity: { active: true, value: 'heterogeneous' },
+                signal: { active: false }
+            },
+            studyInfo: {
+                reference: 'Koh et al',
+                patientCohort: 'Overall (n=25)',
+                investigationType: 'Prospective, Pre- and Post-nCRT',
+                keyCriteriaSummary: 'Irregular Border OR Heterogeneous Signal'
             }
-        });
-    }
-
-    function updateStatisticsSelectorsUI(layout, cohort1, cohort2) {
-        const layoutToggleBtn = document.getElementById('statistics-toggle-comparison');
-        const cohortSelectorsContainer = document.getElementById('statistics-cohort-selectors');
-        if (layoutToggleBtn) {
-            layoutToggleBtn.classList.toggle('active', layout === 'vergleich');
-            layoutToggleBtn.textContent = layout === 'vergleich' ? 'Comparison Active' : 'Single View';
-        }
-        if (cohortSelectorsContainer) {
-            cohortSelectorsContainer.style.display = layout === 'vergleich' ? 'flex' : 'none';
-        }
-        const select1 = document.getElementById('statistics-cohort-select-1');
-        if (select1) {
-            select1.value = cohort1;
-        }
-        const select2 = document.getElementById('statistics-cohort-select-2');
-        if (select2) {
-            select2.value = cohort2;
-        }
-    }
-
-    function updateComparisonViewUI(currentView, currentStudyId) {
-        const viewAsPerf = document.getElementById('view-as-perf');
-        const viewAsVsT2 = document.getElementById('view-as-vs-t2');
-        if (viewAsPerf) {
-            viewAsPerf.checked = currentView === 'as-pur';
-        }
-        if (viewAsVsT2) {
-            viewAsVsT2.checked = currentView === 'as-vs-t2';
-        }
-
-        const compStudySelect = document.getElementById('comp-study-select');
-        if (compStudySelect) {
-            compStudySelect.value = currentStudyId || '';
-            compStudySelect.disabled = currentView === 'as-pur';
-        }
-    }
-
-    function updatePublicationUI(currentSectionId, currentBruteForceMetric) {
-        document.querySelectorAll('#publication-sections-nav .nav-link').forEach(link => {
-            if (link) {
-                const isSublink = link.classList.contains('nav-link-sub');
-                const mainSectionId = isSublink ? link.closest('ul').previousElementSibling.dataset.sectionId : link.dataset.sectionId;
-                const mainSection = window.PUBLICATION_CONFIG.sections.find(s => s.id === mainSectionId);
-                const isActive = mainSection?.subSections.some(s => s.id === currentSectionId) || mainSectionId === currentSectionId;
-                
-                if (isSublink) {
-                    link.classList.toggle('active', link.dataset.sectionId === currentSectionId);
-                } else if (!link.classList.contains('nav-link-main')) {
-                    link.classList.toggle('active', isActive);
-                }
+        },
+        {
+            id: 'barbaro_2024',
+            name: 'Barbaro et al. (2024)',
+            displayShortName: 'Barbaro 2024',
+            logic: 'OR',
+            applicableCohort: 'neoadjuvantTherapy',
+            criteria: {
+                size: { active: true, threshold: 2.2, condition: '>' },
+                shape: { active: false },
+                border: { active: false },
+                homogeneity: { active: false },
+                signal: { active: false }
+            },
+            studyInfo: {
+                reference: 'Barbaro et al',
+                patientCohort: 'Neoadjuvant Therapy (n=191)',
+                investigationType: 'Retrospective, Post-nCRT',
+                focus: 'Size criteria for predicting ypN0',
+                keyCriteriaSummary: 'Short-axis diameter > 2.2 mm'
             }
-        });
-
-        document.querySelectorAll('#publication-sections-nav .nav-link-main').forEach(link => {
-            const mainSectionId = link.dataset.sectionId;
-            const mainSection = window.PUBLICATION_CONFIG.sections.find(s => s.id === mainSectionId);
-            const isActive = mainSection?.subSections.some(s => s.id === currentSectionId);
-             link.classList.toggle('active', isActive);
-        });
-
-        const bfMetricSelect = document.getElementById('publication-bf-metric-select');
-        if (bfMetricSelect) {
-            bfMetricSelect.value = currentBruteForceMetric;
+        },
+        {
+            id: 'rutegard_et_al_esgar',
+            name: 'ESGAR 2016 (Rutegård et al.)',
+            displayShortName: 'ESGAR 2016',
+            logic: 'KOMBINIERT',
+            applicableCohort: 'surgeryAlone',
+            criteria: {
+                size: { active: true, threshold: 9.0, condition: '>=' },
+                shape: { active: true, value: 'round' },
+                border: { active: true, value: 'irregular' },
+                homogeneity: { active: true, value: 'heterogeneous' },
+                signal: { active: false }
+            },
+            studyInfo: {
+                reference: 'Rutegård et al',
+                patientCohort: 'Surgery Alone (n=46)',
+                investigationType: 'Prospective, Node-by-Node',
+                focus: 'Validation of combined ESGAR 2016 criteria',
+                keyCriteriaSummary: '≥9mm OR (5–8mm AND ≥2 features) OR (<5mm AND 3 features)'
+            },
+            description: 'ESGAR 2016 consensus criteria: A lymph node is considered malignant if it has a short-axis diameter of ≥9 mm, OR if it has a diameter of 5–8 mm and at least two suspicious morphological features (round shape, irregular border, or heterogeneous signal), OR if it has a diameter of <5 mm and all three suspicious features.'
         }
-    }
+    ]
+});
 
-    function updateT2CriteriaControlsUI(currentCriteria, currentLogic) {
-        if (!currentCriteria) return;
-        const sizeRangeInput = document.getElementById('range-size');
-        const sizeValueDisplay = document.getElementById('value-size');
-        const sizeManualInput = document.getElementById('input-size');
-        const logicSwitch = document.getElementById('t2-logic-switch');
-        const logicLabel = document.getElementById('t2-logic-label');
-
-        Object.keys(currentCriteria).forEach(key => {
-            if (key === 'logic') return;
-            const criterion = currentCriteria[key];
-            const checkbox = document.getElementById(`check-${key}`);
-            const optionsContainer = checkbox?.closest('.criteria-group')?.querySelector('.criteria-options-container');
-            if (checkbox) checkbox.checked = criterion.active;
-            if (key === 'size') {
-                if (sizeRangeInput) { sizeRangeInput.value = criterion.threshold; sizeRangeInput.disabled = !criterion.active; }
-                if (sizeValueDisplay) { sizeValueDisplay.textContent = formatNumber(criterion.threshold, 1); }
-                if (sizeManualInput) { sizeManualInput.value = formatNumber(criterion.threshold, 1, '', true); sizeManualInput.disabled = !criterion.active; }
-            } else if (optionsContainer) {
-                optionsContainer.querySelectorAll('.t2-criteria-button').forEach(button => {
-                    button.classList.toggle('active', criterion.active && button.dataset.value === criterion.value);
-                    button.classList.toggle('inactive-option', !criterion.active);
-                    button.disabled = !criterion.active;
-                });
-            }
-        });
-        if (logicSwitch) logicSwitch.checked = currentLogic === 'OR';
-        if (logicLabel) logicLabel.textContent = window.APP_CONFIG.UI_TEXTS.t2LogicDisplayNames[currentLogic] || currentLogic;
-    }
-
-    function updateBruteForceUI(status, payload = {}, isWorkerAvailable = false, currentCohort = null) {
-        const container = document.getElementById('brute-force-runner-card-container');
-        if (!container) return;
-
-        let contentHTML = '';
-        let showResultControls = false;
-        const cohortDisplayName = getCohortDisplayName(currentCohort);
-        const selectedMetric = document.getElementById('brute-force-metric')?.value || payload?.metric || window.APP_CONFIG.DEFAULT_SETTINGS.PUBLICATION_BRUTE_FORCE_METRIC;
-
-        if (!isWorkerAvailable) {
-            contentHTML = `<p class="text-danger small p-3">Web Workers are not supported. Brute-force optimization is unavailable.</p>`;
-        } else if (status === 'started' || status === 'progress') {
-            const progress = (payload.total > 0) ? (payload.tested / payload.total) * 100 : 0;
-            const currentBestText = payload.currentBest ? `Current best ${payload.metric}: ${formatNumber(payload.currentBest.metricValue, 4, 'N/A', true)}` : 'Searching...';
-            const totalDisplay = payload.total > 0 ? formatNumber(payload.total, 0) : '...';
-            contentHTML = `
-                <div class="d-flex align-items-center">
-                    <div class="progress flex-grow-1 me-3" style="height: 20px;">
-                        <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: ${progress}%" aria-valuenow="${progress}" aria-valuemin="0" aria-valuemax="100">${formatPercent(progress/100, 0)}</div>
-                    </div>
-                    <span class="small text-muted text-nowrap">Tested: ${formatNumber(payload.tested, 0)} / ${totalDisplay}</span>
-                </div>
-                <p class="small text-muted mt-2 mb-0">${currentBestText}</p>
-            `;
-        } else {
-             const bfResult = window.bruteForceManager.getResultsForCohortAndMetric(currentCohort, selectedMetric);
-             if (bfResult && bfResult.bestResult) {
-                const best = bfResult.bestResult;
-                const criteriaDisplay = window.studyT2CriteriaManager.formatCriteriaForDisplay(best.criteria, best.logic);
-                const resultTooltipTemplate = `Best result of the completed brute-force optimization for the cohort '${cohortDisplayName}' and the target metric '${selectedMetric}'.`;
-                
-                contentHTML = `
-                    <p class="small text-muted" data-tippy-content="${resultTooltipTemplate}">
-                        <strong>Optimization complete for cohort '${cohortDisplayName}'.</strong><br>
-                        Best ${bfResult.metric}: <strong class="text-primary">${formatNumber(best.metricValue, 4, 'N/A', true)}</strong><br>
-                        Criteria: <code>${criteriaDisplay}</code>
-                    </p>
-                `;
-                showResultControls = true;
-            } else if (status === 'cancelled') {
-                 contentHTML = `<p class="text-warning small p-3">Brute-force optimization was cancelled for cohort '${cohortDisplayName}'.</p>`;
-            } else {
-                contentHTML = `<p class="text-muted small p-3">No brute-force optimization has been performed yet for cohort '${cohortDisplayName}' and metric '${selectedMetric}'.</p>`;
-            }
-        }
-
-        const infoTooltipTemplate = `Shows the status of the optimization worker and the currently analyzed patient cohort: [COHORT_NAME].`;
-        const cardTitleTooltip = infoTooltipTemplate.replace('[COHORT_NAME]', `<strong>${cohortDisplayName}</strong>`);
-        const isRunning = status === 'started' || status === 'progress';
-
-        container.innerHTML = `
-            <div class="card h-100" id="brute-force-card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <span data-tippy-content="${cardTitleTooltip}">Criteria Optimization (Brute-Force)</span>
-                    <div class="d-flex align-items-center">
-                        <label for="brute-force-metric" class="me-2 small text-muted" data-tippy-content="Select the target metric for the brute-force optimization.">Target:</label>
-                        <select class="form-select form-select-sm me-2" id="brute-force-metric" ${isRunning ? 'disabled' : ''}>
-                            ${window.APP_CONFIG.AVAILABLE_BRUTE_FORCE_METRICS.map(metric => `<option value="${metric.value}" ${selectedMetric === metric.value ? 'selected' : ''}>${metric.label}</option>`).join('')}
-                        </select>
-                        <button class="btn btn-sm btn-success me-2" id="btn-start-brute-force" data-tippy-content="Starts the brute-force search." ${isRunning || !isWorkerAvailable ? 'disabled' : ''}><i class="fas fa-play me-1"></i> Start</button>
-                        <button class="btn btn-sm btn-danger me-2" id="btn-cancel-brute-force" ${!isRunning ? 'disabled' : ''}><i class="fas fa-stop me-1"></i> Cancel</button>
-                        <button class="btn btn-sm btn-primary" id="btn-apply-best-bf-criteria" ${!showResultControls || isRunning ? 'disabled' : ''}><i class="fas fa-magic me-1"></i> Apply Best</button>
-                        <button class="btn btn-sm btn-outline-info ms-2" id="btn-show-bf-details" ${!showResultControls ? 'disabled' : ''} data-tippy-content="Opens a window with the top 10 results."><i class="fas fa-info-circle"></i> Top 10</button>
-                    </div>
-                </div>
-                <div class="card-body">
-                    ${contentHTML}
-                </div>
-            </div>
-        `;
-        initializeTooltips(container);
-    }
-
-    function updateSortIcons(tableHeaderId, sortState) {
-        const tableHeader = document.getElementById(tableHeaderId);
-        if (!tableHeader) return;
-        tableHeader.querySelectorAll('th[data-sort-key]').forEach(th => {
-            const sortKey = th.dataset.sortKey;
-            const sortIcon = th.querySelector('.fa-sort, .fa-sort-up, .fa-sort-down');
-            if (sortIcon) {
-                sortIcon.className = 'fas fa-sort text-muted opacity-50 ms-1';
-            }
-            if (sortKey === 'status') {
-                 th.querySelectorAll('.sortable-sub-header').forEach(sub => {
-                     sub.style.fontWeight = 'normal';
-                     sub.style.textDecoration = 'none';
-                 });
-            }
-        });
-        if (sortState?.key) {
-            const activeTh = tableHeader.querySelector(`th[data-sort-key="${sortState.key}"]`);
-            if (activeTh) {
-                const activeIcon = activeTh.querySelector('.fa-sort, .fa-sort-up, .fa-sort-down');
-                if (activeIcon) {
-                    activeIcon.className = `fas ${sortState.direction === 'asc' ? 'fa-sort-up' : 'fa-sort-down'} text-primary ms-1`;
-                }
-                if (sortState.key === 'status' && sortState.subKey) {
-                    const activeSub = activeTh.querySelector(`.sortable-sub-header[data-sub-key="${sortState.subKey}"]`);
-                    if(activeSub) {
-                        activeSub.style.fontWeight = 'bold';
-                        activeSub.style.textDecoration = 'underline';
-                    }
-                }
-            }
-        }
-    }
-
-    function markCriteriaSavedIndicator(isUnsaved) {
-        const criteriaCard = document.getElementById('t2-criteria-card');
-        if (criteriaCard) {
-            criteriaCard.classList.toggle('criteria-unsaved-indicator', isUnsaved);
-            let instance = criteriaCard._tippy;
-            const unsavedTooltipText = "<strong>Attention:</strong> There are unsaved changes to the T2 criteria or logic. Click 'Apply & Save' to update the results and save the settings.";
-            if (isUnsaved && !instance) {
-                tippy(criteriaCard, {
-                    content: unsavedTooltipText,
-                    theme: 'warning',
-                    placement: 'top',
-                });
-            } else if (instance) {
-                instance.setProps({
-                    content: unsavedTooltipText,
-                });
-                if (isUnsaved) instance.enable(); else instance.disable();
-            }
-        }
-    }
-
-    function toggleAllDetails(tableBodyId, buttonId) {
-        const tableBody = document.getElementById(tableBodyId);
-        const toggleButton = document.getElementById(buttonId);
-        if (!tableBody || !toggleButton) return;
-
-        const isExpanding = toggleButton.dataset.action === 'expand';
-        const collapseElements = tableBody.querySelectorAll('.collapse');
-
-        collapseElements.forEach(collapseEl => {
-            const bsCollapse = bootstrap.Collapse.getInstance(collapseEl) || new bootstrap.Collapse(collapseEl, { toggle: false });
-            if (isExpanding) bsCollapse.show(); else bsCollapse.hide();
-        });
-
-        toggleButton.dataset.action = isExpanding ? 'collapse' : 'expand';
-        const expandAllTooltip = "Expand All Details";
-        const collapseAllTooltip = "Collapse All Details";
-        toggleButton.innerHTML = isExpanding
-            ? `Collapse All Details <i class="fas fa-chevron-up ms-1"></i>`
-            : `Expand All Details <i class="fas fa-chevron-down ms-1"></i>`;
-        toggleButton.setAttribute('data-tippy-content', isExpanding ? collapseAllTooltip : expandAllTooltip);
-    }
-
-    return Object.freeze({
-        showToast,
-        initializeTooltips,
-        updateElementText,
-        updateElementHTML,
-        toggleElementClass,
-        setElementDisabled,
-        highlightElement,
-        attachRowCollapseListeners,
-        renderTabContent,
-        showQuickGuide,
-        updateHeaderStatsUI,
-        updateCohortButtonsUI,
-        updateExportButtonStates,
-        updateStatisticsSelectorsUI,
-        updateComparisonViewUI,
-        updatePublicationUI,
-        updateT2CriteriaControlsUI,
-        updateBruteForceUI,
-        updateSortIcons,
-        markCriteriaSavedIndicator,
-        toggleAllDetails,
-    });
-})();
+function getDefaultT2Criteria() {
+    return cloneDeep(window.DEFAULT_T2_CRITERIA);
+}
