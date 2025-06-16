@@ -43,7 +43,7 @@ window.publicationService = (() => {
                 const formattedText = refData.text.replace(/(\d{4};\d{1,3}:\d{1,4}–\d{1,4})/, '<strong>$1</strong>');
                 return `<li>${formattedText}</li>`;
             }).join('');
-            referencesHtml = `<h2 id="references_main">References</h2><ol>${listItems}</ol>`;
+            referencesHtml = `<section id="references_main"><h2>References</h2><ol>${listItems}</ol></section>`;
         }
 
         return { processedHtml, referencesHtml };
@@ -90,8 +90,10 @@ window.publicationService = (() => {
 
             const sectionLabel = window.APP_CONFIG.UI_TEXTS.publicationTab.sectionLabels[section.labelKey] || section.labelKey;
             
-            rawContentHTML += `<h2 id="${section.id}">${sectionLabel}</h2>`;
+            rawContentHTML += `<section id="${section.id}">`;
+            rawContentHTML += `<h2>${sectionLabel}</h2>`;
             rawContentHTML += generateSectionHTML(section.id, allCohortStats, commonData);
+            rawContentHTML += `</section>`;
         });
         
         const allReferences = commonData?.references || {};
