@@ -46,65 +46,69 @@ The application follows a modular architecture that separates data logic, servic
 6.  **UI Layer (`ui/`):** Responsible for rendering all data and components.
 
 ### 3.2. Directory Structure
+<details>
+<summary>Click to expand a full list of all project files and their locations.</summary>
 
 ```
 /
 ├── css/
-│ └── style.css
+│   └── style.css
 ├── data/
-│ └── data.js
+│   └── data.js
 ├── docs/
-│ ├── Application_Guide.md
-│ ├── Barbaro_2024_summary.txt
-│ ├── Koh_2008_summary.txt
-│ ├── Lurz_Schaefer_AvocadoSign_2025.pdf.txt
-│ ├── Lurz_Schaefer_AvocadoSign_2025_summary.txt
-│ ├── Radiology_Publication_Instructions_for_Authors.md
-│ ├── Radiology_Scientific_Style_Guide.md
-│ └── Rutegard_2025_summary.txt
+│   ├── Application_Guide.md
+│   ├── Barbaro_2024_summary.txt
+│   ├── Koh_2008_summary.txt
+│   ├── Lurz_Schaefer_AvocadoSign_2025.pdf.txt
+│   ├── Lurz_Schaefer_AvocadoSign_2025_summary.txt
+│   ├── Radiology_Publication_Instructions_for_Authors.md
+│   ├── Radiology_Scientific_Style_Guide.md
+│   └── Rutegard_2025_summary.txt
 ├── js/
-│ ├── app/
-│ │ ├── main.js
-│ │ └── state.js
-│ ├── core/
-│ │ ├── data_processor.js
-│ │ ├── study_criteria_manager.js
-│ │ └── t2_criteria_manager.js
-│ ├── services/
-│ │ ├── publication_service/
-│ │ │ ├── abstract_generator.js
-│ │ │ ├── discussion_generator.js
-│ │ │ ├── introduction_generator.js
-│ │ │ ├── methods_generator.js
-│ │ │ ├── publication_helpers.js
-│ │ │ ├── references_generator.js
-│ │ │ ├── results_generator.js
-│ │ │ └── title_page_generator.js
-│ │ ├── publication_service.js
-│ │ ├── brute_force_manager.js
-│ │ ├── export_service.js
-│ │ └── statistics_service.js
-│ ├── ui/
-│ │ ├── components/
-│ │ │ ├── chart_renderer.js
-│ │ │ ├── flowchart_renderer.js
-│ │ │ ├── table_renderer.js
-│ │ │ └── ui_components.js
-│ │ ├── tabs/
-│ │ │ ├── analysis_tab.js
-│ │ │ ├── comparison_tab.js
-│ │ │ ├── data_tab.js
-│ │ │ ├── export_tab.js
-│ │ │ ├── publication_tab.js
-│ │ │ └── statistics_tab.js
-│ │ ├── event_manager.js
-│ │ └── ui_manager.js
-│ └── utils.js
+│   ├── app/
+│   │   ├── main.js
+│   │   └── state.js
+│   ├── core/
+│   │   ├── data_processor.js
+│   │   ├── study_criteria_manager.js
+│   │   └── t2_criteria_manager.js
+│   ├── services/
+│   │   ├── publication_service/
+│   │   │   ├── abstract_generator.js
+│   │   │   ├── discussion_generator.js
+│   │   │   ├── introduction_generator.js
+│   │   │   ├── methods_generator.js
+│   │   │   ├── publication_helpers.js
+│   │   │   ├── references_generator.js
+│   │   │   ├── results_generator.js
+│   │   │   ├── stard_generator.js
+│   │   │   └── title_page_generator.js
+│   │   ├── publication_service.js
+│   │   ├── brute_force_manager.js
+│   │   ├── export_service.js
+│   │   └── statistics_service.js
+│   ├── ui/
+│   │   ├── components/
+│   │   │   ├── chart_renderer.js
+│   │   │   ├── flowchart_renderer.js
+│   │   │   ├── table_renderer.js
+│   │   │   └── ui_components.js
+│   │   ├── tabs/
+│   │   │   ├── analysis_tab.js
+│   │   │   ├── comparison_tab.js
+│   │   │   ├── data_tab.js
+│   │   │   ├── export_tab.js
+│   │   │   ├── publication_tab.js
+│   │   │   └── statistics_tab.js
+│   │   ├── event_manager.js
+│   │   └── ui_manager.js
+│   └── utils.js
 ├── workers/
-│ └── brute_force_worker.js
+│   └── brute_force_worker.js
 ├── index.html
 └── README.md
 ```
+</details>
 
 ### 3.3. Glossary
 *   **AS:** Avocado Sign
