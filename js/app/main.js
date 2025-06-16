@@ -266,12 +266,12 @@ class App {
         }
 
         switch (tabId) {
-            case 'data': window.uiManager.renderTabContent('data-tab', () => window.dataTab.render(this.currentCohortData, window.state.getDataTableSort())); break;
-            case 'analysis': window.uiManager.renderTabContent('analysis-tab', () => window.analysisTab.render(this.currentCohortData, window.t2CriteriaManager.getCurrentCriteria(), window.t2CriteriaManager.getCurrentLogic(), window.state.getAnalysisTableSort(), cohort, window.bruteForceManager.isWorkerAvailable(), this.allPublicationStats[cohort], allBruteForceResults)); break;
-            case 'statistics': window.uiManager.renderTabContent('statistics-tab', () => window.statisticsTab.render(this.processedData, criteria, logic, window.state.getStatsLayout(), window.state.getStatsCohort1(), window.state.getStatsCohort2(), cohort)); break;
-            case 'comparison': window.uiManager.renderTabContent('comparison-tab', () => window.comparisonTab.render(window.state.getComparisonView(), currentComparisonData, window.state.getComparisonStudyId(), cohort, this.processedData, criteria, logic)); break;
-            case 'publication': window.uiManager.renderTabContent('publication-tab', () => window.publicationTab.render(publicationData, window.state.getPublicationSection())); break;
-            case 'export': window.uiManager.renderTabContent('export-tab', () => window.exportTab.render(cohort)); break;
+            case 'data': window.uiManager.renderTabContent('data', () => window.dataTab.render(this.currentCohortData, window.state.getDataTableSort())); break;
+            case 'analysis': window.uiManager.renderTabContent('analysis', () => window.analysisTab.render(this.currentCohortData, window.t2CriteriaManager.getCurrentCriteria(), window.t2CriteriaManager.getCurrentLogic(), window.state.getAnalysisTableSort(), cohort, window.bruteForceManager.isWorkerAvailable(), this.allPublicationStats[cohort], allBruteForceResults)); break;
+            case 'statistics': window.uiManager.renderTabContent('statistics', () => window.statisticsTab.render(this.processedData, criteria, logic, window.state.getStatsLayout(), window.state.getStatsCohort1(), window.state.getStatsCohort2(), cohort)); break;
+            case 'comparison': window.uiManager.renderTabContent('comparison', () => window.comparisonTab.render(window.state.getComparisonView(), currentComparisonData, window.state.getComparisonStudyId(), cohort, this.processedData, criteria, logic)); break;
+            case 'publication': window.uiManager.renderTabContent('publication', () => window.publicationTab.render(publicationData, window.state.getPublicationSection())); break;
+            case 'export': window.uiManager.renderTabContent('export', () => window.exportTab.render(cohort)); break;
         }
     }
 
