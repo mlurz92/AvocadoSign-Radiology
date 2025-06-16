@@ -103,7 +103,7 @@ window.analysisTab = (() => {
         const bruteForceOverviewCardContainerId = 'brute-force-overview-card-container';
         
         const stats = window.statisticsService.calculateDescriptiveStats(data);
-        const cohortDisplayName = getCohortDisplayName(currentCohort);
+        const cohortDisplayName = window.utils.getCohortDisplayName(currentCohort);
         
         const metricSelectValue = document.getElementById('brute-force-metric')?.value || window.APP_CONFIG.DEFAULT_SETTINGS.PUBLICATION_BRUTE_FORCE_METRIC;
         const bruteForceResultForCurrentCohortAndMetric = allBruteForceResults[currentCohort] ? allBruteForceResults[currentCohort][metricSelectValue] : null;
@@ -115,7 +115,7 @@ window.analysisTab = (() => {
             const t2DashboardTitle = `T2-Status (${formattedAppliedT2})`;
 
             dashboardCardsHTML = `
-                ${window.uiComponents.createDashboardCard(window.APP_CONFIG.UI_TEXTS.chartTitles.ageDistribution, `<p class="mb-0 small">Median: ${formatNumber(stats.age?.median, 1)} (${formatNumber(stats.age?.min, 0)} - ${formatNumber(stats.age?.max, 0)})</p>`, 'chart-dash-age', '', '', 'p-1', dlBtns('chart-dash-age', 'ageDistribution'), cohortDisplayName)}
+                ${window.uiComponents.createDashboardCard(window.APP_CONFIG.UI_TEXTS.chartTitles.ageDistribution, `<p class="mb-0 small">Median: ${window.utils.formatNumber(stats.age?.median, 1)} (${window.utils.formatNumber(stats.age?.min, 0)} - ${window.utils.formatNumber(stats.age?.max, 0)})</p>`, 'chart-dash-age', '', '', 'p-1', dlBtns('chart-dash-age', 'ageDistribution'), cohortDisplayName)}
                 ${window.uiComponents.createDashboardCard(window.APP_CONFIG.UI_TEXTS.chartTitles.genderDistribution, `<p class="mb-0 small">M: ${stats.sex?.m ?? 0} F: ${stats.sex?.f ?? 0}</p>`, 'chart-dash-gender', '', '', 'p-1', dlBtns('chart-dash-gender', 'genderDistribution'), cohortDisplayName)}
                 ${window.uiComponents.createDashboardCard(window.APP_CONFIG.UI_TEXTS.chartTitles.therapyDistribution, `<p class="mb-0 small">Surgery alone: ${stats.therapy?.surgeryAlone ?? 0} Neoadjuvant therapy: ${stats.therapy?.neoadjuvantTherapy ?? 0}</p>`, 'chart-dash-therapy', '', '', 'p-1', dlBtns('chart-dash-therapy', 'therapyDistribution'), cohortDisplayName)}
                 ${window.uiComponents.createDashboardCard(window.APP_CONFIG.UI_TEXTS.chartTitles.statusN, `<p class="mb-0 small">N+: ${stats.nStatus?.plus ?? 0} N-: ${stats.nStatus?.minus ?? 0}</p>`, 'chart-dash-status-n', '', '', 'p-1', dlBtns('chart-dash-status-n', 'statusN'), cohortDisplayName)}
@@ -154,7 +154,7 @@ window.analysisTab = (() => {
                     const statsT2 = currentCohortStats.performanceT2Applied;
                     const fCI = (m, d=1, p=true) => {
                         const digits = (m?.name === 'auc') ? 3 : ((m?.name === 'f1') ? 3 : d);
-                        return formatCI(m?.value, m?.ci?.lower, m?.ci?.upper, digits, p, '--');
+                        return window.utils.formatCI(m?.value, m?.ci?.lower, m?.ci?.upper, digits, p, '--');
                     };
                     
                     const formattedAppliedT2 = window.studyT2CriteriaManager.formatCriteriaForDisplay(currentCriteria, currentLogic, true);
@@ -165,22 +165,22 @@ window.analysisTab = (() => {
                             <table class="table table-sm small mb-0 table-striped">
                                 <thead>
                                     <tr>
-                                        <th data-tippy-content="${getDefinitionTooltip('sens')}">Sensitivity</th>
-                                        <th data-tippy-content="${getDefinitionTooltip('spec')}">Specificity</th>
-                                        <th data-tippy-content="${getDefinitionTooltip('ppv')}">PPV</th>
-                                        <th data-tippy-content="${getDefinitionTooltip('npv')}">NPV</th>
-                                        <th data-tippy-content="${getDefinitionTooltip('acc')}">Accuracy</th>
-                                        <th data-tippy-content="${getDefinitionTooltip('auc')}">AUC</th>
+                                        <th data-tippy-content="${window.utils.getDefinitionTooltip('sens')}">Sensitivity</th>
+                                        <th data-tippy-content="${window.utils.getDefinitionTooltip('spec')}">Specificity</th>
+                                        <th data-tippy-content="${window.utils.getDefinitionTooltip('ppv')}">PPV</th>
+                                        <th data-tippy-content="${window.utils.getDefinitionTooltip('npv')}">NPV</th>
+                                        <th data-tippy-content="${window.utils.getDefinitionTooltip('acc')}">Accuracy</th>
+                                        <th data-tippy-content="${window.utils.getDefinitionTooltip('auc')}">AUC</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <tr>
-                                        <td data-tippy-content="${getInterpretationTooltip('sens', statsT2.sens)}">${fCI(statsT2.sens, 1, true)}</td>
-                                        <td data-tippy-content="${getInterpretationTooltip('spec', statsT2.spec)}">${fCI(statsT2.spec, 1, true)}</td>
-                                        <td data-tippy-content="${getInterpretationTooltip('ppv', statsT2.ppv)}">${fCI(statsT2.ppv, 1, true)}</td>
-                                        <td data-tippy-content="${getInterpretationTooltip('npv', statsT2.npv)}">${fCI(statsT2.npv, 1, true)}</td>
-                                        <td data-tippy-content="${getInterpretationTooltip('acc', statsT2.acc)}">${fCI(statsT2.acc, 1, true)}</td>
-                                        <td data-tippy-content="${getInterpretationTooltip('auc', statsT2.auc)}">${fCI(statsT2.auc, 3, false)}</td>
+                                        <td data-tippy-content="${window.utils.getInterpretationTooltip('sens', statsT2.sens)}">${fCI(statsT2.sens, 1, true)}</td>
+                                        <td data-tippy-content="${window.utils.getInterpretationTooltip('spec', statsT2.spec)}">${fCI(statsT2.spec, 1, true)}</td>
+                                        <td data-tippy-content="${window.utils.getInterpretationTooltip('ppv', statsT2.ppv)}">${fCI(statsT2.ppv, 1, true)}</td>
+                                        <td data-tippy-content="${window.utils.getInterpretationTooltip('npv', statsT2.npv)}">${fCI(statsT2.npv, 1, true)}</td>
+                                        <td data-tippy-content="${window.utils.getInterpretationTooltip('acc', statsT2.acc)}">${fCI(statsT2.acc, 1, true)}</td>
+                                        <td data-tippy-content="${window.utils.getInterpretationTooltip('auc', statsT2.auc)}">${fCI(statsT2.auc, 3, false)}</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -192,11 +192,11 @@ window.analysisTab = (() => {
                         metricsHtml,
                         false,
                         null,
-                        [{id: 'dl-t2-metrics-overview-png', icon: 'fa-image', format: 'png', tableId: 't2-metrics-overview-card-content table', tableName: `T2_Metrics_Overview_${getCohortDisplayName(currentCohort).replace(/\s+/g, '_')}`}],
+                        [{id: 'dl-t2-metrics-overview-png', icon: 'fa-image', format: 'png', tableId: 't2-metrics-overview-card-content table', tableName: `T2_Metrics_Overview_${window.utils.getCohortDisplayName(currentCohort).replace(/\s+/g, '_')}`}],
                         't2-metrics-overview-card-content table'
                     ));
                 } else {
-                    window.uiManager.updateElementHTML(metricsOverviewContainer.id, `<div class="col-12"><div class="alert alert-info small p-2">No diagnostic performance data available for current T2 criteria in cohort '${getCohortDisplayName(currentCohort)}'. Apply criteria or check data.</div></div>`);
+                    window.uiManager.updateElementHTML(metricsOverviewContainer.id, `<div class="col-12"><div class="alert alert-info small p-2">No diagnostic performance data available for current T2 criteria in cohort '${window.utils.getCohortDisplayName(currentCohort)}'. Apply criteria or check data.</div></div>`);
                 }
             }
             
