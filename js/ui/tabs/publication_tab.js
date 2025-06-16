@@ -1,20 +1,22 @@
 window.publicationTab = (() => {
 
     function renderWordCounts() {
-        const sectionsToCount = [
-            { id: 'introduction_main', limit: 400 },
-            { id: 'methoden_main', limit: 800 },
-            { id: 'ergebnisse_main', limit: 1000 },
-            { id: 'discussion_main', limit: 800 }
-        ];
+        const sectionsWithLimits = window.PUBLICATION_CONFIG.sections.filter(s => s.limit && s.countType);
 
-        sectionsToCount.forEach(section => {
+        sectionsWithLimits.forEach(section => {
             const contentElement = document.getElementById(section.id);
             const navElement = document.querySelector(`.publication-section-link[data-section-id="${section.id}"]`);
+
             if (contentElement && navElement) {
-                const text = contentElement.textContent || contentElement.innerText || '';
-                const wordCount = text.trim().split(/\s+/).filter(Boolean).length;
+                let currentCount = 0;
                 
+                if (section.countType === 'word') {
+                    const text = contentElement.textContent || contentElement.innerText || '';
+                    currentCount = text.trim().split(/\s+/).filter(Boolean).length;
+                } else if (section.countType === 'item') {
+                    currentCount = contentElement.querySelectorAll('li').length;
+                }
+
                 let countIndicator = navElement.querySelector('.word-count-indicator');
                 if (!countIndicator) {
                     countIndicator = document.createElement('span');
@@ -22,13 +24,13 @@ window.publicationTab = (() => {
                     navElement.appendChild(countIndicator);
                 }
                 
-                countIndicator.textContent = `${wordCount} / ${section.limit}`;
+                countIndicator.textContent = `${currentCount} / ${section.limit}`;
                 
-                const ratio = wordCount / section.limit;
+                const ratio = currentCount / section.limit;
                 let bgColor = 'bg-success';
                 if (ratio > 1) {
                     bgColor = 'bg-danger';
-                } else if (ratio > 0.85) {
+                } else if (ratio > 0.9) {
                     bgColor = 'bg-warning';
                 }
                 countIndicator.className = `badge rounded-pill ms-2 word-count-indicator ${bgColor}`;
