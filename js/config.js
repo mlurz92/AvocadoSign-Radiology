@@ -9,7 +9,7 @@ window.DEFAULT_T2_CRITERIA = Object.freeze({
 
 window.APP_CONFIG = Object.freeze({
     APP_NAME: "Nodal Staging: Avocado Sign vs. T2 Criteria",
-    APP_VERSION: "3.2.0-radiology-edition",
+    APP_VERSION: "3.2.1-radiology-edition",
     NA_PLACEHOLDER: '--',
     COHORTS: Object.freeze({
         OVERALL: { id: 'Overall', therapyValue: null, displayName: 'Overall' },
@@ -51,7 +51,7 @@ window.APP_CONFIG = Object.freeze({
         COMPARISON_VIEW: 'currentComparisonView_v4.2_detailed',
         COMPARISON_STUDY_ID: 'currentComparisonStudyId_v4.2_detailed',
         CHART_COLOR_SCHEME: 'chartColorScheme_v4.2_detailed',
-        FIRST_APP_START: 'appFirstStart_v3.2.0'
+        FIRST_APP_START: 'appFirstStart_v3.2.1'
     }),
     PATHS: Object.freeze({
         BRUTE_FORCE_WORKER: 'workers/brute_force_worker.js'
@@ -394,10 +394,10 @@ window.APP_CONFIG = Object.freeze({
 window.PUBLICATION_CONFIG = Object.freeze({
     sections: [
         { id: 'title_main', labelKey: 'title_main', subSections: [] },
-        { id: 'abstract_main', labelKey: 'abstract_main', subSections: [{ id: 'abstract_main', label: 'Abstract' }] },
-        { id: 'introduction_main', labelKey: 'introduction_main', subSections: [{ id: 'introduction_main', label: 'Introduction' }] },
+        { id: 'abstract_main', labelKey: 'abstract_main', countType: 'word', limit: 300, subSections: [] },
+        { id: 'introduction_main', labelKey: 'introduction_main', countType: 'word', limit: 400, subSections: [] },
         {
-            id: 'methoden_main', labelKey: 'methoden_main', subSections: [
+            id: 'methoden_main', labelKey: 'methoden_main', countType: 'word', limit: 800, subSections: [
                 { id: 'methoden_studienanlage_ethik', label: 'Study Design and Patients' },
                 { id: 'methoden_mrt_protokoll_akquisition', label: 'MRI Protocol and Image Analysis' },
                 { id: 'methoden_vergleichskriterien_t2', label: 'Comparative T2w Criteria Sets' },
@@ -406,13 +406,13 @@ window.PUBLICATION_CONFIG = Object.freeze({
             ]
         },
         {
-            id: 'ergebnisse_main', labelKey: 'ergebnisse_main', subSections: [
+            id: 'ergebnisse_main', labelKey: 'ergebnisse_main', countType: 'word', limit: 1000, subSections: [
                 { id: 'ergebnisse_patientencharakteristika', label: 'Patient Characteristics' },
                 { id: 'ergebnisse_vergleich_as_vs_t2', label: 'Diagnostic Performance and Comparison' }
             ]
         },
-        { id: 'discussion_main', labelKey: 'discussion_main', subSections: [{ id: 'discussion_main', label: 'Discussion' }] },
-        { id: 'references_main', labelKey: 'references_main', subSections: [{ id: 'references_main', label: 'References' }] }
+        { id: 'discussion_main', labelKey: 'discussion_main', countType: 'word', limit: 800, subSections: [] },
+        { id: 'references_main', labelKey: 'references_main', countType: 'item', limit: 35, subSections: [] }
     ],
     literatureCriteriaSets: [
         {
