@@ -440,7 +440,7 @@ window.statisticsService = (() => {
         const matrix = calculateConfusionMatrix(data, predictionKey, referenceKey);
         const { tp, fp, fn, tn } = matrix;
         const total = tp + fp + fn + tn;
-        const nullMetric = { value: NaN, ci: null, method: null, se: NaN };
+        const nullMetric = { value: NaN, ci: null, method: null, se: NaN, matrix: matrix };
         if (total === 0) return { matrix, sens: nullMetric, spec: nullMetric, ppv: nullMetric, npv: nullMetric, acc: nullMetric, balAcc: nullMetric, f1: nullMetric, auc: nullMetric, youden: nullMetric };
 
         const sens_val = (tp + fn) > 0 ? tp / (tp + fn) : NaN;
@@ -473,15 +473,15 @@ window.statisticsService = (() => {
 
         return {
             matrix,
-            sens: { value: sens_val, ci: calculateWilsonScoreCI(tp, tp + fn), n_success: tp, n_trials: tp + fn, method: window.APP_CONFIG.STATISTICAL_CONSTANTS.DEFAULT_CI_METHOD_PROPORTION },
-            spec: { value: spec_val, ci: calculateWilsonScoreCI(tn, fp + tn), n_success: tn, n_trials: fp + tn, method: window.APP_CONFIG.STATISTICAL_CONSTANTS.DEFAULT_CI_METHOD_PROPORTION },
-            ppv: { value: ppv_val, ci: calculateWilsonScoreCI(tp, tp + fp), n_success: tp, n_trials: tp + fp, method: window.APP_CONFIG.STATISTICAL_CONSTANTS.DEFAULT_CI_METHOD_PROPORTION },
-            npv: { value: npv_val, ci: calculateWilsonScoreCI(tn, fn + tn), n_success: tn, n_trials: fn + tn, method: window.APP_CONFIG.STATISTICAL_CONSTANTS.DEFAULT_CI_METHOD_PROPORTION },
-            acc: { value: acc_val, ci: calculateWilsonScoreCI(tp + tn, total), n_success: tp + tn, n_trials: total, method: window.APP_CONFIG.STATISTICAL_CONSTANTS.DEFAULT_CI_METHOD_PROPORTION },
-            balAcc: { value: balAcc_val, ...bootstrapCI(data, bootstrapFactory(predictionKey, referenceKey, 'balAcc')), matrix_components: {tp, fp, fn, tn, total} },
-            f1: { value: f1_val, ...bootstrapCI(data, bootstrapFactory(predictionKey, referenceKey, 'f1')), matrix_components: {tp, fp, fn, tn, total} },
-            auc: { value: balAcc_val, ...bootstrapCI(data, bootstrapFactory(predictionKey, referenceKey, 'auc')), matrix_components: {tp, fp, fn, tn, total} },
-            youden: { value: youden_val, ...bootstrapCI(data, bootstrapFactory(predictionKey, referenceKey, 'youden')), matrix_components: {tp, fp, fn, tn, total} }
+            sens: { value: sens_val, ci: calculateWilsonScoreCI(tp, tp + fn), n_success: tp, n_trials: tp + fn, method: window.APP_CONFIG.STATISTICAL_CONSTANTS.DEFAULT_CI_METHOD_PROPORTION, matrix: matrix },
+            spec: { value: spec_val, ci: calculateWilsonScoreCI(tn, fp + tn), n_success: tn, n_trials: fp + tn, method: window.APP_CONFIG.STATISTICAL_CONSTANTS.DEFAULT_CI_METHOD_PROPORTION, matrix: matrix },
+            ppv: { value: ppv_val, ci: calculateWilsonScoreCI(tp, tp + fp), n_success: tp, n_trials: tp + fp, method: window.APP_CONFIG.STATISTICAL_CONSTANTS.DEFAULT_CI_METHOD_PROPORTION, matrix: matrix },
+            npv: { value: npv_val, ci: calculateWilsonScoreCI(tn, fn + tn), n_success: tn, n_trials: fn + tn, method: window.APP_CONFIG.STATISTICAL_CONSTANTS.DEFAULT_CI_METHOD_PROPORTION, matrix: matrix },
+            acc: { value: acc_val, ci: calculateWilsonScoreCI(tp + tn, total), n_success: tp + tn, n_trials: total, method: window.APP_CONFIG.STATISTICAL_CONSTANTS.DEFAULT_CI_METHOD_PROPORTION, matrix: matrix },
+            balAcc: { value: balAcc_val, ...bootstrapCI(data, bootstrapFactory(predictionKey, referenceKey, 'balAcc')), matrix_components: {tp, fp, fn, tn, total}, matrix: matrix },
+            f1: { value: f1_val, ...bootstrapCI(data, bootstrapFactory(predictionKey, referenceKey, 'f1')), matrix_components: {tp, fp, fn, tn, total}, matrix: matrix },
+            auc: { value: balAcc_val, ...bootstrapCI(data, bootstrapFactory(predictionKey, referenceKey, 'auc')), matrix_components: {tp, fp, fn, tn, total}, matrix: matrix },
+            youden: { value: youden_val, ...bootstrapCI(data, bootstrapFactory(predictionKey, referenceKey, 'youden')), matrix_components: {tp, fp, fn, tn, total}, matrix: matrix }
         };
     }
 
@@ -601,10 +601,16 @@ window.statisticsService = (() => {
             };
 
             allLiteratureSets.forEach(studySet => {
-                if (studySet.applicableCohort === cohortId) {
-                    const evaluatedDataStudy = window.studyT2CriteriaManager.evaluateDatasetWithStudyCriteria(cloneDeep(cohortData), studySet);
-                    results[cohortId].performanceT2Literature[studySet.id] = calculateDiagnosticPerformance(evaluatedDataStudy, 't2Status', 'nStatus');
-                    results[cohortId].comparisonASvsT2Literature[studySet.id] = compareDiagnosticMethods(evaluatedDataStudy, 'asStatus', 't2Status', 'nStatus');
+                const cohortForSet = studySet.applicableCohort || window.APP_CONFIG.COHORTS.OVERALL.id;
+                if (cohorts.includes(cohortForSet)) {
+                     const dataForStudyCohort = window.dataProcessor.filterDataByCohort(data, cohortForSet);
+                     if(dataForStudyCohort.length > 0) {
+                        const evaluatedDataStudy = window.studyT2CriteriaManager.evaluateDatasetWithStudyCriteria(cloneDeep(dataForStudyCohort), studySet);
+                        results[cohortForSet].performanceT2Literature = results[cohortForSet].performanceT2Literature || {};
+                        results[cohortForSet].performanceT2Literature[studySet.id] = calculateDiagnosticPerformance(evaluatedDataStudy, 't2Status', 'nStatus');
+                        results[cohortForSet].comparisonASvsT2Literature = results[cohortForSet].comparisonASvsT2Literature || {};
+                        results[cohortForSet].comparisonASvsT2Literature[studySet.id] = compareDiagnosticMethods(evaluatedDataStudy, 'asStatus', 't2Status', 'nStatus');
+                     }
                 }
             });
             
@@ -637,12 +643,12 @@ window.statisticsService = (() => {
         if (statsSurgery && statsSurgery.descriptive.patientCount > 0 && statsNeoadjuvant && statsNeoadjuvant.descriptive.patientCount > 0) {
             results.interCohortComparison = {
                 as: calculateZTestForAUCComparison(
-                    statsSurgery.performanceAS.auc.value, statsSurgery.performanceAS.auc.se, statsSurgery.descriptive.patientCount,
-                    statsNeoadjuvant.performanceAS.auc.value, statsNeoadjuvant.performanceAS.auc.se, statsNeoadjuvant.descriptive.patientCount
+                    statsSurgery.performanceAS?.auc?.value, statsSurgery.performanceAS?.auc?.se, statsSurgery.descriptive.patientCount,
+                    statsNeoadjuvant.performanceAS?.auc?.value, statsNeoadjuvant.performanceAS?.auc?.se, statsNeoadjuvant.descriptive.patientCount
                 ),
                 t2Applied: calculateZTestForAUCComparison(
-                    statsSurgery.performanceT2Applied.auc.value, statsSurgery.performanceT2Applied.auc.se, statsSurgery.descriptive.patientCount,
-                    statsNeoadjuvant.performanceT2Applied.auc.value, statsNeoadjuvant.performanceT2Applied.auc.se, statsNeoadjuvant.descriptive.patientCount
+                    statsSurgery.performanceT2Applied?.auc?.value, statsSurgery.performanceT2Applied?.auc?.se, statsSurgery.descriptive.patientCount,
+                    statsNeoadjuvant.performanceT2Applied?.auc?.value, statsNeoadjuvant.performanceT2Applied?.auc?.se, statsNeoadjuvant.descriptive.patientCount
                 )
             };
         }
