@@ -281,28 +281,27 @@ window.statisticsTab = (() => {
             }
         });
 
-        if (layout === 'vergleich' && allCohortStats[cohort1] && allCohortStats[cohort2]) {
+        if (layout === 'vergleich' && allCohortStats[cohort1] && allCohortStats[cohort2] && allCohortStats.interCohortComparison) {
              const compCard = document.createElement('div');
              compCard.className = 'col-12';
              const c1Stats = allCohortStats[cohort1];
              const c2Stats = allCohortStats[cohort2];
+             const interComp = allCohortStats.interCohortComparison;
              
              let compContent = '<p class="text-muted small p-2">Not enough data for cohort comparison.</p>';
-             const aucCompAS = window.statisticsService.calculateZTestForAUCComparison(c1Stats.performanceAS.auc.value, c1Stats.performanceAS.auc.se, c1Stats.descriptive.patientCount, c2Stats.performanceAS.auc.value, c2Stats.performanceAS.auc.se, c2Stats.descriptive.patientCount);
-             const aucCompT2 = window.statisticsService.calculateZTestForAUCComparison(c1Stats.performanceT2Applied.auc.value, c1Stats.performanceT2Applied.auc.se, c1Stats.descriptive.patientCount, c2Stats.performanceT2Applied.auc.value, c2Stats.performanceT2Applied.auc.se, c2Stats.descriptive.patientCount);
-
-             if(aucCompAS && aucCompT2) {
+             
+             if(interComp.as && interComp.t2Applied) {
                  compContent = `<div class="table-responsive"><table class="table table-sm table-striped small mb-0">
                     <thead><tr>
                         <th>Method</th>
                         <th>Metric</th>
                         <th>${getCohortDisplayName(cohort1)}</th>
                         <th>${getCohortDisplayName(cohort2)}</th>
-                        <th>p-Value (unpaired)</th>
+                        <th data-tippy-content="P-value from Z-Test for two independent AUCs.">p-Value (unpaired)</th>
                     </tr></thead>
                     <tbody>
-                        <tr><td>Avocado Sign</td><td>AUC</td><td>${formatNumber(c1Stats.performanceAS.auc.value, 3, na_stat, true)}</td><td>${formatNumber(c2Stats.performanceAS.auc.value, 3, na_stat, true)}</td><td>${getPValueText(aucCompAS.pValue, false)}</td></tr>
-                        <tr><td>${formattedAppliedT2Short}</td><td>AUC</td><td>${formatNumber(c1Stats.performanceT2Applied.auc.value, 3, na_stat, true)}</td><td>${formatNumber(c2Stats.performanceT2Applied.auc.value, 3, na_stat, true)}</td><td>${getPValueText(aucCompT2.pValue, false)}</td></tr>
+                        <tr><td>Avocado Sign</td><td>AUC</td><td>${formatNumber(c1Stats.performanceAS.auc.value, 3, na_stat, true)}</td><td>${formatNumber(c2Stats.performanceAS.auc.value, 3, na_stat, true)}</td><td>${getPValueText(interComp.as.pValue, false)}</td></tr>
+                        <tr><td>${formattedAppliedT2Short}</td><td>AUC</td><td>${formatNumber(c1Stats.performanceT2Applied.auc.value, 3, na_stat, true)}</td><td>${formatNumber(c2Stats.performanceT2Applied.auc.value, 3, na_stat, true)}</td><td>${getPValueText(interComp.t2Applied.pValue, false)}</td></tr>
                     </tbody>
                  </table></div>`;
              }
