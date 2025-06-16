@@ -119,7 +119,7 @@ window.publicationHelpers = (() => {
         }
 
         const { id, caption, headers, rows, notes } = config;
-        let tableHtml = `<div class="table-responsive my-4" id="${id || generateUUID()}">`;
+        let tableHtml = `<div class="table-responsive my-4" id="${id || window.utils.generateUUID()}">`;
         tableHtml += `<table class="table table-sm table-striped small">`;
         if (caption) {
             tableHtml += `<caption><strong>${caption}</strong></caption>`;
