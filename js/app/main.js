@@ -40,9 +40,9 @@ class App {
             this.updateUI();
             this.renderCurrentTab();
             
-            if (!loadFromLocalStorage(window.APP_CONFIG.STORAGE_KEYS.FIRST_APP_START)) {
+            if (!window.utils.loadFromLocalStorage(window.APP_CONFIG.STORAGE_KEYS.FIRST_APP_START)) {
                 window.uiManager.showQuickGuide();
-                saveToLocalStorage(window.APP_CONFIG.STORAGE_KEYS.FIRST_APP_START, true);
+                window.utils.saveToLocalStorage(window.APP_CONFIG.STORAGE_KEYS.FIRST_APP_START, true);
             }
             
             window.uiManager.initializeTooltips(document.body);
@@ -146,7 +146,7 @@ class App {
             const activeTabId = window.state.getActiveTabId();
             const sortState = activeTabId === 'data' ? window.state.getDataTableSort() : window.state.getAnalysisTableSort();
             if(sortState && sortState.key) {
-                 evaluatedData.sort(getSortFunction(sortState.key, sortState.direction, sortState.subKey));
+                 evaluatedData.sort(window.utils.getSortFunction(sortState.key, sortState.direction, sortState.subKey));
             }
             this.currentCohortData = evaluatedData;
         } catch (error) {
@@ -184,7 +184,7 @@ class App {
                 id: window.APP_CONFIG.SPECIAL_IDS.APPLIED_CRITERIA_STUDY_ID, name: window.APP_CONFIG.SPECIAL_IDS.APPLIED_CRITERIA_DISPLAY_NAME,
                 displayShortName: window.APP_CONFIG.SPECIAL_IDS.APPLIED_CRITERIA_DISPLAY_NAME, criteria: appliedCriteria, logic: appliedLogic,
                 studyInfo: {
-                    reference: 'User-defined criteria', patientCohort: `Current: ${getCohortDisplayName(cohortForComparisonTab)} (N=${filteredDataForComparisonTab.length})`,
+                    reference: 'User-defined criteria', patientCohort: `Current: ${window.utils.getCohortDisplayName(cohortForComparisonTab)} (N=${filteredDataForComparisonTab.length})`,
                     keyCriteriaSummary: window.studyT2CriteriaManager.formatCriteriaForDisplay(appliedCriteria, appliedLogic, false)
                 }
             };
@@ -268,7 +268,7 @@ class App {
         switch (tabId) {
             case 'data': window.uiManager.renderTabContent('data', () => window.dataTab.render(this.currentCohortData, window.state.getDataTableSort())); break;
             case 'analysis': window.uiManager.renderTabContent('analysis', () => window.analysisTab.render(this.currentCohortData, window.t2CriteriaManager.getCurrentCriteria(), window.t2CriteriaManager.getCurrentLogic(), window.state.getAnalysisTableSort(), cohort, window.bruteForceManager.isWorkerAvailable(), this.allPublicationStats[cohort], allBruteForceResults)); break;
-            case 'statistics': window.uiManager.renderTabContent('statistics', () => window.statisticsTab.render(this.processedData, criteria, logic, window.state.getStatsLayout(), window.state.getStatsCohort1(), window.state.getStatsCohort2(), cohort)); break;
+            case 'statistics': window.uiManager.renderTabContent('statistics', () => window.statisticsTab.render(this.allPublicationStats, criteria, logic, window.state.getStatsLayout(), window.state.getStatsCohort1(), window.state.getStatsCohort2(), cohort)); break;
             case 'comparison': window.uiManager.renderTabContent('comparison', () => window.comparisonTab.render(window.state.getComparisonView(), currentComparisonData, window.state.getComparisonStudyId(), cohort, this.processedData, criteria, logic)); break;
             case 'publication': window.uiManager.renderTabContent('publication', () => window.publicationTab.render(publicationData, window.state.getPublicationSection())); break;
             case 'export': window.uiManager.renderTabContent('export', () => window.exportTab.render(cohort)); break;
@@ -279,9 +279,9 @@ class App {
         if (window.state.setCurrentCohort(newCohort)) {
             this.refreshCurrentTab();
             if (source === "user") {
-                window.uiManager.showToast(`Cohort '${getCohortDisplayName(newCohort)}' selected.`, 'info');
+                window.uiManager.showToast(`Cohort '${window.utils.getCohortDisplayName(newCohort)}' selected.`, 'info');
             } else if (source === "auto_comparison") {
-                window.uiManager.showToast(`Global cohort automatically set to '${getCohortDisplayName(newCohort)}' to match the study selection.`, 'info', 4000);
+                window.uiManager.showToast(`Global cohort automatically set to '${window.utils.getCohortDisplayName(newCohort)}' to match the study selection.`, 'info', 4000);
                 window.uiManager.highlightElement(`btn-cohort-${newCohort}`);
             }
         }
