@@ -128,7 +128,7 @@ window.t2CriteriaManager = (() => {
         if (criteria.shape?.active) checkResult.shape = (lymphNode.shape === criteria.shape.value);
         if (criteria.border?.active) checkResult.border = (lymphNode.border === criteria.border.value);
         if (criteria.homogeneity?.active) checkResult.homogeneity = (lymphNode.homogeneity === criteria.homogeneity.value);
-        if (criteria.signal?.active) checkResult.signal = (lymphNode.signal === criteria.signal.value);
+        if (criteria.signal?.active) checkResult.signal = (lymphNode.signal !== null && lymphNode.signal === criteria.signal.value);
 
         return checkResult;
     }
@@ -140,11 +140,12 @@ window.t2CriteriaManager = (() => {
         const lymphNodes = patient.t2Nodes;
         const activeKeys = Object.keys(criteria).filter(key => key !== 'logic' && criteria[key]?.active);
 
-        if (!Array.isArray(lymphNodes) || (lymphNodes.length === 0 && activeKeys.length > 0)) {
-            return { t2Status: '-', positiveNodeCount: 0, evaluatedNodes: [] };
-        }
         if (activeKeys.length === 0) {
              return { t2Status: null, positiveNodeCount: 0, evaluatedNodes: (lymphNodes || []).map(lk => ({...lk, isPositive: false, checkResult: {}})) };
+        }
+        
+        if (!Array.isArray(lymphNodes) || lymphNodes.length === 0) {
+            return { t2Status: '-', positiveNodeCount: 0, evaluatedNodes: [] };
         }
 
         let patientIsPositive = false;
