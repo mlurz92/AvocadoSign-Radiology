@@ -480,7 +480,3 @@ window.PUBLICATION_CONFIG = Object.freeze({
         }
     ]
 });
-
-function getDefaultT2Criteria() {
-    return cloneDeep(window.DEFAULT_T2_CRITERIA);
-}
