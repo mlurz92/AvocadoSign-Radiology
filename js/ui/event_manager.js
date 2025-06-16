@@ -58,7 +58,7 @@ window.eventManager = (() => {
 
     function handleBodyMouseOver(event) {
         const criteriaControl = event.target.closest('.t2-criteria-button, .criteria-checkbox, .criteria-range, .criteria-input-manual');
-        if (!criteriaControl || document.getElementById('analysis-tab')?.classList.contains('active') === false) return;
+        if (!criteriaControl || document.getElementById('analysis-pane')?.classList.contains('active') === false) return;
 
         const group = criteriaControl.closest('.criteria-group');
         if (!group) return;
@@ -83,7 +83,7 @@ window.eventManager = (() => {
 
     function handleBodyMouseOut(event) {
         const criteriaControl = event.target.closest('.t2-criteria-button, .criteria-checkbox, .criteria-range, .criteria-input-manual');
-        if (!criteriaControl || document.getElementById('analysis-tab')?.classList.contains('active') === false) return;
+        if (!criteriaControl || document.getElementById('analysis-pane')?.classList.contains('active') === false) return;
         
         clearAnalysisTableHighlights();
     }
