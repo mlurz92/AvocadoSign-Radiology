@@ -8,17 +8,17 @@ window.tableRenderer = (() => {
         let content = `<h6 class="w-100 mb-2 ps-1">T2 Lymph Node Features:</h6>`;
         patient.t2Nodes.forEach((lk, index) => {
             if (!lk) return;
-            const sizeText = formatNumber(lk.size, 1, 'N/A');
+            const sizeText = window.utils.formatNumber(lk.size, 1, 'N/A');
             const shapeText = lk.shape || '--';
             const borderText = lk.border || '--';
             const homogeneityText = lk.homogeneity || '--';
             const signalText = lk.signal || 'N/A';
 
-            const shapeIcon = getT2IconSVG('shape', lk.shape);
-            const borderIcon = getT2IconSVG('border', lk.border);
-            const homogeneityIcon = getT2IconSVG('homogeneity', lk.homogeneity);
-            const signalIcon = getT2IconSVG('signal', lk.signal);
-            const sizeIcon = getT2IconSVG('size', null);
+            const shapeIcon = window.utils.getT2IconSVG('shape', lk.shape);
+            const borderIcon = window.utils.getT2IconSVG('border', lk.border);
+            const homogeneityIcon = window.utils.getT2IconSVG('homogeneity', lk.homogeneity);
+            const signalIcon = window.utils.getT2IconSVG('signal', lk.signal);
+            const sizeIcon = window.utils.getT2IconSVG('size', null);
 
             const sizeTooltip = 'Size (short axis)';
             const shapeTooltip = 'Shape';
@@ -50,19 +50,19 @@ window.tableRenderer = (() => {
         const detailRowId = `data-detail-${patient.id}`;
         const hasT2Nodes = Array.isArray(patient.t2Nodes) && patient.t2Nodes.length > 0;
         const sexText = patient.sex === 'm' ? 'Male' : patient.sex === 'f' ? 'Female' : 'Unknown';
-        const therapyText = getCohortDisplayName(patient.therapy);
+        const therapyText = window.utils.getCohortDisplayName(patient.therapy);
         const naPlaceholder = '--';
         
-        const notesText = escapeHTML(patient.notes || '');
+        const notesText = window.utils.escapeHTML(patient.notes || '');
         const tooltipNotes = notesText ? notesText : 'Additional notes';
 
         const nTooltip = 'N-Status (Histopathology Reference)';
         const asTooltip = 'AS-Status (Avocado Sign Prediction)';
         const t2Tooltip = 'T2-Status (Prediction based on applied criteria)';
 
-        const nBadge = formatStatusBadge(patient.nStatus, nTooltip);
-        const asBadge = formatStatusBadge(patient.asStatus, asTooltip);
-        const t2Badge = formatStatusBadge(patient.t2Status, t2Tooltip);
+        const nBadge = window.utils.formatStatusBadge(patient.nStatus, nTooltip);
+        const asBadge = window.utils.formatStatusBadge(patient.asStatus, asTooltip);
+        const t2Badge = window.utils.formatStatusBadge(patient.t2Status, t2Tooltip);
 
         return `
             <tr id="${rowId}" ${hasT2Nodes ? `class="clickable-row"` : ''} ${hasT2Nodes ? `data-bs-toggle="collapse"` : ''} data-bs-target="#${detailRowId}" aria-expanded="false" aria-controls="${detailRowId}">
@@ -70,7 +70,7 @@ window.tableRenderer = (() => {
                 <td data-label="Last Name">${patient.lastName || naPlaceholder}</td>
                 <td data-label="First Name">${patient.firstName || naPlaceholder}</td>
                 <td data-label="Sex">${sexText}</td>
-                <td data-label="Age">${formatNumber(patient.age, 0, naPlaceholder)}</td>
+                <td data-label="Age">${window.utils.formatNumber(patient.age, 0, naPlaceholder)}</td>
                 <td data-label="Therapy">${therapyText}</td>
                 <td data-label="N/AS/T2">
                     <div class="d-flex justify-content-start align-items-center" style="gap: 8px;">
@@ -131,8 +131,8 @@ window.tableRenderer = (() => {
                     hlClass = 'highlight-suspect-feature';
                 }
                 
-                const icon = getT2IconSVG(iconType || key, originalValueInLK);
-                const text = key === 'size' ? `${formatNumber(originalValueInLK, 1, 'N/A')}mm` : (originalValueInLK || naPlaceholder);
+                const icon = window.utils.getT2IconSVG(iconType || key, originalValueInLK);
+                const text = key === 'size' ? `${window.utils.formatNumber(originalValueInLK, 1, 'N/A')}mm` : (originalValueInLK || naPlaceholder);
                 
                 const tooltipKey = 't2' + key.charAt(0).toUpperCase() + key.slice(1);
                 const tooltipBase = window.APP_CONFIG.UI_TEXTS.tooltips[tooltipKey]?.description || `Feature ${key}`;
@@ -158,20 +158,20 @@ window.tableRenderer = (() => {
         const rowId = `analysis-row-${patient.id}`;
         const detailRowId = `analysis-detail-${patient.id}`;
         const hasEvaluatedNodes = Array.isArray(patient.t2NodesEvaluated) && patient.t2NodesEvaluated.length > 0;
-        const therapyText = getCohortDisplayName(patient.therapy);
+        const therapyText = window.utils.getCohortDisplayName(patient.therapy);
         const naPlaceholder = '--';
 
-        const nCountsText = `${formatNumber(patient.countPathologyNodesPositive, 0, '-')}/${formatNumber(patient.countPathologyNodes, 0, '-')}`;
-        const asCountsText = `${formatNumber(patient.countASNodesPositive, 0, '-')}/${formatNumber(patient.countASNodes, 0, '-')}`;
-        const t2CountsText = `${formatNumber(patient.countT2NodesPositive, 0, '-')}/${formatNumber(patient.countT2Nodes, 0, '-')}`;
+        const nCountsText = `${window.utils.formatNumber(patient.countPathologyNodesPositive, 0, '-')}/${window.utils.formatNumber(patient.countPathologyNodes, 0, '-')}`;
+        const asCountsText = `${window.utils.formatNumber(patient.countASNodesPositive, 0, '-')}/${window.utils.formatNumber(patient.countASNodes, 0, '-')}`;
+        const t2CountsText = `${window.utils.formatNumber(patient.countT2NodesPositive, 0, '-')}/${window.utils.formatNumber(patient.countT2Nodes, 0, '-')}`;
         
         const nTooltip = 'N-Status (Histopathology Reference)';
         const asTooltip = 'AS-Status (Avocado Sign Prediction)';
         const t2Tooltip = 'T2-Status (Prediction based on applied criteria)';
         
-        const nBadge = formatStatusBadge(patient.nStatus, nTooltip);
-        const asBadge = formatStatusBadge(patient.asStatus, asTooltip);
-        const t2Badge = formatStatusBadge(patient.t2Status, t2Tooltip);
+        const nBadge = window.utils.formatStatusBadge(patient.nStatus, nTooltip);
+        const asBadge = window.utils.formatStatusBadge(patient.asStatus, asTooltip);
+        const t2Badge = window.utils.formatStatusBadge(patient.t2Status, t2Tooltip);
 
         return `
             <tr id="${rowId}" ${hasEvaluatedNodes ? `class="clickable-row"` : ''} ${hasEvaluatedNodes ? `data-bs-toggle="collapse"` : ''} data-bs-target="#${detailRowId}" aria-expanded="false" aria-controls="${detailRowId}" data-patient-id="${patient.id}">
