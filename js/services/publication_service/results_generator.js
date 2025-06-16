@@ -85,8 +85,8 @@ window.resultsGenerator = (() => {
         };
         
         const addCompRowOverall = (setName, perfKey, compKey) => {
-            const perf = getObjectValueByPath(stats.Overall, perfKey);
-            const comp = getObjectValueByPath(stats.Overall, compKey)?.delong;
+            const perf = window.utils.getObjectValueByPath(stats.Overall, perfKey);
+            const comp = window.utils.getObjectValueByPath(stats.Overall, compKey)?.delong;
             if (!perf) return [setName, 'N/A', 'N/A', 'N/A', 'N/A', 'N/A'];
             return [
                 setName,
@@ -121,8 +121,8 @@ window.resultsGenerator = (() => {
         const addSubgroupRow = (cohortId, setName, perfKey) => {
             const cohortStats = stats[cohortId];
             if (!cohortStats || !cohortStats.descriptive || cohortStats.descriptive.patientCount === 0) return null;
-            const perf = getObjectValueByPath(cohortStats, perfKey);
-            const cohortName = `${getCohortDisplayName(cohortId)} (n=${cohortStats.descriptive.patientCount})`;
+            const perf = window.utils.getObjectValueByPath(cohortStats, perfKey);
+            const cohortName = `${window.utils.getCohortDisplayName(cohortId)} (n=${cohortStats.descriptive.patientCount})`;
             if (!perf) return [cohortName, setName, 'N/A', 'N/A', 'N/A', 'N/A'];
             return [
                 cohortName,
