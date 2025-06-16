@@ -11,13 +11,13 @@ window.publicationHelpers = (() => {
         if (p < 0.001) return `${prefix} < .001`;
         if (p > 0.99) return `${prefix} > .99`;
 
-        const pRoundedTo2 = Math.round(p * 100) / 100;
         const pRoundedTo3 = Math.round(p * 1000) / 1000;
-
+        
         if (p < 0.01) {
             return `${prefix} = .${pRoundedTo3.toFixed(3).substring(2)}`;
         }
         
+        const pRoundedTo2 = Math.round(p * 100) / 100;
         if (pRoundedTo2 === 0.05 && p.toPrecision(15) !== (0.05).toPrecision(15)) {
              return `${prefix} = .${pRoundedTo3.toFixed(3).substring(2)}`;
         }
@@ -25,6 +25,8 @@ window.publicationHelpers = (() => {
         let formattedP = pRoundedTo2.toFixed(2);
         if (formattedP.startsWith("0.")) {
             formattedP = formattedP.substring(1);
+        } else if (formattedP === "1.00") {
+            return `${prefix} > .99`;
         }
         
         return `${prefix} = ${formattedP}`;
