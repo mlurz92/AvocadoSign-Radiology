@@ -209,16 +209,39 @@ function getStatisticalSignificanceSymbol(pValue) {
             return level.symbol;
         }
     }
-    return 'ns';
+    return '';
 }
 
 function getPValueText(pValue) {
     const p = parseFloat(pValue);
     if (p === null || p === undefined || isNaN(p) || !isFinite(p)) return 'N/A';
 
-    const prefix = 'p';
-    if (p < 0.001) return `${prefix} < 0.001`;
-    return `${prefix} = ${p.toFixed(3)}`;
+    const prefix = 'P';
+    if (p < 0.001) return `${prefix} < .001`;
+    if (p > 0.99) return `${prefix} > .99`;
+    
+    let pRoundedTo3 = Math.round(p * 1000) / 1000;
+    if (pRoundedTo3.toString().length > 5) pRoundedTo3 = parseFloat(pRoundedTo3.toPrecision(3));
+
+    if (p < 0.01) {
+        return `${prefix} = .${pRoundedTo3.toFixed(3).substring(2)}`;
+    }
+    
+    let pRoundedTo2 = Math.round(p * 100) / 100;
+    if (pRoundedTo2.toString().length > 4) pRoundedTo2 = parseFloat(pRoundedTo2.toPrecision(2));
+    
+    if (pRoundedTo2 >= 0.05 && p < 0.05) {
+         return `${prefix} = .${pRoundedTo3.toFixed(3).substring(2)}`;
+    }
+    
+    let formattedP = pRoundedTo2.toFixed(2);
+    if (formattedP.startsWith("0.")) {
+        formattedP = formattedP.substring(1);
+    } else if (formattedP === "1.00") {
+        return `${prefix} > .99`;
+    }
+    
+    return `${prefix} = ${formattedP}`;
 }
 
 
@@ -283,7 +306,7 @@ function getORInterpretation(orValue) {
 
 function escapeHTML(text) {
     if (typeof text !== 'string') return text === null ? '' : String(text);
-    const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+    const map = { '&': '&', '<': '<', '>': '>', '"': '"', "'": ''' };
     return text.replace(/[&<>"']/g, match => map[match]);
 }
 
@@ -442,4 +465,22 @@ function getT2IconSVG(type, value) {
             svgContent = window.APP_CONFIG.T2_ICON_SVGS.UNKNOWN(s, sw, iconColor, c, r, sq, sqPos);
     }
     return `<svg class="icon-t2 icon-${type}" width="${s}" height="${s}" viewBox="0 0 ${s} ${s}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${type}: ${value || 'unknown'}">${svgContent}</svg>`;
+}
+
+function formatStatusBadge(status, tooltipContent = '') {
+    let badgeClass = 'bg-secondary-light';
+    let iconClass = 'fa-question';
+    let text = '?';
+
+    if (status === '+') {
+        badgeClass = 'bg-danger-light';
+        iconClass = 'fa-plus';
+        text = '+';
+    } else if (status === '-') {
+        badgeClass = 'bg-success-light';
+        iconClass = 'fa-check';
+        text = '−';
+    }
+    
+    return `<span class="status-badge ${badgeClass}" data-tippy-content="${tooltipContent}"><i class="fas ${iconClass} fa-fw"></i></span>`;
 }
