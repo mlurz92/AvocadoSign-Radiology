@@ -109,7 +109,7 @@ window.comparisonTab = (() => {
                 comparisonTableHTML += `<tr><td data-tippy-content="${getDefinitionTooltip(key)}">${metricNames[key]}</td><td data-tippy-content="${getInterpretationTooltip(key, performanceAS[key])}">${valAS}</td><td data-tippy-content="${getInterpretationTooltip(key, performanceT2[key])}">${valT2}</td></tr>`;
             });
             comparisonTableHTML += `</tbody></table></div>`;
-            const comparisonTableCardHTML = window.uiComponents.createStatisticsCard('comp-as-vs-t2-comp-table_card', `Performance Metrics (AS vs. ${t2ShortNameEffective})`, comparisonTableHTML, false, null, [{id: 'dl-comp-as-vs-t2-comp-table-png', icon: 'fa-image', format: 'png', tableId: 'comp-as-vs-t2-comp-table', tableName: `Comp_ASvsT2_Metrics_${comparisonCriteriaSet?.id || 'T2'}`}]);
+            const comparisonTableCardHTML = window.uiComponents.createStatisticsCard('comp-as-vs-t2-comp-table_card', `Performance Metrics (AS vs. ${t2ShortNameEffective})`, comparisonTableHTML, false, null, [{id: `dl-comp-as-vs-t2-comp-table-png`, icon: 'fa-image', format: 'png', tableId: 'comp-as-vs-t2-comp-table', tableName: `Comp_ASvsT2_Metrics_${comparisonCriteriaSet?.id || 'T2'}`}]);
             
             const mcnemarTooltip = getInterpretationTooltip('pValue', {value: comparison.mcnemar?.pValue, testName: 'McNemar'}, { method1: 'AS', method2: t2ShortNameEffective, metricName: 'Accuracy'});
             const delongTooltip = getInterpretationTooltip('pValue', {value: comparison.delong?.pValue, testName: 'DeLong'}, { method1: 'AS', method2: t2ShortNameEffective, metricName: 'AUC'});
@@ -144,9 +144,12 @@ window.comparisonTab = (() => {
         }
 
         const displayGlobalCohort = getCohortDisplayName(currentGlobalCohort);
-        const cohortNotice = (cohortForComparison !== currentGlobalCohort)
-            ? `(Global cohort: <strong>${displayGlobalCohort}</strong>. T2 comparison basis evaluated on <strong>${displayCohortForComparison}</strong>, N=${patientCountForComparison || '?'}).`
-            : `(N=${patientCountForComparison || '?'})`;
+        let cohortNotice = `(Global cohort: <strong>${displayGlobalCohort}</strong>)`;
+        if (cohortForComparison !== currentGlobalCohort) {
+            cohortNotice = `<span class="text-warning">Note: T2 criteria are evaluated on cohort '<strong>${displayCohortForComparison}</strong>' (N=${patientCountForComparison || '?'}), while AS performance reflects the global cohort '<strong>${displayGlobalCohort}</strong>'. The global cohort was automatically set.</span>`;
+        } else {
+            cohortNotice = `(N=${patientCountForComparison || '?'})`;
+        }
 
         return `<div class="row mb-4"><div class="col-12"><h4 class="text-center mb-1">Comparison: Avocado Sign vs. T2 Criteria</h4><p class="text-center text-muted small mb-3">Current comparison cohort: <strong>${displayCohortForComparison}</strong> ${cohortNotice}</p><div class="row justify-content-center"><div class="col-md-9 col-lg-7"><div class="input-group input-group-sm"><label class="input-group-text" for="comp-study-select">T2 Comparison Basis:</label><select class="form-select" id="comp-study-select"><option value="" ${!selectedStudyId ? 'selected' : ''} disabled>-- Please select --</option>${appliedOptionHTML}<option value="" disabled>--- Published Criteria ---</option>${studyOptionsHTML}</select></div></div></div></div></div><div id="comparison-as-vs-t2-results">${resultsHTML}</div>`;
     }
