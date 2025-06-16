@@ -6,7 +6,7 @@ window.publicationHelpers = (() => {
             return 'N/A';
         }
 
-        const prefix = 'P';
+        const prefix = '<em>P</em>';
 
         if (p < 0.001) return `${prefix} < .001`;
         if (p > 0.99) return `${prefix} > .99`;
@@ -18,7 +18,7 @@ window.publicationHelpers = (() => {
         }
         
         const pRoundedTo2 = Math.round(p * 100) / 100;
-        if (pRoundedTo2 === 0.05 && p.toPrecision(15) !== (0.05).toPrecision(15)) {
+        if (pRoundedTo2 >= 0.05 && p < 0.05) {
              return `${prefix} = .${pRoundedTo3.toFixed(3).substring(2)}`;
         }
 
@@ -131,9 +131,17 @@ window.publicationHelpers = (() => {
                 const cellData = (cell === null || cell === undefined) ? '' : String(cell);
                 const isIndented = cellData.startsWith('   ');
                 const tag = (index === 0 && !isIndented) ? 'th' : 'td';
-                const style = isIndented ? 'style="padding-left: 2em;"' : (tag === 'th' ? 'style="text-align: left;"' : '');
-                const scope = (tag === 'th') ? 'scope="row"' : '';
-                return `<${tag} ${scope} ${style}>${cellData.trim()}</${tag}>`;
+                let style = isIndented ? 'style="padding-left: 2em;"' : (tag === 'th' ? 'style="text-align: left;"' : '');
+                
+                let pValueClass = '';
+                if (cellData.includes('<em>P</em>')) {
+                    const pValueMatch = cellData.match(/([<>=.\s]+)(\d*\.\d+)/);
+                    if(pValueMatch && parseFloat(pValueMatch[2]) < 0.05) {
+                        pValueClass = ' p-value-significant';
+                    }
+                }
+
+                return `<${tag} class="${pValueClass}" ${tag === 'th' ? 'scope="row"' : ''} ${style}>${cellData.trim()}</${tag}>`;
             }).join('')}</tr>`;
         });
         tableHtml += `</tbody>`;
