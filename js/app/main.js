@@ -352,8 +352,3 @@ class App {
     getProcessedData() { return this.processedData; }
     getComparisonDataForExport() { return this.comparisonDataForExport; }
 }
-
-document.addEventListener('DOMContentLoaded', () => {
-    const app = new App();
-    app.init();
-});
