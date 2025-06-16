@@ -158,30 +158,30 @@ window.uiComponents = (() => {
             const isMainActive = mainSection.id === currentSectionId || (mainSection.subSections && mainSection.subSections.some(sub => sub.id === currentSectionId));
             
             let subNavHTML = '';
-            if (isMainActive && mainSection.subSections && mainSection.subSections.length > 0) {
-                subNavHTML += '<ul class="nav flex-column ps-3 mt-1 mb-2">';
-                mainSection.subSections.forEach(sub => {
-                    const isSubActive = sub.id === currentSectionId;
-                    subNavHTML += `
-                        <li class="nav-item">
-                            <a class="nav-link nav-link-sub py-1 publication-section-link ${isSubActive ? 'active' : ''}" href="#" data-section-id="${sub.id}" data-tippy-content="${sub.label}">
-                                ${sub.label}
-                            </a>
-                        </li>`;
-                });
-                subNavHTML += '</ul>';
+            if (mainSection.subSections && mainSection.subSections.length > 0) {
+                 subNavHTML += '<ul class="nav flex-column ps-3 mt-1 mb-2">';
+                 mainSection.subSections.forEach(sub => {
+                     const isSubActive = sub.id === currentSectionId;
+                     subNavHTML += `
+                         <li class="nav-item">
+                             <a class="nav-link nav-link-sub py-1 publication-section-link ${isSubActive ? 'active' : ''}" href="#" data-section-id="${sub.id}" data-tippy-content="${sub.label}">
+                                 ${sub.label}
+                             </a>
+                         </li>`;
+                 });
+                 subNavHTML += '</ul>';
             }
             
             const mainLinkClass = (mainSection.subSections && mainSection.subSections.length > 0) ? 'nav-link-main' : '';
-            const wordCountSpan = mainSection.wordCountLimit ? '<span class="word-count-indicator"></span>' : '';
+            const countIndicatorSpan = (mainSection.limit && mainSection.countType) ? '<span class="word-count-indicator"></span>' : '';
 
             return `
                 <li class="nav-item">
-                    <a class="nav-link py-2 publication-section-link d-flex justify-content-between align-items-center ${mainLinkClass} ${isMainActive && !subNavHTML ? 'active' : ''}" href="#" data-section-id="${mainSection.id}" data-tippy-content="${sectionLabel}">
+                    <a class="nav-link py-2 publication-section-link d-flex justify-content-between align-items-center ${mainLinkClass} ${isMainActive && !subNavHTML.includes("active") ? 'active' : ''}" href="#" data-section-id="${mainSection.id}" data-tippy-content="${sectionLabel}">
                         ${sectionLabel}
-                        ${wordCountSpan}
+                        ${countIndicatorSpan}
                     </a>
-                    ${subNavHTML}
+                    ${isMainActive ? subNavHTML : ''}
                 </li>`;
         }).join('');
 
@@ -324,6 +324,35 @@ window.uiComponents = (() => {
         return tableHTML;
     }
 
+    function createConfusionMatrixPopoverHTML(matrix) {
+        if (!matrix) return 'No data';
+        const { tp, fp, fn, tn } = matrix;
+        return `
+            <div class="table-responsive">
+                <table class="table table-sm table-bordered text-center small mb-0">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th class="fw-bold">N+ (Pathology)</th>
+                            <th class="fw-bold">N- (Pathology)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="fw-bold">Test +</td>
+                            <td data-tippy-content="True Positives">${tp}</td>
+                            <td data-tippy-content="False Positives">${fp}</td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold">Test -</td>
+                            <td data-tippy-content="False Negatives">${fn}</td>
+                            <td data-tippy-content="True Negatives">${tn}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>`;
+    }
+
     return Object.freeze({
         createHeaderButtonHTML,
         createDashboardCard,
@@ -331,6 +360,7 @@ window.uiComponents = (() => {
         createStatisticsCard,
         createPublicationNav,
         createBruteForceModalContent,
-        createBruteForceOverviewTableHTML
+        createBruteForceOverviewTableHTML,
+        createConfusionMatrixPopoverHTML
     });
 })();
