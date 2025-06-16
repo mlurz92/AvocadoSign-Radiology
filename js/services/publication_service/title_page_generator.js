@@ -19,8 +19,8 @@ window.titlePageGenerator = (() => {
         const fundingStatement = "The authors state that this work has not received any funding.";
         const dataSharingStatement = "Data generated or analyzed during the study are available from the corresponding author by request.";
 
-        let keyResultsHTML = '<p>Key results could not be generated.</p>';
-        let summaryStatementHTML = '<p>Summary statement could not be generated.</p>';
+        let keyResultsHTML = '<p>Key results could not be generated due to missing data.</p>';
+        let summaryStatementHTML = '<p>Summary statement could not be generated due to missing data.</p>';
 
         if (overallStats && commonData) {
             const { performanceAS } = overallStats;
@@ -32,10 +32,10 @@ window.titlePageGenerator = (() => {
             
             keyResultsHTML = `
                 <h4 style="font-size: 1.1rem; font-weight: bold; margin-top: 1.5rem;">Key Results</h4>
-                <ul style="padding-left: 20px; margin-top: 0.5rem;">
+                <ul style="padding-left: 20px; margin-top: 0.5rem; list-style-position: inside;">
                     <li>In a retrospective study of ${nOverall} patients with rectal cancer, the Avocado Sign (AS) on contrast-enhanced MRI yielded an area under the receiver operating characteristic curve (AUC) of ${helpers.formatMetricForPublication(performanceAS.auc, 'auc', true)}.</li>
-                    ${bfResultForPub ? `<li>A cohort-optimized T2-weighted (T2w) criteria set, identified via brute-force analysis, yielded an AUC of ${helpers.formatMetricForPublication(bfResultForPub.auc, 'auc', true)}.</li>` : ''}
-                    ${bfComparisonForPub ? `<li>The diagnostic performance of the AS was not inferior to that of the cohort-optimized T2w criteria (${helpers.formatPValueForPublication(bfComparisonForPub.delong.pValue)}).</li>` : ''}
+                    ${bfResultForPub ? `<li>A cohort-optimized T2-weighted (T2w) criteria set, identified via brute-force analysis, yielded a numerically similar AUC of ${helpers.formatMetricForPublication(bfResultForPub.auc, 'auc', true)}.</li>` : '<li>A cohort-optimized T2-weighted (T2w) criteria set was used as a best-case benchmark.</li>'}
+                    ${bfComparisonForPub ? `<li>The diagnostic performance of the AS was not inferior to that of the cohort-optimized T2w criteria (${helpers.formatPValueForPublication(bfComparisonForPub.delong.pValue)}).</li>` : '<li>The difference in diagnostic performance between the Avocado Sign and the T2-weighted benchmark was evaluated.</li>'}
                 </ul>
             `;
         }
