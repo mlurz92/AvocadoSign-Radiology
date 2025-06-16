@@ -22,7 +22,7 @@ window.abstractGenerator = (() => {
         const q1AgeFormatted = helpers.formatValueForPublication(descriptive.age.q1, 0);
         const q3AgeFormatted = helpers.formatValueForPublication(descriptive.age.q3, 0);
         const ageIQR = `${q1AgeFormatted}–${q3AgeFormatted}`;
-        const demographicsString = `${nOverall} patients (median age, ${medianAgeFormatted} years; interquartile range, ${ageIQR} years; ${descriptive.sex.m} men)`;
+        const demographicsString = `${nOverall} patients (median age, ${medianAgeFormatted} years; interquartile range, ${ageIQR}; ${descriptive.sex.m} men)`;
 
         if (bfResultsAvailable) {
             resultsSectionHTML = `
@@ -33,10 +33,10 @@ window.abstractGenerator = (() => {
             `;
         } else {
             resultsSectionHTML = `
-                <p>A total of ${demographicsString} were analyzed, of whom ${nPositive} (${helpers.formatValueForPublication(nPositive / nOverall, 0, true)}%) were N-positive. The Avocado Sign demonstrated an AUC of ${helpers.formatMetricForPublication(performanceAS.auc, 'auc')}.</p>
+                <p>A total of ${demographicsString} were analyzed, of whom ${nPositive} (${helpers.formatValueForPublication(nPositive / nOverall, 0, true)}%) were N-positive. The Avocado Sign demonstrated an AUC of ${helpers.formatMetricForPublication(performanceAS.auc, 'auc')}. Comparison with optimized T2w criteria is pending.</p>
             `;
              conclusionText = `
-                <p>The Avocado Sign is a highly reproducible MRI marker for predicting lymph node status in rectal cancer and shows high diagnostic performance, pending final comparison with cohort-optimized T2-weighted criteria.</p>
+                <p>The Avocado Sign is a highly reproducible MRI marker for predicting lymph node status in rectal cancer and shows high diagnostic performance.</p>
             `;
         }
 
