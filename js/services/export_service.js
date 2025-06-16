@@ -349,7 +349,7 @@ window.exportService = (() => {
             else if (tableType === 'deskriptiv') { title = 'Descriptive Statistics'; const stats = dataOrStats; if (!stats || !stats.patientCount) return `# ${title} (Cohort: ${kollektivDisplayName})\n\nNo data available.`; const total = stats.patientCount; headers = ['Metric', 'Value']; const fLKRowMD = (lk) => `${formatNumber(lk?.median, 1, na)} (${formatNumber(lk?.min, 0, na)}-${formatNumber(lk?.max, 0, na)}) \\[Mean: ${formatNumber(lk?.mean, 1, na)} ± ${formatNumber(lk?.sd, 1, na)}\\]`; rows = [ ['Number of Patients', total], ['Median Age (Min-Max) \\[Mean ± SD\\]', `${formatNumber(stats.age?.median, 1, na)} (${formatNumber(stats.age?.min, 0, na)} - ${formatNumber(stats.age?.max, 0, na)}) \\[${formatNumber(stats.age?.mean, 1, na)} ± ${formatNumber(stats.age?.sd, 1, na)}\\]`], ['Sex (m/f) (n / %)', `${stats.sex?.m ?? 0} / ${stats.sex?.f ?? 0} (${formatPercent((stats.sex?.m ?? 0) / total, 1)} / ${formatPercent((stats.sex?.f ?? 0) / total, 1)})`], ['Therapy (Upfront Surgery / nRCT) (n / %)', `${stats.therapy?.surgeryAlone ?? 0} / ${stats.therapy?.neoadjuvantTherapy ?? 0} (${formatPercent((stats.therapy?.surgeryAlone ?? 0) / total, 1)} / ${formatPercent((stats.therapy?.neoadjuvantTherapy ?? 0) / total, 1)})`], ['N Status (+ / -) (n / %)', `${stats.nStatus?.plus ?? 0} / ${stats.nStatus?.minus ?? 0} (${formatPercent((stats.nStatus?.plus ?? 0) / total, 1)} / ${formatPercent((stats.nStatus?.minus ?? 0) / total, 1)})`], ['AS Status (+ / -) (n / %)', `${stats.asStatus?.plus ?? 0} / ${stats.asStatus?.minus ?? 0} (${formatPercent((stats.asStatus?.plus ?? 0) / total, 1)} / ${formatPercent((stats.asStatus?.minus ?? 0) / total, 1)})`], ['T2 Status (+ / -) (n / %)', `${stats.t2Status?.plus ?? 0} / ${stats.t2Status?.minus ?? 0} (${formatPercent((stats.t2Status?.plus ?? 0) / total, 1)} / ${formatPercent((stats.t2Status?.minus ?? 0) / total, 1)})`], ['Median LN N total (Min-Max) \\[Mean ± SD\\]', fLKRowMD(stats.lnCounts?.n?.total)], ['Median LN N+ (Min-Max) \\[Mean ± SD\\] (only N+ Pat.)', fLKRowMD(stats.lnCounts?.n?.plus)], ['Median LN AS total (Min-Max) \\[Mean ± SD\\]', fLKRowMD(stats.lnCounts?.as?.total)], ['Median LN AS+ (Min-Max) \\[Mean ± SD\\] (only AS+ Pat.)', fLKRowMD(stats.lnCounts?.as?.plus)], ['Median LN T2 total (Min-Max) \\[Mean ± SD\\]', fLKRowMD(stats.lnCounts?.t2?.total)], ['Median LN T2+ (Min-Max) \\[Mean ± SD\\] (only T2+ Pat.)', fLKRowMD(stats.lnCounts?.t2?.plus)] ].map(r => r.map(escMD)); }
             else if (tableType === 'comp_as_perf') { title = `Diagnostic Performance (AS) for Cohorts`; const { statsGesamt, statsSurgeryAlone, statsNeoadjuvantTherapy } = dataOrStats || {}; if (!statsGesamt && !statsSurgeryAlone && !statsNeoadjuvantTherapy) return `# ${title}\n\nError: Invalid data.`; headers = ['Cohort', 'Sens. (95% CI)', 'Spec. (95% CI)', 'PPV (95% CI)', 'NPV (95% CI)', 'Acc. (95% CI)', 'AUC (95% CI)']; const fRow = (s, k) => { const d = getCohortDisplayName(k); if (!s || typeof s.matrix !== 'object') return [d + ' (N=?)', na, na, na, na, na, na].map(escMD); const n = s.matrix ? (s.matrix.tp + s.matrix.fp + s.matrix.fn + s.matrix.tn) : 0; const fCI_p = (m, ky) => { const dig = (ky === 'auc') ? 3 : ((ky === 'f1') ? 3 : 1); const isP = !(ky === 'f1' || ky === 'auc'); return formatCI(m?.value, m?.ci?.lower, m?.ci?.upper, dig, isP, na); }; return [`${d} (N=${n})`, fCI_p(s.sens, 'sens'), fCI_p(s.spec, 'spec'), fCI_p(s.ppv, 'ppv'), fCI_p(s.npv, 'npv'), fCI_p(s.acc, 'acc'), fCI_p(s.auc, 'auc')].map(escMD); }; rows = [ fRow(statsGesamt, 'Overall'), fRow(statsSurgeryAlone, 'surgeryAlone'), fRow(statsNeoadjuvantTherapy, 'neoadjuvantTherapy') ]; }
             else if (tableType === 'comp_as_vs_t2_perf' || tableType === 'comp_as_vs_t2_comp') { const { performanceAS, performanceT2 } = dataOrStats || {}; title = `Comparison Diagnostic Performance (AS vs. ${escMD(t2CriteriaLabelShort)})`; if (!performanceAS || !performanceT2) return `# ${title} (Cohort: ${kollektivDisplayName})\n\nError: Invalid data for comparison.`; headers = ['Metric', 'AS (Value, 95% CI)', `${escMD(t2CriteriaLabelShort)} (Value, 95% CI)`]; const fRow = (mKey, nm, isP = true, d = 1) => { const mAS = performanceAS[mKey]; const mT2 = performanceT2[mKey]; const dig = (mKey === 'auc' || mKey === 'f1' || mKey === 'balAcc') ? 3 : d; const vAS = formatCI(mAS?.value, mAS?.ci?.lower, mAS?.ci?.upper, dig, isP, na); const vT2 = formatCI(mT2?.value, mT2?.ci?.lower, mT2?.ci?.upper, dig, isP, na); return [nm, vAS, vT2]; }; rows = [ fRow('sens', 'Sensitivity'), fRow('spec', 'Specificity'), fRow('ppv', 'PPV'), fRow('npv', 'NPV'), fRow('acc', 'Accuracy'), fRow('balAcc', 'Balanced Accuracy', false, 3), fRow('f1', 'F1-Score', false, 3), fRow('auc', 'AUC', false, 3) ].map(r => r.map(escMD)); }
-            else if (tableType === 'comp_as_vs_t2_tests') { const { comparison } = dataOrStats || {}; title = `Statistical Comparison (AS vs. ${escMD(t2CriteriaLabelShort)})`; if (!comparison) return `# ${title} (Cohort: ${kollektivDisplayName})\n\nError: Invalid data for comparison tests.`; headers = ['Test', 'Statistic Value', 'p-Value', 'Method']; rows = [ ['McNemar (Accuracy)', `${formatNumber(comparison?.mcnemar?.statistic, 3, na, true)} (df=${comparison?.mcnemar?.df || na})`, `${getPValueText(comparison?.mcnemar?.pValue, true)} ${getStatisticalSignificanceSymbol(comparison?.mcnemar?.pValue)}`, `${comparison?.mcnemar?.method || na}`], ['DeLong (AUC)', `Z=${formatNumber(comparison?.delong?.Z, 3, na, true)}`, `${getPValueText(comparison?.delong?.pValue, true)} ${getStatisticalSignificanceSymbol(comparison?.delong?.pValue)}`, `${comparison?.delong?.method || na}`] ].map(r => r.map(escMD)); }
+            else if (tableType === 'comp_as_vs_t2_tests') { const { comparison } = dataOrStats || {}; title = `Statistical Comparison (AS vs. ${escMD(t2CriteriaLabelShort)})`; if (!comparison) return `# ${title} (Cohort: ${kollektivDisplayName})\n\nError: Invalid data for comparison tests.`; headers = ['Test', 'Statistic Value', 'p-Value', 'Method']; rows = [ ['McNemar (Accuracy)', `${formatNumber(comparison?.mcnemar?.statistic, 3, na)} (df=${comparison?.mcnemar?.df || na})`, `${getPValueText(comparison?.mcnemar?.pValue, true)} ${getStatisticalSignificanceSymbol(comparison?.mcnemar?.pValue)}`, `${comparison?.mcnemar?.method || na}`], ['DeLong (AUC)', `Z=${formatNumber(comparison?.delong?.Z, 3, na)}`, `${getPValueText(comparison?.delong?.pValue, true)} ${getStatisticalSignificanceSymbol(comparison?.delong?.pValue)}`, `${comparison?.delong?.method || na}`] ].map(r => r.map(escMD)); }
             else { return `# Unknown table type for Markdown: ${tableType}`; }
             const headerLine = `| ${headers.join(' | ')} |`; const separatorLine = `|${headers.map(() => '---').join('|')}|`; const bodyLines = rows.map(row => `| ${row.join(' | ')} |`).join('\n');
             let metaInfo = `# ${title}`; if (!['daten', 'auswertung', 'comp_as_perf'].includes(tableType)) metaInfo += ` (Cohort: ${kollektivDisplayName})`; metaInfo += '\n'; if(criteria && logic && ['auswertung', 'deskriptiv'].includes(tableType)) metaInfo += `\n_T2 Basis (applied): ${escMD(formatCriteriaFunc(criteria, logic))}_\n\n`; else if (options.t2CriteriaLabelFull && ['comp_as_vs_t2_perf', 'comp_as_vs_t2_tests', 'comp_as_vs_t2_comp'].includes(tableType)) metaInfo += `\n_T2 Basis (comparison): ${escMD(options.t2CriteriaLabelFull)}_\n\n`; else metaInfo += '\n';
@@ -445,55 +445,13 @@ window.exportService = (() => {
          } catch(error) { window.uiManager.showToast(`Error during table PNG export for '${tableName}'.`, 'danger'); }
      }
 
-    async function exportChartsZip(scopeSelector, zipTypeKey, kollektiv, format) {
-         window.uiManager.showToast(`Starting ${format.toUpperCase()} export for visible charts & tables...`, 'info', 2000);
-         if (!window.JSZip) { window.uiManager.showToast("JSZip library not loaded.", "danger"); return; }
-         const zip = new JSZip(); const promises = []; let successCount = 0;
-         const chartSvgs = document.querySelectorAll(`${scopeSelector} [id*="chart-"] svg, ${scopeSelector} .dashboard-chart-container svg, ${scopeSelector} .comp-chart-container svg`);
-         const tableSelectors = [ scopeSelector + ' table[id^="table-"]', scopeSelector + ' table[id^="analysis-table"]', scopeSelector + ' table[id^="data-table"]', scopeSelector + ' table[id^="bruteforce-results-table"]', scopeSelector + ' table[id^="comp-as-vs-t2-comp-table"]', scopeSelector + ' table[id="comp-as-perf-table"]' ];
-         const tableContainers = (format === 'png' && window.APP_CONFIG.EXPORT_SETTINGS.ENABLE_TABLE_PNG_EXPORT) ? document.querySelectorAll(tableSelectors.join(', ')) : [];
-
-         if (chartSvgs.length === 0 && tableContainers.length === 0) { window.uiManager.showToast('No charts or tables found in current view.', 'warning'); return; }
-
-         chartSvgs.forEach((svgElement, index) => {
-             const chartId = svgElement.closest('div[id]')?.id || `chart_${index + 1}`;
-             const chartName = chartId.replace(/^chart-/, '').replace(/-container$/, '').replace(/-content$/, '').replace(/-[0-9]+$/, '');
-             let filenameKey, conversionPromise, ext;
-             if (format === 'png') { filenameKey = 'CHART_SINGLE_PNG'; ext = 'png'; conversionPromise = convertSvgToPngBlob(svgElement).catch(e => null); }
-             else if (format === 'svg') { filenameKey = 'CHART_SINGLE_SVG'; ext = 'svg'; conversionPromise = convertSvgToSvgBlob(svgElement).catch(e => null); }
-             else { return; }
-             const filename = generateFilename(filenameKey, kollektiv, ext, { chartName });
-             promises.push(conversionPromise.then(blob => (blob ? { blob, filename } : { error: new Error("Blob is null for chart"), filename })));
-         });
-
-         tableContainers.forEach((table, index) => {
-              if (format !== 'png') return;
-              const tableId = table.id || `exportable-table-${generateUUID()}`; table.id = tableId;
-              let tableName = table.closest('.card')?.querySelector('.card-header')?.firstChild?.textContent?.trim() || table.caption?.textContent.trim() || table.id;
-              tableName = tableName.replace(/[^a-zA-Z0-9]/g, '_').substring(0, 30);
-              const typeKey = 'TABLE_PNG_EXPORT';
-              const filename = generateFilename(typeKey, kollektiv, 'png', {tableName: tableName, tableId});
-              const baseWidth = table.offsetWidth || 800;
-              promises.push(convertTableToPngBlob(tableId, baseWidth).catch(e => null).then(blob => (blob ? { blob, filename } : { error: new Error("Table Blob is null"), filename })));
-         });
-
-         try {
-             const results = await Promise.all(promises);
-             results.forEach(result => { if (result && result.blob) { zip.file(result.filename, result.blob); successCount++; } else if (result && result.error) { } });
-             if (successCount > 0) {
-                 const zipFilename = generateFilename(zipTypeKey, kollektiv, 'zip'); const content = await zip.generateAsync({ type: "blob", compression: "DEFLATE", compressionOptions: { level: 6 } });
-                 if (downloadFile(content, zipFilename, "application/zip")) window.uiManager.showToast(`${successCount} object(s) successfully exported as ${format.toUpperCase()} (ZIP).`, 'success');
-             } else { window.uiManager.showToast(`Export (${format.toUpperCase()}) failed: No objects could be converted.`, 'danger'); }
-         } catch (error) { window.uiManager.showToast(`Error creating ${format.toUpperCase()} ZIP.`, 'danger'); }
-     }
-
-     async function exportCategoryZip(category, data, bfResults, kollektiv, criteria, logic) {
+    async function exportCategoryZip(category, data, bfResults, kollektiv, criteria, logic) {
          window.uiManager.showToast(`Generating ${category.toUpperCase()} ZIP package...`, 'info', 2000);
           if (!window.JSZip) { window.uiManager.showToast("JSZip library not loaded.", "danger"); return; }
          const zip = new JSZip(); let filesAdded = 0; let statsDataForAllKollektive = null;
          const lang = window.state.getCurrentPublikationLang();
 
-         const needsStats = ['all', 'csv', 'md', 'html'].includes(category.toLowerCase().replace('-zip',''));
+         const needsStats = ['all', 'csv', 'md', 'html', 'radiology-submission'].includes(category.toLowerCase().replace('-zip',''));
          if(needsStats && data && data.length > 0 && criteria && logic) {
              try {
                 statsDataForAllKollektive = window.statisticsService.calculateAllPublicationStats(data, criteria, logic, bfResults);
@@ -506,7 +464,7 @@ window.exportService = (() => {
          }
          const currentKollektivStats = statsDataForAllKollektive ? statsDataForAllKollektive[kollektiv] : null;
 
-         const addFile = (filename, content) => { if (content !== null && content !== undefined && String(content).length > 0) { zip.file(filename, content); filesAdded++; return true; } return false; };
+         const addFile = (filename, content) => { if (content !== null && content !== undefined && (typeof content === 'string' ? content.length > 0 : content.size > 0)) { zip.file(filename, content); filesAdded++; return true; } return false; };
          try {
              if (['all', 'csv'].includes(category)) {
                  if (currentKollektivStats) addFile(generateFilename('STATS_CSV', kollektiv, 'csv'), generateStatistikCSVString(currentKollektivStats, kollektiv, criteria, logic));
@@ -522,7 +480,7 @@ window.exportService = (() => {
                  if (window.PUBLICATION_CONFIG && window.state && window.publicationService && window.APP_CONFIG) {
                      const commonDataForPub = { appName: window.APP_CONFIG.APP_NAME, appVersion: window.APP_CONFIG.APP_VERSION, nOverall: data.length, nPositive: data.filter(p => p.nStatus === '+').length, nSurgeryAlone: data.filter(p => p.therapy === 'surgeryAlone').length, nNeoadjuvantTherapy: data.filter(p => p.therapy === 'neoadjuvantTherapy').length, references: window.APP_CONFIG.REFERENCES_FOR_PUBLICATION, bruteForceMetricForPublication: window.state.getPublicationBruteForceMetric(), currentLanguage: lang, rawData: data };
                      window.PUBLICATION_CONFIG.sections.forEach(mainSection => {
-                         const sectionContent = window.publicationService.generateSectionHTML(mainSection.id, statsDataForAllKollektive, commonDataForPub);
+                         const sectionContent = window.publicationService.generateSectionHTML(mainSection.id, statsDataForAllKollektive, commonData);
                          const typeKey = `PUBLICATION_SECTION_MD`;
                          const sectionName = mainSection.labelKey.replace(/_main$/, '').replace(/_/g, '-');
                          addFile(generateFilename(typeKey, kollektiv, 'md', {sectionName: sectionName}), `# ${window.APP_CONFIG.UI_TEXTS.publicationTab.sectionLabels[mainSection.labelKey]}\n\n${sectionContent.replace(/<[^>]*>/g, '')}`);
@@ -537,6 +495,7 @@ window.exportService = (() => {
              if (['all', 'html'].includes(category) && data && data.length > 0 ) { addFile(generateFilename('COMPREHENSIVE_REPORT_HTML', kollektiv, 'html'), generateComprehensiveReportHTML(data, bfResults, kollektiv, criteria, logic)); }
              if (['png'].includes(category)) { await exportChartsZip('#app-container', 'PNG_ZIP', kollektiv, 'png'); return; }
              if (['svg'].includes(category)) { await exportChartsZip('#app-container', 'SVG_ZIP', kollektiv, 'svg'); return; }
+             if (category === 'radiology-submission') { await exportRadiologySubmissionPackage(data, statsDataForAllKollektive, bfResults); return; }
 
             if (filesAdded > 0) {
                 const zipFilename = generateFilename(`${category.toUpperCase()}_PAKET`, kollektiv, 'zip');
@@ -630,6 +589,62 @@ window.exportService = (() => {
         }
     }
 
+    async function exportRadiologySubmissionPackage(data, allStats, bfResults) {
+        if (!window.JSZip || typeof htmlToDocx === 'undefined') {
+            window.uiManager.showToast("Required export libraries (JSZip, html-to-docx) are not available.", "danger");
+            return;
+        }
+
+        window.uiManager.showToast("Generating Radiology Submission Package...", "info", 4000);
+        const zip = new JSZip();
+        
+        const lang = window.state.getCurrentPublikationLang();
+        const overallCohortId = window.APP_CONFIG.COHORTS.OVERALL.id;
+        
+        const commonData = {
+            appName: window.APP_CONFIG.APP_NAME, appVersion: window.APP_CONFIG.APP_VERSION,
+            nOverall: allStats?.[overallCohortId]?.descriptive?.patientCount || 0,
+            nPositive: allStats?.[overallCohortId]?.descriptive?.nStatus?.plus || 0,
+            nSurgeryAlone: allStats?.[window.APP_CONFIG.COHORTS.SURGERY_ALONE.id]?.descriptive?.patientCount || 0,
+            nNeoadjuvantTherapy: allStats?.[window.APP_CONFIG.COHORTS.NEOADJUVANT.id]?.descriptive?.patientCount || 0,
+            references: window.APP_CONFIG.REFERENCES_FOR_PUBLICATION || {},
+            bruteForceMetricForPublication: window.state.getPublicationBruteForceMetric(),
+            currentLanguage: lang, rawData: data
+        };
+
+        try {
+            const fullTitlePageHTML = `<!DOCTYPE html><html><head><style>body{font-family: Arial, sans-serif; font-size: 12pt;}</style></head><body>${window.publicationService.generateSectionHTML('title_main', allStats, commonData)}</body></html>`;
+            const mainManuscriptHTML = `<!DOCTYPE html><html><head><style>body{font-family: Arial, sans-serif; font-size: 12pt; line-height: 2;} p { margin-bottom: 1em; text-align: justify; } table { border-collapse: collapse; margin-top: 1em; margin-bottom: 1em;} th, td {border: 1px solid #ccc; padding: 6px;} th { background-color: #f2f2f2; } </style></head><body>${window.publicationService.generateFullPublicationHTML(allStats, commonData)}</body></html>`;
+            const stardChecklistHTML = `<!DOCTYPE html><html><head><style>body{font-family: Arial, sans-serif; font-size: 10pt;} table {border-collapse: collapse;} th,td {border:1px solid #ddd; padding: 8px;}</style></head><body>${window.stardGenerator ? window.stardGenerator.generateStardChecklist() : 'STARD Checklist could not be generated.'}</body></html>`;
+
+            const titlePageBlob = await htmlToDocx(fullTitlePageHTML, null, { title: 'Title Page' });
+            zip.file("Title_Page.docx", titlePageBlob);
+            
+            const manuscriptBlob = await htmlToDocx(mainManuscriptHTML, null, { title: 'Main Manuscript' });
+            zip.file("Main_Manuscript_Anonymized.docx", manuscriptBlob);
+
+            const flowchartContainer = document.getElementById('figure-1-flowchart-container');
+            if (flowchartContainer) {
+                const svgElement = flowchartContainer.querySelector('svg');
+                if(svgElement) {
+                    const svgBlob = await convertSvgToSvgBlob(svgElement);
+                    zip.file("Figure_1.svg", svgBlob);
+                }
+            }
+
+            const stardContent = window.stardGenerator.generateStardChecklistData().map(item => `${item.section} - Item ${item.item}: ${item.label}\nLocation: ${item.location}`).join('\n\n');
+            zip.file("STARD_Checklist.md", stardContent);
+            
+            const zipContent = await zip.generateAsync({ type: "blob", compression: "DEFLATE", compressionOptions: { level: 6 } });
+            downloadFile(zipContent, "Radiology_Submission_Package.zip", "application/zip");
+            window.uiManager.showToast("Radiology Submission Package successfully generated.", "success");
+
+        } catch(error) {
+            window.uiManager.showToast("Failed to generate submission package. Check console for details.", "danger");
+        }
+    }
+
+
     return Object.freeze({
         exportStatistikCSV,
         exportBruteForceReport,
@@ -640,6 +655,7 @@ window.exportService = (() => {
         exportTablePNG,
         exportCategoryZip,
         exportComparisonData,
+        exportRadiologySubmissionPackage,
         generateFilename
     });
 
