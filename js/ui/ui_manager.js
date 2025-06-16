@@ -236,11 +236,31 @@ window.uiManager = (() => {
         updateElementText('header-status-t2', stats.statusT2);
     }
 
-    function updateCohortButtonsUI(currentCohort) {
+    function updateCohortButtonsUI(currentCohort, isSelectionLocked = false) {
+        const defaultTooltip = "Select the patient cohort for analysis.";
+        const lockedTooltip = `Selection locked. Comparison is active for the '${getCohortDisplayName(currentCohort)}' cohort.`;
+
         Object.values(window.APP_CONFIG.COHORTS).forEach(cohort => {
             const button = document.getElementById(`btn-cohort-${cohort.id}`);
             if (button) {
-                button.classList.toggle('active', cohort.id === currentCohort);
+                const isActive = cohort.id === currentCohort;
+                button.classList.toggle('active', isActive);
+
+                if (isSelectionLocked) {
+                    button.disabled = !isActive;
+                    const tooltipInstance = button._tippy;
+                    if(tooltipInstance) {
+                        tooltipInstance.setContent(lockedTooltip);
+                    } else {
+                        tippy(button, { content: lockedTooltip });
+                    }
+                } else {
+                    button.disabled = false;
+                    const tooltipInstance = button._tippy;
+                     if(tooltipInstance) {
+                        tooltipInstance.setContent(defaultTooltip);
+                    }
+                }
             }
         });
     }
