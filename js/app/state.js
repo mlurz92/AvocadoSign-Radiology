@@ -5,8 +5,8 @@ window.state = (() => {
     function init() {
         defaultState = {
             currentCohort: window.APP_CONFIG.DEFAULT_SETTINGS.COHORT,
-            dataTableSort: cloneDeep(window.APP_CONFIG.DEFAULT_SETTINGS.DATA_TABLE_SORT),
-            analysisTableSort: cloneDeep(window.APP_CONFIG.DEFAULT_SETTINGS.ANALYSIS_TABLE_SORT),
+            dataTableSort: window.utils.cloneDeep(window.APP_CONFIG.DEFAULT_SETTINGS.DATA_TABLE_SORT),
+            analysisTableSort: window.utils.cloneDeep(window.APP_CONFIG.DEFAULT_SETTINGS.ANALYSIS_TABLE_SORT),
             publicationSection: window.APP_CONFIG.DEFAULT_SETTINGS.PUBLICATION_SECTION,
             publicationBruteForceMetric: window.APP_CONFIG.DEFAULT_SETTINGS.PUBLICATION_BRUTE_FORCE_METRIC,
             publicationLang: window.APP_CONFIG.DEFAULT_SETTINGS.PUBLICATION_LANG,
@@ -18,21 +18,21 @@ window.state = (() => {
             activeTabId: 'publication'
         };
 
-        const loadedSection = loadFromLocalStorage(window.APP_CONFIG.STORAGE_KEYS.PUBLICATION_SECTION);
+        const loadedSection = window.utils.loadFromLocalStorage(window.APP_CONFIG.STORAGE_KEYS.PUBLICATION_SECTION);
         const isValidSection = window.PUBLICATION_CONFIG.sections.some(s => s.id === loadedSection || s.subSections.some(sub => sub.id === loadedSection));
 
         currentState = {
-            currentCohort: loadFromLocalStorage(window.APP_CONFIG.STORAGE_KEYS.CURRENT_COHORT) ?? defaultState.currentCohort,
+            currentCohort: window.utils.loadFromLocalStorage(window.APP_CONFIG.STORAGE_KEYS.CURRENT_COHORT) ?? defaultState.currentCohort,
             publicationSection: isValidSection ? loadedSection : defaultState.publicationSection,
-            publicationBruteForceMetric: loadFromLocalStorage(window.APP_CONFIG.STORAGE_KEYS.PUBLICATION_BRUTE_FORCE_METRIC) ?? defaultState.publicationBruteForceMetric,
-            publicationLang: loadFromLocalStorage(window.APP_CONFIG.STORAGE_KEYS.PUBLICATION_LANG) ?? defaultState.publicationLang,
-            statsLayout: loadFromLocalStorage(window.APP_CONFIG.STORAGE_KEYS.STATS_LAYOUT) ?? defaultState.statsLayout,
-            statsCohort1: loadFromLocalStorage(window.APP_CONFIG.STORAGE_KEYS.STATS_COHORT1) ?? defaultState.statsCohort1,
-            statsCohort2: loadFromLocalStorage(window.APP_CONFIG.STORAGE_KEYS.STATS_COHORT2) ?? defaultState.statsCohort2,
-            comparisonView: loadFromLocalStorage(window.APP_CONFIG.STORAGE_KEYS.COMPARISON_VIEW) ?? defaultState.comparisonView,
-            comparisonStudyId: loadFromLocalStorage(window.APP_CONFIG.STORAGE_KEYS.COMPARISON_STUDY_ID) ?? defaultState.comparisonStudyId,
-            dataTableSort: cloneDeep(defaultState.dataTableSort),
-            analysisTableSort: cloneDeep(defaultState.analysisTableSort),
+            publicationBruteForceMetric: window.utils.loadFromLocalStorage(window.APP_CONFIG.STORAGE_KEYS.PUBLICATION_BRUTE_FORCE_METRIC) ?? defaultState.publicationBruteForceMetric,
+            publicationLang: window.utils.loadFromLocalStorage(window.APP_CONFIG.STORAGE_KEYS.PUBLICATION_LANG) ?? defaultState.publicationLang,
+            statsLayout: window.utils.loadFromLocalStorage(window.APP_CONFIG.STORAGE_KEYS.STATS_LAYOUT) ?? defaultState.statsLayout,
+            statsCohort1: window.utils.loadFromLocalStorage(window.APP_CONFIG.STORAGE_KEYS.STATS_COHORT1) ?? defaultState.statsCohort1,
+            statsCohort2: window.utils.loadFromLocalStorage(window.APP_CONFIG.STORAGE_KEYS.STATS_COHORT2) ?? defaultState.statsCohort2,
+            comparisonView: window.utils.loadFromLocalStorage(window.APP_CONFIG.STORAGE_KEYS.COMPARISON_VIEW) ?? defaultState.comparisonView,
+            comparisonStudyId: window.utils.loadFromLocalStorage(window.APP_CONFIG.STORAGE_KEYS.COMPARISON_STUDY_ID) ?? defaultState.comparisonStudyId,
+            dataTableSort: window.utils.cloneDeep(defaultState.dataTableSort),
+            analysisTableSort: window.utils.cloneDeep(defaultState.analysisTableSort),
             activeTabId: defaultState.activeTabId
         };
     }
@@ -41,7 +41,7 @@ window.state = (() => {
         if (currentState[key] !== newValue) {
             currentState[key] = newValue;
             if (storageKey) {
-                saveToLocalStorage(storageKey, newValue);
+                window.utils.saveToLocalStorage(storageKey, newValue);
             }
             return true;
         }
@@ -51,7 +51,7 @@ window.state = (() => {
     function getCurrentCohort() { return currentState.currentCohort; }
     function setCurrentCohort(newCohort) { return _setter('currentCohort', window.APP_CONFIG.STORAGE_KEYS.CURRENT_COHORT, newCohort); }
 
-    function getDataTableSort() { return cloneDeep(currentState.dataTableSort); }
+    function getDataTableSort() { return window.utils.cloneDeep(currentState.dataTableSort); }
     function updateDataTableSort(key, subKey = null) {
         if (currentState.dataTableSort.key === key && currentState.dataTableSort.subKey === subKey) {
             currentState.dataTableSort.direction = currentState.dataTableSort.direction === 'asc' ? 'desc' : 'asc';
@@ -61,7 +61,7 @@ window.state = (() => {
         return true;
     }
 
-    function getAnalysisTableSort() { return cloneDeep(currentState.analysisTableSort); }
+    function getAnalysisTableSort() { return window.utils.cloneDeep(currentState.analysisTableSort); }
     function updateAnalysisTableSort(key, subKey = null) {
         if (currentState.analysisTableSort.key === key && currentState.analysisTableSort.subKey === subKey) {
             currentState.analysisTableSort.direction = currentState.analysisTableSort.direction === 'asc' ? 'desc' : 'asc';
@@ -166,4 +166,4 @@ window.state = (() => {
         getActiveTabId,
         setActiveTabId
     });
-})(); 
+})();
