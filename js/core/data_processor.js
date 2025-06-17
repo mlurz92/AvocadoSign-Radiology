@@ -1,5 +1,45 @@
 window.dataProcessor = (() => {
 
+    function _deduplicateRawData(rawData) {
+        if (!Array.isArray(rawData)) return [];
+        const patientMap = new Map();
+        const duplicates = new Map();
+
+        rawData.forEach(patient => {
+            if (!patient || !patient.lastName || !patient.birthDate) return;
+            const key = `${patient.lastName.toLowerCase()}_${patient.birthDate}`;
+            if (!patientMap.has(key)) {
+                patientMap.set(key, patient);
+            } else {
+                if (!duplicates.has(key)) {
+                    duplicates.set(key, [patientMap.get(key)]);
+                }
+                duplicates.get(key).push(patient);
+            }
+        });
+
+        duplicates.forEach((duplicatePatients, key) => {
+            duplicatePatients.sort((a, b) => a.id - b.id);
+            const primaryPatient = duplicatePatients[0];
+
+            for (let i = 1; i < duplicatePatients.length; i++) {
+                const secondaryPatient = duplicatePatients[i];
+                if (Array.isArray(secondaryPatient.t2Nodes)) {
+                    primaryPatient.t2Nodes = [...(primaryPatient.t2Nodes || []), ...secondaryPatient.t2Nodes];
+                }
+                if (secondaryPatient.notes && !primaryPatient.notes.includes(secondaryPatient.notes)) {
+                    primaryPatient.notes = [primaryPatient.notes, secondaryPatient.notes].filter(Boolean).join('; ');
+                }
+                patientMap.delete(key); 
+                patientMap.set(key, primaryPatient); 
+            }
+        });
+
+        const uniquePatients = Array.from(patientMap.values());
+        uniquePatients.sort((a, b) => a.id - b.id);
+        return uniquePatients;
+    }
+
     function calculateAge(birthDateStr, examDateStr) {
         if (!birthDateStr || !examDateStr) return null;
         try {
@@ -58,7 +98,8 @@ window.dataProcessor = (() => {
     function processAllData(rawData) {
         if (!Array.isArray(rawData)) return [];
         if (typeof window.APP_CONFIG === 'undefined') return [];
-        return rawData.map((patient, index) => processSinglePatient(patient, index));
+        const deduplicatedData = _deduplicateRawData(rawData);
+        return deduplicatedData.map((patient, index) => processSinglePatient(patient, index));
     }
 
     function filterDataByCohort(data, cohortId) {
