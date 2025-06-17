@@ -11,7 +11,7 @@ window.bruteForceManager = (() => {
     let onStarted = null;
 
     function _loadResultsFromStorage() {
-        const storedResults = loadFromLocalStorage(window.APP_CONFIG.STORAGE_KEYS.BRUTE_FORCE_RESULTS);
+        const storedResults = window.utils.loadFromLocalStorage(window.APP_CONFIG.STORAGE_KEYS.BRUTE_FORCE_RESULTS);
         if (storedResults && typeof storedResults === 'object') {
             allCohortResults = storedResults;
         } else {
@@ -20,7 +20,7 @@ window.bruteForceManager = (() => {
     }
 
     function _saveResultsToStorage() {
-        saveToLocalStorage(window.APP_CONFIG.STORAGE_KEYS.BRUTE_FORCE_RESULTS, allCohortResults);
+        window.utils.saveToLocalStorage(window.APP_CONFIG.STORAGE_KEYS.BRUTE_FORCE_RESULTS, allCohortResults);
     }
 
     function initializeWorker() {
@@ -66,7 +66,7 @@ window.bruteForceManager = (() => {
                     if (!allCohortResults[resultCohort]) {
                         allCohortResults[resultCohort] = {};
                     }
-                    allCohortResults[resultCohort][resultMetric] = cloneDeep(payload);
+                    allCohortResults[resultCohort][resultMetric] = window.utils.cloneDeep(payload);
                     _saveResultsToStorage();
                 }
                 currentCohortRunning = null;
@@ -156,15 +156,15 @@ window.bruteForceManager = (() => {
     }
 
     function getResultsForCohortAndMetric(cohortId, metric) {
-        return allCohortResults[cohortId]?.[metric] ? cloneDeep(allCohortResults[cohortId][metric]) : null;
+        return allCohortResults[cohortId]?.[metric] ? window.utils.cloneDeep(allCohortResults[cohortId][metric]) : null;
     }
 
     function getAllResultsForCohort(cohortId) {
-        return allCohortResults[cohortId] ? cloneDeep(allCohortResults[cohortId]) : null;
+        return allCohortResults[cohortId] ? window.utils.cloneDeep(allCohortResults[cohortId]) : null;
     }
 
     function getAllResults() {
-        return cloneDeep(allCohortResults);
+        return window.utils.cloneDeep(allCohortResults);
     }
 
     function isWorkerAvailable() {
