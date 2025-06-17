@@ -164,4 +164,4 @@ window.publicationTab = (() => {
         getSectionContentForExport
     });
 
-})();
+})(); 
