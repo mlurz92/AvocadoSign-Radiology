@@ -8,17 +8,17 @@ window.tableRenderer = (() => {
         let content = `<h6 class="w-100 mb-2 ps-1">${window.APP_CONFIG.UI_TEXTS.tooltips.dataTab.t2NodeHeader || 'T2 Lymph Node Features:'}</h6>`;
         patient.t2Nodes.forEach((lk, index) => {
             if (!lk) return;
-            const sizeText = window.utils.formatNumber(lk.size, 1, 'N/A');
+            const sizeText = formatNumber(lk.size, 1, 'N/A');
             const shapeText = lk.shape || '--';
             const borderText = lk.border || '--';
             const homogeneityText = lk.homogeneity || '--';
             const signalText = lk.signal || 'N/A';
 
-            const shapeIcon = window.utils.getT2IconSVG('shape', lk.shape);
-            const borderIcon = window.utils.getT2IconSVG('border', lk.border);
-            const homogeneityIcon = window.utils.getT2IconSVG('homogeneity', lk.homogeneity);
-            const signalIcon = window.utils.getT2IconSVG('signal', lk.signal);
-            const sizeIcon = window.utils.getT2IconSVG('size', null);
+            const shapeIcon = getT2IconSVG('shape', lk.shape);
+            const borderIcon = getT2IconSVG('border', lk.border);
+            const homogeneityIcon = getT2IconSVG('homogeneity', lk.homogeneity);
+            const signalIcon = getT2IconSVG('signal', lk.signal);
+            const sizeIcon = getT2IconSVG('size', null);
 
             const sizeTooltip = window.APP_CONFIG.UI_TEXTS.tooltips.t2Size?.description || 'Size (short axis)';
             const shapeTooltip = window.APP_CONFIG.UI_TEXTS.tooltips.t2Shape?.description || 'Shape';
@@ -44,10 +44,10 @@ window.tableRenderer = (() => {
         const detailRowId = `data-detail-${patient.id}`;
         const hasT2Nodes = Array.isArray(patient.t2Nodes) && patient.t2Nodes.length > 0;
         const sexText = patient.sex === 'm' ? 'Male' : patient.sex === 'f' ? 'Female' : 'Unknown';
-        const therapyText = window.utils.getCohortDisplayName(patient.therapy);
+        const therapyText = getCohortDisplayName(patient.therapy);
         const naPlaceholder = '--';
         
-        const notesText = window.utils.escapeHTML(patient.notes || '');
+        const notesText = escapeHTML(patient.notes || '');
         const tooltipNotes = notesText ? notesText : (window.APP_CONFIG.UI_TEXTS.tooltips.dataTab?.notes || 'Additional notes');
 
         const t2StatusClass = patient.t2Status === '+' ? 'plus' : patient.t2Status === '-' ? 'minus' : 'unknown';
@@ -62,7 +62,7 @@ window.tableRenderer = (() => {
                 <td data-label="Last Name">${patient.lastName || naPlaceholder}</td>
                 <td data-label="First Name">${patient.firstName || naPlaceholder}</td>
                 <td data-label="Sex">${sexText}</td>
-                <td data-label="Age">${window.utils.formatNumber(patient.age, 0, naPlaceholder)}</td>
+                <td data-label="Age">${formatNumber(patient.age, 0, naPlaceholder)}</td>
                 <td data-label="Therapy">${therapyText}</td>
                 <td data-label="N/AS/T2">
                     <span class="status-${patient.nStatus === '+' ? 'plus' : 'minus'}" data-tippy-content="${nTooltip}">${patient.nStatus ?? '?'}</span> /
@@ -95,7 +95,7 @@ window.tableRenderer = (() => {
         const naPlaceholder = '--';
 
         const headerTooltip = (window.APP_CONFIG.UI_TEXTS.tooltips.analysisTab.t2NodeHeaderTooltip || 
-            'Shows the evaluation of each T2 lymph node based on the currently applied criteria. Fulfilled positive criteria are highlighted.');
+            'Shows the evaluation of each T2 lymph node based on the currently applied criteria. Fulfilled criteria contributing to a positive evaluation are highlighted.');
 
         let content = `<h6 class="w-100 mb-2 ps-1" data-tippy-content="${headerTooltip}">T2 LN Evaluation (Logic: ${window.APP_CONFIG.UI_TEXTS.t2LogicDisplayNames[appliedLogic] || appliedLogic || 'N/A'}, Criteria: ${criteriaFormatted || 'N/A'})</h6>`;
 
@@ -124,8 +124,8 @@ window.tableRenderer = (() => {
                     hlClass = 'highlight-suspect-feature';
                 }
                 
-                const icon = window.utils.getT2IconSVG(iconType || key, originalValueInLK);
-                const text = key === 'size' ? `${window.utils.formatNumber(originalValueInLK, 1, 'N/A')}mm` : (originalValueInLK || naPlaceholder);
+                const icon = getT2IconSVG(iconType || key, originalValueInLK);
+                const text = key === 'size' ? `${formatNumber(originalValueInLK, 1, 'N/A')}mm` : (originalValueInLK || naPlaceholder);
                 
                 const tooltipKey = 't2' + key.charAt(0).toUpperCase() + key.slice(1);
                 const tooltipBase = window.APP_CONFIG.UI_TEXTS.tooltips[tooltipKey]?.description || `Feature ${key}`;
@@ -151,12 +151,12 @@ window.tableRenderer = (() => {
         const rowId = `analysis-row-${patient.id}`;
         const detailRowId = `analysis-detail-${patient.id}`;
         const hasEvaluatedNodes = Array.isArray(patient.t2NodesEvaluated) && patient.t2NodesEvaluated.length > 0;
-        const therapyText = window.utils.getCohortDisplayName(patient.therapy);
+        const therapyText = getCohortDisplayName(patient.therapy);
         const naPlaceholder = '--';
 
-        const nCountsText = `${window.utils.formatNumber(patient.countPathologyNodesPositive, 0, '-')}/${window.utils.formatNumber(patient.countPathologyNodes, 0, '-')}`;
-        const asCountsText = `${window.utils.formatNumber(patient.countASNodesPositive, 0, '-')}/${window.utils.formatNumber(patient.countASNodes, 0, '-')}`;
-        const t2CountsText = `${window.utils.formatNumber(patient.countT2NodesPositive, 0, '-')}/${window.utils.formatNumber(patient.countT2Nodes, 0, '-')}`;
+        const nCountsText = `${formatNumber(patient.countPathologyNodesPositive, 0, '-')}/${formatNumber(patient.countPathologyNodes, 0, '-')}`;
+        const asCountsText = `${formatNumber(patient.countASNodesPositive, 0, '-')}/${formatNumber(patient.countASNodes, 0, '-')}`;
+        const t2CountsText = `${formatNumber(patient.countT2NodesPositive, 0, '-')}/${formatNumber(patient.countT2Nodes, 0, '-')}`;
         
         const nTooltip = window.APP_CONFIG.UI_TEXTS.tooltips.analysisTab?.nStatus || 'N-Status (Histopathology Reference)';
         const asTooltip = window.APP_CONFIG.UI_TEXTS.tooltips.analysisTab?.asStatus || 'AS-Status (Avocado Sign Prediction)';

@@ -10,14 +10,15 @@ window.publicationHelpers = (() => {
 
         if (p < 0.001) return `${prefix} < .001`;
         if (p > 0.99) return `${prefix} > .99`;
-        
+
         const pRoundedTo3 = parseFloat(p.toFixed(3));
+        
         if (p < 0.01) {
             return `${prefix} = .${pRoundedTo3.toFixed(3).substring(2)}`;
         }
         
         const pRoundedTo2 = parseFloat(p.toFixed(2));
-        if (pRoundedTo2 === 0.05 && p < 0.05) {
+        if (pRoundedTo2 === 0.05 && p.toPrecision(15) < (0.05).toPrecision(15)) {
              return `${prefix} = .${pRoundedTo3.toFixed(3).substring(2)}`;
         }
 

@@ -10,7 +10,7 @@ let startTime = 0;
 let t2SizeRange = { min: 0.1, max: 15.0, step: 0.1 };
 const reportIntervalFactor = 200;
 
-function _formatNumberForWorker(num, digits = 1, placeholder = '--') {
+function formatNumberForWorker(num, digits = 1, placeholder = '--') {
     const number = parseFloat(num);
     if (num === null || num === undefined || isNaN(number) || !isFinite(number)) {
         return placeholder;
@@ -18,10 +18,10 @@ function _formatNumberForWorker(num, digits = 1, placeholder = '--') {
     return number.toFixed(digits);
 }
 
-function _formatCriteriaForDisplay(criteria, logic = null) {
+function formatCriteriaForDisplay(criteria, logic = null) {
     if (!criteria || typeof criteria !== 'object') return 'N/A';
     const parts = [];
-    const activeKeys = Object.keys(criteria).filter(key => key !== 'logic' && criteria[key]?.active === true);
+    const activeKeys = Object.keys(criteria).filter(key => key !== 'logic' && criteria[key]?.active);
     if (activeKeys.length === 0) return 'No active criteria';
 
     const effectiveLogic = logic || criteria.logic || 'OR';
@@ -29,7 +29,7 @@ function _formatCriteriaForDisplay(criteria, logic = null) {
 
     const formatValue = (key, criterion) => {
         if (!criterion) return '?';
-        if (key === 'size') return `${criterion.condition || '>='}${_formatNumberForWorker(criterion.threshold, 1)}mm`;
+        if (key === 'size') return `${criterion.condition || '>='}${formatNumberForWorker(criterion.threshold, 1)}mm`;
         return criterion.value || '?';
     };
 
@@ -59,7 +59,7 @@ function _formatCriteriaForDisplay(criteria, logic = null) {
     return parts.join(separator);
 }
 
-function _cloneDeep(obj) {
+function cloneDeep(obj) {
     if (obj === null || typeof obj !== 'object') return obj;
     try {
         if (typeof self !== 'undefined' && self.structuredClone) {
@@ -71,7 +71,7 @@ function _cloneDeep(obj) {
         if (Array.isArray(obj)) {
             const arrCopy = [];
             for (let i = 0; i < obj.length; i++) {
-                arrCopy[i] = _cloneDeep(obj[i]);
+                arrCopy[i] = cloneDeep(obj[i]);
             }
             return arrCopy;
         }
@@ -79,7 +79,7 @@ function _cloneDeep(obj) {
             const objCopy = {};
             for (const key in obj) {
                 if (Object.prototype.hasOwnProperty.call(obj, key)) {
-                    objCopy[key] = _cloneDeep(obj[key]);
+                    objCopy[key] = cloneDeep(obj[key]);
                 }
             }
             return objCopy;
@@ -242,7 +242,7 @@ function generateCriteriaCombinations() {
             const currentKey = activeKeys[keyIndex];
             const options = VALUE_OPTIONS[currentKey];
             options.forEach(value => {
-                const nextCombo = _cloneDeep(currentCombo);
+                const nextCombo = cloneDeep(currentCombo);
                 if (currentKey === 'size') {
                     nextCombo[currentKey].threshold = value;
                     nextCombo[currentKey].condition = '>=';
@@ -258,7 +258,7 @@ function generateCriteriaCombinations() {
 
         combinationsForSubset.forEach(combo => {
             LOGICS.forEach(logic => {
-                const finalCombo = { logic: logic, criteria: _cloneDeep(combo) };
+                const finalCombo = { logic: logic, criteria: cloneDeep(combo) };
                 CRITERIA_KEYS.forEach(k => {
                     if (!finalCombo.criteria[k]) finalCombo.criteria[k] = { active: false };
                 });
@@ -324,7 +324,7 @@ function runBruteForce() {
                 payload: {
                     tested: combinationsTested,
                     total: totalCombinations,
-                    currentBest: bestResult.criteria ? _cloneDeep(bestResult) : null,
+                    currentBest: bestResult.criteria ? cloneDeep(bestResult) : null,
                     metric: targetMetric,
                     cohort: cohortName
                 }
@@ -366,7 +366,7 @@ function runBruteForce() {
                 }
             }
         }
-        const finalBest = bestResult.criteria ? _cloneDeep(bestResult) : (topResults[0] ? _cloneDeep(topResults[0]) : null);
+        const finalBest = bestResult.criteria ? cloneDeep(bestResult) : (topResults[0] ? cloneDeep(topResults[0]) : null);
 
         let nTotal = 0;
         let nPlus = 0;

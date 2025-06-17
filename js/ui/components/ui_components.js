@@ -55,7 +55,7 @@ window.uiComponents = (() => {
         const defaultCriteria = getDefaultT2Criteria();
         const sizeThreshold = initialCriteria.size?.threshold ?? defaultCriteria.size.threshold;
         const { min, max, step } = window.APP_CONFIG.T2_CRITERIA_SETTINGS.SIZE_RANGE;
-        const formattedThresholdForInput = window.utils.formatNumber(sizeThreshold, 1, '5.0', true);
+        const formattedThresholdForInput = formatNumber(sizeThreshold, 1, '5.0', true);
 
         const createButtonOptions = (key, isChecked, criterionLabel) => {
             const valuesKey = key.toUpperCase() + '_VALUES';
@@ -65,7 +65,7 @@ window.uiComponents = (() => {
 
             return values.map(value => {
                 const isActiveValue = isChecked && currentValue === value;
-                const icon = window.utils.getT2IconSVG(key, value);
+                const icon = getT2IconSVG(key, value);
                 const buttonTooltip = `Set criterion '${criterionLabel}' to '${value}'. ${isChecked ? '' : '(Criterion is currently inactive)'}`;
                 
                 return `<button class="btn t2-criteria-button criteria-icon-button ${isActiveValue ? 'active' : ''} ${!isChecked ? 'inactive-option' : ''}" data-criterion="${key}" data-value="${value}" data-tippy-content="${buttonTooltip}" ${!isChecked ? 'disabled' : ''}>${icon}</button>`;
@@ -107,7 +107,7 @@ window.uiComponents = (() => {
                             <div class="d-flex align-items-center flex-wrap">
                                  <span class="me-1 small text-muted">≥</span>
                                  <input type="range" class="form-range criteria-range flex-grow-1 me-2" id="range-size" min="${min}" max="${max}" step="${step}" value="${formattedThresholdForInput}" ${!isChecked ? 'disabled' : ''} data-tippy-content="Set short-axis diameter threshold (≥).">
-                                 <span class="criteria-value-display text-end me-1 fw-bold" id="value-size">${window.utils.formatNumber(sizeThreshold, 1)}</span><span class="me-2 small text-muted">mm</span>
+                                 <span class="criteria-value-display text-end me-1 fw-bold" id="value-size">${formatNumber(sizeThreshold, 1)}</span><span class="me-2 small text-muted">mm</span>
                                  <input type="number" class="form-control form-control-sm criteria-input-manual" id="input-size" min="${min}" max="${max}" step="${step}" value="${formattedThresholdForInput}" ${!isChecked ? 'disabled' : ''} style="width: 70px;" aria-label="Enter size manually" data-tippy-content="Enter threshold manually.">
                             </div>
                         `)}
@@ -132,7 +132,7 @@ window.uiComponents = (() => {
         let cardTooltipHtml = `data-tippy-content="${title}"`;
         if (tooltipKey && window.APP_CONFIG.UI_TEXTS.tooltips[tooltipKey]?.cardTitle) {
             let tooltipTemplate = window.APP_CONFIG.UI_TEXTS.tooltips[tooltipKey].cardTitle;
-            let cohortName = cohortId ? window.utils.getCohortDisplayName(cohortId) : 'the current cohort';
+            let cohortName = cohortId ? getCohortDisplayName(cohortId) : 'the current cohort';
             let finalTooltip = tooltipTemplate.replace('[COHORT]', `<strong>${cohortName}</strong>`);
             cardTooltipHtml = `data-tippy-content="${finalTooltip}"`;
         }
@@ -189,7 +189,7 @@ window.uiComponents = (() => {
     }
 
     function createBruteForceModalContent(resultsData) {
-        if (!resultsData || !results.results || resultsData.results.length === 0) {
+        if (!resultsData || !resultsData.results || resultsData.results.length === 0) {
             return '<p class="text-center text-muted">No brute-force results available.</p>';
         }
 
@@ -198,12 +198,12 @@ window.uiComponents = (() => {
 
         let html = `
             <div class="mb-4">
-                <h5>Optimization Summary for Cohort: ${window.utils.getCohortDisplayName(cohort)}</h5>
+                <h5>Optimization Summary for Cohort: ${getCohortDisplayName(cohort)}</h5>
                 <ul class="list-unstyled small mb-2">
                     <li><strong>Target Metric:</strong> ${metric}</li>
-                    <li><strong>Total Combinations Tested:</strong> ${window.utils.formatNumber(totalTested, 0)}</li>
-                    <li><strong>Duration:</strong> ${window.utils.formatNumber(duration / 1000, 1, 'N/A', true)} seconds</li>
-                    <li><strong>Patient Count (N):</strong> ${window.utils.formatNumber(nTotal, 0)} (N+: ${window.utils.formatNumber(nPlus, 0)}, N-: ${window.utils.formatNumber(nMinus, 0)})</li>
+                    <li><strong>Total Combinations Tested:</strong> ${formatNumber(totalTested, 0)}</li>
+                    <li><strong>Duration:</strong> ${formatNumber(duration / 1000, 1, 'N/A', true)} seconds</li>
+                    <li><strong>Patient Count (N):</strong> ${formatNumber(nTotal, 0)} (N+: ${formatNumber(nPlus, 0)}, N-: ${formatNumber(nMinus, 0)})</li>
                 </ul>
             </div>
             <h5>Top 10 Results:</h5>
@@ -249,7 +249,7 @@ window.uiComponents = (() => {
             html += `
                 <tr>
                     <td>${currentRank}</td>
-                    <td>${window.utils.formatNumber(result.metricValue, 4, 'N/A', true)}</td>
+                    <td>${formatNumber(result.metricValue, 4, 'N/A', true)}</td>
                     <td>${result.logic.toUpperCase()}</td>
                     <td><code>${formatCriteriaFunc(result.criteria, result.logic)}</code></td>
                 </tr>
@@ -305,9 +305,9 @@ window.uiComponents = (() => {
                         hasContent = true;
                         tableHTML += `
                             <tr>
-                                <td>${window.utils.getCohortDisplayName(cohortId)}</td>
+                                <td>${getCohortDisplayName(cohortId)}</td>
                                 <td>${metricName}</td>
-                                <td>${window.utils.formatNumber(result.bestResult.metricValue, 4, na, true)}</td>
+                                <td>${formatNumber(result.bestResult.metricValue, 4, na, true)}</td>
                                 <td><code>${formatCriteriaFunc(result.bestResult.criteria, result.bestResult.logic, true)}</code></td>
                             </tr>
                         `;

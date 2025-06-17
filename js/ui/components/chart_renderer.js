@@ -86,7 +86,7 @@ window.chartRenderer = (() => {
         chartArea.selectAll(".bar").data(bins).join("rect").attr("class", "bar").attr("x", d => x(d.x0) + 1).attr("y", y(0)).attr("width", d => Math.max(0, x(d.x1) - x(d.x0) - 1)).attr("height", 0).style("fill", barColor).style("opacity", 0.8).attr("rx", 1).attr("ry", 1)
             .on("mouseover", (event, d) => {
                 tooltip.transition().duration(50).style("opacity", .95);
-                tooltip.html(`Age: ${window.utils.formatNumber(d.x0, 0)}-${window.utils.formatNumber(d.x1, 0)}<br>Count: ${d.length}`).style("left", (event.pageX + 10) + "px").style("top", (event.pageY - 15) + "px");
+                tooltip.html(`Age: ${formatNumber(d.x0, 0)}-${formatNumber(d.x1, 0)}<br>Count: ${d.length}`).style("left", (event.pageX + 10) + "px").style("top", (event.pageY - 15) + "px");
                 d3.select(event.currentTarget).style("opacity", 1).style("stroke", "#333").style("stroke-width", 0.5);
             })
             .on("mouseout", (event) => {
@@ -129,7 +129,7 @@ window.chartRenderer = (() => {
         arcs.append("path").style("fill", d => color(d.data.label)).style("stroke", window.APP_CONFIG.CHART_SETTINGS.PLOT_BACKGROUND_COLOR).style("stroke-width", "1.5px").style("opacity", 0.85)
             .on("mouseover", function(event, d) {
                 tooltip.transition().duration(50).style("opacity", .95);
-                tooltip.html(`<strong>${d.data.label}:</strong> ${window.utils.formatNumber(d.data.value, 0)} (${window.utils.formatPercent(d.data.value / totalValue)})`).style("left", (event.pageX + 10) + "px").style("top", (event.pageY - 15) + "px");
+                tooltip.html(`<strong>${d.data.label}:</strong> ${formatNumber(d.data.value, 0)} (${formatPercent(d.data.value / totalValue)})`).style("left", (event.pageX + 10) + "px").style("top", (event.pageY - 15) + "px");
                 d3.select(this).transition().duration(100).style("opacity", 1).attr("transform", "scale(1.03)");
             })
             .on("mouseout", function() {
@@ -148,7 +148,7 @@ window.chartRenderer = (() => {
             legendItems.each(function(d, i) {
                 const item = d3.select(this);
                 item.append("rect").attr("x", 0).attr("y", 0).attr("width", 10).attr("height", 10).attr("fill", color(d.label));
-                item.append("text").attr("x", 14).attr("y", 5).attr("dy", "0.35em").text(`${d.label} (${window.utils.formatNumber(d.value, 0)})`);
+                item.append("text").attr("x", 14).attr("y", 5).attr("dy", "0.35em").text(`${d.label} (${formatNumber(d.value, 0)})`);
                 const itemWidth = this.getBBox().width + 15;
                 if (i > 0 && currentX + itemWidth > innerWidth) { currentX = 0; currentY += 18; }
                 item.attr("transform", `translate(${currentX}, ${currentY})`);
@@ -189,7 +189,7 @@ window.chartRenderer = (() => {
                 tooltip.transition().duration(50).style("opacity", .95);
                 const displayName = subgroupDisplayNames[d.key] || d.key;
                 const digits = (d.metric === 'AUC' || d.metric === 'F1') ? 2 : 0;
-                const formattedValue = (d.metric === 'AUC' || d.metric === 'F1') ? window.utils.formatNumber(d.value, digits) : window.utils.formatPercent(d.value, digits);
+                const formattedValue = (d.metric === 'AUC' || d.metric === 'F1') ? formatNumber(d.value, digits) : formatPercent(d.value, digits);
                 tooltip.html(`<strong>${d.metric} (${displayName}):</strong> ${formattedValue}`).style("left", (event.pageX + 10) + "px").style("top", (event.pageY - 15) + "px");
                 d3.select(this).style("opacity", 1).style("stroke", "#333").style("stroke-width", 1);
             })
@@ -293,7 +293,7 @@ window.chartRenderer = (() => {
             .attr("fill", window.APP_CONFIG.CHART_SETTINGS.AS_COLOR)
             .on("mouseover", (event) => {
                 tooltip.transition().duration(50).style("opacity", .95);
-                tooltip.html(`<strong>${methodName}</strong><br>Sensitivity: ${window.utils.formatPercent(sensitivity, 1)}<br>1-Specificity: ${window.utils.formatPercent(oneMinusSpecificity, 1)}<br>AUC: ${window.utils.formatNumber(auc, 2)}`)
+                tooltip.html(`<strong>${methodName}</strong><br>Sensitivity: ${formatPercent(sensitivity, 1)}<br>1-Specificity: ${formatPercent(oneMinusSpecificity, 1)}<br>AUC: ${formatNumber(auc, 2)}`)
                     .style("left", (event.pageX + 10) + "px")
                     .style("top", (event.pageY - 15) + "px");
                  d3.select(event.currentTarget).transition().duration(100).attr('r', 7);
@@ -316,7 +316,7 @@ window.chartRenderer = (() => {
             .style("font-size", "11px")
             .style("font-weight", "bold")
             .style("opacity", 0)
-            .text(`AUC: ${window.utils.formatNumber(auc, 2)}`)
+            .text(`AUC: ${formatNumber(auc, 2)}`)
             .transition()
             .delay(window.APP_CONFIG.CHART_SETTINGS.ANIMATION_DURATION_MS)
             .duration(400)

@@ -1,7 +1,7 @@
 window.eventManager = (() => {
     let app;
 
-    const debouncedUpdateSizeInput = window.utils.debounce(value => {
+    const debouncedUpdateSizeInput = debounce(value => {
         if (window.t2CriteriaManager.updateCriterionThreshold(value)) {
             if (!window.t2CriteriaManager.getCurrentCriteria().size?.active) {
                 window.t2CriteriaManager.toggleCriterionActive('size', true);
@@ -181,13 +181,13 @@ window.eventManager = (() => {
             const sizeValueDisplay = document.getElementById('value-size');
             const sizeRangeInput = document.getElementById('range-size');
             const sizeManualInput = document.getElementById('input-size');
-            const newValue = window.utils.formatNumber(target.value, 1, '', true);
+            const newValue = formatNumber(target.value, 1, '', true);
 
             if (target.id === 'range-size') {
-                if(sizeValueDisplay) sizeValueDisplay.textContent = window.utils.formatNumber(newValue, 1);
+                if(sizeValueDisplay) sizeValueDisplay.textContent = formatNumber(newValue, 1);
                 if(sizeManualInput) sizeManualInput.value = newValue;
             } else {
-                if(sizeValueDisplay) sizeValueDisplay.textContent = window.utils.formatNumber(newValue, 1);
+                if(sizeValueDisplay) sizeValueDisplay.textContent = formatNumber(newValue, 1);
                 if(sizeRangeInput) sizeRangeInput.value = parseFloat(newValue);
             }
             debouncedUpdateSizeInput(newValue);

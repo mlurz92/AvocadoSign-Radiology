@@ -9,7 +9,7 @@ window.studyT2CriteriaManager = (() => {
         const formatValue = (key, criterion, isShort) => {
             if (!criterion) return '?';
             if (key === 'size') {
-                const formattedThreshold = window.utils.formatNumber(criterion.threshold, 1, '?', true);
+                const formattedThreshold = formatNumber(criterion.threshold, 1, '?', true);
                 return `Size ${criterion.condition || '>='} ${formattedThreshold}mm`;
             }
             let value = criterion.value || '?';
@@ -67,13 +67,13 @@ window.studyT2CriteriaManager = (() => {
     }
 
     function getAllStudyCriteriaSets() {
-        return window.utils.cloneDeep(window.PUBLICATION_CONFIG.literatureCriteriaSets);
+        return cloneDeep(window.PUBLICATION_CONFIG.literatureCriteriaSets);
     }
 
     function getStudyCriteriaSetById(id) {
         if (typeof id !== 'string') return null;
         const foundSet = window.PUBLICATION_CONFIG.literatureCriteriaSets.find(set => set.id === id);
-        return foundSet ? window.utils.cloneDeep(foundSet) : null;
+        return foundSet ? cloneDeep(foundSet) : null;
     }
 
     function _checkSingleNodeESGAR(lymphNode, criteria) {
@@ -205,12 +205,12 @@ window.studyT2CriteriaManager = (() => {
 
     function evaluateDatasetWithStudyCriteria(dataset, studyCriteriaSet) {
         if (!studyCriteriaSet) {
-            return (dataset || []).map(p => ({ ...window.utils.cloneDeep(p), t2Status: null, countT2NodesPositive: 0, t2NodesEvaluated: [] }));
+            return (dataset || []).map(p => ({ ...cloneDeep(p), t2Status: null, countT2NodesPositive: 0, t2NodesEvaluated: [] }));
         }
         if (!Array.isArray(dataset)) return [];
         return dataset.map(patient => {
             if (!patient) return null;
-            const patientCopy = window.utils.cloneDeep(patient);
+            const patientCopy = cloneDeep(patient);
             const { t2Status, positiveNodeCount, evaluatedNodes } = evaluatePatientWithStudyCriteria(patientCopy, studyCriteriaSet);
             patientCopy.t2Status = t2Status;
             patientCopy.countT2NodesPositive = positiveNodeCount;

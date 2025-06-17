@@ -24,7 +24,7 @@ window.exportTab = (() => {
     };
 
     function render(currentCohort) {
-        const cohortDisplayName = window.utils.getCohortDisplayName(currentCohort);
+        const cohortDisplayName = getCohortDisplayName(currentCohort);
         const descriptionTextTemplate = window.APP_CONFIG.UI_TEXTS.tooltips.exportTab.description;
         const finalDescriptionText = descriptionTextTemplate.replace('[COHORT]', `<strong>${cohortDisplayName}</strong>`);
 

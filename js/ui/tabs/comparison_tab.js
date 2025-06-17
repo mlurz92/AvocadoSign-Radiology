@@ -10,16 +10,16 @@ window.comparisonTab = (() => {
             { id: window.APP_CONFIG.COHORTS.NEOADJUVANT.id, stats: statsNeoadjuvantTherapy }
         ];
 
-        const currentCohortName = window.utils.getCohortDisplayName(cohort);
+        const currentCohortName = getCohortDisplayName(cohort);
         const displayPatientCount = patientCount > 0 ? patientCount : (statsCurrentCohort?.matrix?.tp + statsCurrentCohort?.matrix?.fp + statsCurrentCohort?.matrix?.fn + statsCurrentCohort?.matrix?.tn) || 0;
         const hasDataForCurrent = !!(statsCurrentCohort && statsCurrentCohort.matrix && displayPatientCount > 0);
 
         const createPerfTableRow = (stats, cohortKey) => {
-            const cohortDisplayName = window.utils.getCohortDisplayName(cohortKey);
+            const cohortDisplayName = getCohortDisplayName(cohortKey);
             const fCI_p = (m, k) => { 
                 const d = (k === 'auc' || k === 'f1' || k ==='youden') ? 2 : 0; 
                 const p = !(k === 'auc' || k === 'f1' || k ==='youden'); 
-                return window.utils.formatCI(m?.value, m?.ci?.lower, m?.ci?.upper, d, p, na); 
+                return formatCI(m?.value, m?.ci?.lower, m?.ci?.upper, d, p, na); 
             };
             if (!stats || typeof stats.matrix !== 'object') {
                 const nPatients = stats?.descriptive?.patientCount || '?'; 
@@ -28,12 +28,12 @@ window.comparisonTab = (() => {
             const count = stats.matrix ? (stats.matrix.tp + stats.matrix.fp + stats.matrix.fn + stats.matrix.tn) : 0;
             return `<tr>
                         <td class="fw-bold">${cohortDisplayName} (N=${count})</td>
-                        <td data-tippy-content="${window.utils.getInterpretationTooltip('sens', stats.sens)}">${fCI_p(stats.sens, 'sens')}</td>
-                        <td data-tippy-content="${window.utils.getInterpretationTooltip('spec', stats.spec)}">${fCI_p(stats.spec, 'spec')}</td>
-                        <td data-tippy-content="${window.utils.getInterpretationTooltip('ppv', stats.ppv)}">${fCI_p(stats.ppv, 'ppv')}</td>
-                        <td data-tippy-content="${window.utils.getInterpretationTooltip('npv', stats.npv)}">${fCI_p(stats.npv, 'npv')}</td>
-                        <td data-tippy-content="${window.utils.getInterpretationTooltip('acc', stats.acc)}">${fCI_p(stats.acc, 'acc')}</td>
-                        <td data-tippy-content="${window.utils.getInterpretationTooltip('auc', stats.auc)}">${fCI_p(stats.auc, 'auc')}</td>
+                        <td data-tippy-content="${getInterpretationTooltip('sens', stats.sens)}">${fCI_p(stats.sens, 'sens')}</td>
+                        <td data-tippy-content="${getInterpretationTooltip('spec', stats.spec)}">${fCI_p(stats.spec, 'spec')}</td>
+                        <td data-tippy-content="${getInterpretationTooltip('ppv', stats.ppv)}">${fCI_p(stats.ppv, 'ppv')}</td>
+                        <td data-tippy-content="${getInterpretationTooltip('npv', stats.npv)}">${fCI_p(stats.npv, 'npv')}</td>
+                        <td data-tippy-content="${getInterpretationTooltip('acc', stats.acc)}">${fCI_p(stats.acc, 'acc')}</td>
+                        <td data-tippy-content="${getInterpretationTooltip('auc', stats.auc)}">${fCI_p(stats.auc, 'auc')}</td>
                     </tr>`;
         };
         const tableId = "comp-as-perf-table";
@@ -46,12 +46,12 @@ window.comparisonTab = (() => {
                     <div class="card-body p-0"><div class="table-responsive"><table class="table table-striped table-hover table-sm small mb-0" id="${tableId}">
                         <thead class="small"><tr>
                             <th data-tippy-content="Patient cohort and its size (N).">Cohort</th>
-                            <th data-tippy-content="${window.utils.getDefinitionTooltip('sens')}">Sens. (95% CI)</th>
-                            <th data-tippy-content="${window.utils.getDefinitionTooltip('spec')}">Spec. (95% CI)</th>
-                            <th data-tippy-content="${window.utils.getDefinitionTooltip('ppv')}">PPV (95% CI)</th>
-                            <th data-tippy-content="${window.utils.getDefinitionTooltip('npv')}">NPV (95% CI)</th>
-                            <th data-tippy-content="${window.utils.getDefinitionTooltip('acc')}">Acc. (95% CI)</th>
-                            <th data-tippy-content="${window.utils.getDefinitionTooltip('auc')}">AUC (95% CI)</th>
+                            <th data-tippy-content="${getDefinitionTooltip('sens')}">Sens. (95% CI)</th>
+                            <th data-tippy-content="${getDefinitionTooltip('spec')}">Spec. (95% CI)</th>
+                            <th data-tippy-content="${getDefinitionTooltip('ppv')}">PPV (95% CI)</th>
+                            <th data-tippy-content="${getDefinitionTooltip('npv')}">NPV (95% CI)</th>
+                            <th data-tippy-content="${getDefinitionTooltip('acc')}">Acc. (95% CI)</th>
+                            <th data-tippy-content="${getDefinitionTooltip('auc')}">AUC (95% CI)</th>
                         </tr></thead>
                         <tbody>${cohortsData.map(c => createPerfTableRow(c.stats, c.id)).join('')}</tbody>
                     </table></div></div>
@@ -77,7 +77,7 @@ window.comparisonTab = (() => {
     function _createASvsT2ComparisonViewHTML(comparisonData, selectedStudyId, currentGlobalCohort) {
         const { performanceAS, performanceT2, comparison, comparisonCriteriaSet, cohortForComparison, patientCountForComparison, t2ShortName } = comparisonData || {};
         const na_stat = window.APP_CONFIG.NA_PLACEHOLDER;
-        const displayCohortForComparison = window.utils.getCohortDisplayName(cohortForComparison);
+        const displayCohortForComparison = getCohortDisplayName(cohortForComparison);
         const isApplied = selectedStudyId === window.APP_CONFIG.SPECIAL_IDS.APPLIED_CRITERIA_STUDY_ID;
         const appliedName = window.APP_CONFIG.SPECIAL_IDS.APPLIED_CRITERIA_DISPLAY_NAME || "Applied Criteria";
         
@@ -104,19 +104,19 @@ window.comparisonTab = (() => {
             metrics.forEach(key => {
                 const isRate = !(key === 'f1' || key === 'auc' || key === 'balAcc'); 
                 const digits = (key === 'auc' || key === 'f1' || key === 'balAcc') ? 2 : 0;
-                const valAS = window.utils.formatCI(performanceAS[key]?.value, performanceAS[key]?.ci?.lower, performanceAS[key]?.ci?.upper, digits, isRate, '--');
-                const valT2 = window.utils.formatCI(performanceT2[key]?.value, performanceT2[key]?.ci?.lower, performanceT2[key]?.ci?.upper, digits, isRate, '--');
-                comparisonTableHTML += `<tr><td data-tippy-content="${window.utils.getDefinitionTooltip(key)}">${metricNames[key]}</td><td data-tippy-content="${window.utils.getInterpretationTooltip(key, performanceAS[key])}">${valAS}</td><td data-tippy-content="${window.utils.getInterpretationTooltip(key, performanceT2[key])}">${valT2}</td></tr>`;
+                const valAS = formatCI(performanceAS[key]?.value, performanceAS[key]?.ci?.lower, performanceAS[key]?.ci?.upper, digits, isRate, '--');
+                const valT2 = formatCI(performanceT2[key]?.value, performanceT2[key]?.ci?.lower, performanceT2[key]?.ci?.upper, digits, isRate, '--');
+                comparisonTableHTML += `<tr><td data-tippy-content="${getDefinitionTooltip(key)}">${metricNames[key]}</td><td data-tippy-content="${getInterpretationTooltip(key, performanceAS[key])}">${valAS}</td><td data-tippy-content="${getInterpretationTooltip(key, performanceT2[key])}">${valT2}</td></tr>`;
             });
             comparisonTableHTML += `</tbody></table></div>`;
             const comparisonTableCardHTML = window.uiComponents.createStatisticsCard('comp-as-vs-t2-comp-table_card', `Performance Metrics (AS vs. ${t2ShortNameEffective})`, comparisonTableHTML, false, null, [{id: `dl-comp-as-vs-t2-comp-table-png`, icon: 'fa-image', format: 'png', tableId: 'comp-as-vs-t2-comp-table', tableName: `Comp_ASvsT2_Metrics_${comparisonCriteriaSet?.id || 'T2'}`}]);
             
-            const mcnemarTooltip = window.utils.getInterpretationTooltip('pValue', {value: comparison.mcnemar?.pValue, testName: 'McNemar'}, { method1: 'AS', method2: t2ShortNameEffective, metricName: 'Accuracy'});
-            const delongTooltip = window.utils.getInterpretationTooltip('pValue', {value: comparison.delong?.pValue, testName: 'DeLong'}, { method1: 'AS', method2: t2ShortNameEffective, metricName: 'AUC'});
+            const mcnemarTooltip = getInterpretationTooltip('pValue', {value: comparison.mcnemar?.pValue, testName: 'McNemar'}, { method1: 'AS', method2: t2ShortNameEffective, metricName: 'Accuracy'});
+            const delongTooltip = getInterpretationTooltip('pValue', {value: comparison.delong?.pValue, testName: 'DeLong'}, { method1: 'AS', method2: t2ShortNameEffective, metricName: 'AUC'});
 
             let testsTableHTML = `<table class="table table-sm table-striped small mb-0" id="comp-as-vs-t2-test-table"><thead class="small visually-hidden"><tr><th>Test</th><th>Statistic</th><th>p-Value</th><th>Method</th></tr></thead><tbody>`;
-            testsTableHTML += `<tr><td data-tippy-content="${window.utils.getDefinitionTooltip('mcnemar')}">McNemar (Acc)</td><td>${window.utils.formatNumber(comparison?.mcnemar?.statistic, 3, na_stat, true)} (df=${comparison?.mcnemar?.df || na_stat})</td><td data-tippy-content="${mcnemarTooltip}">${window.utils.getPValueText(comparison?.mcnemar?.pValue, false)} ${window.utils.getStatisticalSignificanceSymbol(comparison?.mcnemar?.pValue)}</td><td>${comparison?.mcnemar?.method || na_stat}</td></tr>`;
-            testsTableHTML += `<tr><td data-tippy-content="${window.utils.getDefinitionTooltip('delong')}">DeLong (AUC)</td><td>Z=${window.utils.formatNumber(comparison?.delong?.Z, 3, na_stat, true)}</td><td data-tippy-content="${delongTooltip}">${window.utils.getPValueText(comparison?.delong?.pValue, false)} ${window.utils.getStatisticalSignificanceSymbol(comparison?.delong?.pValue)}</td><td>${comparison?.delong?.method || na_stat}</td></tr>`;
+            testsTableHTML += `<tr><td data-tippy-content="${getDefinitionTooltip('mcnemar')}">McNemar (Acc)</td><td>${formatNumber(comparison?.mcnemar?.statistic, 3, na_stat, true)} (df=${comparison?.mcnemar?.df || na_stat})</td><td data-tippy-content="${mcnemarTooltip}">${getPValueText(comparison?.mcnemar?.pValue, false)} ${getStatisticalSignificanceSymbol(comparison?.mcnemar?.pValue)}</td><td>${comparison?.mcnemar?.method || na_stat}</td></tr>`;
+            testsTableHTML += `<tr><td data-tippy-content="${getDefinitionTooltip('delong')}">DeLong (AUC)</td><td>Z=${formatNumber(comparison?.delong?.Z, 3, na_stat, true)}</td><td data-tippy-content="${delongTooltip}">${getPValueText(comparison?.delong?.pValue, false)} ${getStatisticalSignificanceSymbol(comparison?.delong?.pValue)}</td><td>${comparison?.delong?.method || na_stat}</td></tr>`;
             testsTableHTML += `</tbody></table>`;
             const testsCardHTML = window.uiComponents.createStatisticsCard('comp-as-vs-t2-test-table_card', `Statistical Comparison (AS vs. ${t2ShortNameEffective})`, testsTableHTML, false, null, [{id: `dl-comp-as-vs-t2-test-table-png`, icon: 'fa-image', format: 'png', tableId: 'comp-as-vs-t2-test-table', tableName: `Comp_ASvsT2_Tests_${comparisonCriteriaSet?.id || 'T2'}`}]);
             
@@ -143,7 +143,7 @@ window.comparisonTab = (() => {
              resultsHTML = `<div class="alert alert-info">Please select a comparison basis for cohort '<strong>${displayCohortForComparison}</strong>'.</div>`;
         }
 
-        const displayGlobalCohort = window.utils.getCohortDisplayName(currentGlobalCohort);
+        const displayGlobalCohort = getCohortDisplayName(currentGlobalCohort);
         let cohortNotice = `(Global cohort: <strong>${displayGlobalCohort}</strong>)`;
         if (cohortForComparison !== currentGlobalCohort) {
             cohortNotice = `<span class="text-warning">Note: T2 criteria are evaluated on cohort '<strong>${displayCohortForComparison}</strong>' (N=${patientCountForComparison || '?'}), while AS performance reflects the global cohort '<strong>${displayGlobalCohort}</strong>'. The global cohort was automatically set.</span>`;
@@ -196,7 +196,7 @@ window.comparisonTab = (() => {
                 if (document.getElementById(chartId) && dataForROC.length > 0) {
                     window.chartRenderer.renderDiagnosticPerformanceChart(dataForROC, 'asStatus', 'nStatus', chartId, window.APP_CONFIG.UI_TEXTS.legendLabels.avocadoSign);
                 } else if (document.getElementById(chartId)) {
-                    window.uiManager.updateElementHTML(chartId, `<p class="text-center text-muted p-3">No data for chart (${window.utils.getCohortDisplayName(comparisonData.cohort)}).</p>`);
+                    window.uiManager.updateElementHTML(chartId, `<p class="text-center text-muted p-3">No data for chart (${getCohortDisplayName(comparisonData.cohort)}).</p>`);
                 }
             } else if (view === 'as-vs-t2' && comparisonData?.performanceAS && comparisonData?.performanceT2) {
                 const chartContainerId = "comp-chart-container";

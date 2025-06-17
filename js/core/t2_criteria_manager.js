@@ -6,24 +6,24 @@ window.t2CriteriaManager = (() => {
     let isUnsaved = false;
 
     function init() {
-        const savedCriteria = window.utils.loadFromLocalStorage(window.APP_CONFIG.STORAGE_KEYS.APPLIED_CRITERIA);
-        const savedLogic = window.utils.loadFromLocalStorage(window.APP_CONFIG.STORAGE_KEYS.APPLIED_LOGIC);
+        const savedCriteria = loadFromLocalStorage(window.APP_CONFIG.STORAGE_KEYS.APPLIED_CRITERIA);
+        const savedLogic = loadFromLocalStorage(window.APP_CONFIG.STORAGE_KEYS.APPLIED_LOGIC);
         const defaultCriteria = getDefaultT2Criteria();
 
-        appliedCriteria = window.utils.deepMerge(window.utils.cloneDeep(defaultCriteria), savedCriteria || {});
+        appliedCriteria = deepMerge(cloneDeep(defaultCriteria), savedCriteria || {});
         appliedLogic = (savedLogic === 'AND' || savedLogic === 'OR') ? savedLogic : defaultCriteria.logic;
 
-        currentCriteria = window.utils.cloneDeep(appliedCriteria);
+        currentCriteria = cloneDeep(appliedCriteria);
         currentLogic = appliedLogic;
         isUnsaved = false;
     }
 
     function getCurrentCriteria() {
-        return window.utils.cloneDeep(currentCriteria);
+        return cloneDeep(currentCriteria);
     }
 
     function getAppliedCriteria() {
-        return window.utils.cloneDeep(appliedCriteria);
+        return cloneDeep(appliedCriteria);
     }
 
     function getCurrentLogic() {
@@ -59,7 +59,7 @@ window.t2CriteriaManager = (() => {
         if (!currentCriteria || !currentCriteria.size || isNaN(numValue) || !isFinite(numValue)) {
             return false;
         }
-        const clampedValue = window.utils.clampNumber(numValue, window.APP_CONFIG.T2_CRITERIA_SETTINGS.SIZE_RANGE.min, window.APP_CONFIG.T2_CRITERIA_SETTINGS.SIZE_RANGE.max);
+        const clampedValue = clampNumber(numValue, window.APP_CONFIG.T2_CRITERIA_SETTINGS.SIZE_RANGE.min, window.APP_CONFIG.T2_CRITERIA_SETTINGS.SIZE_RANGE.max);
         if (currentCriteria.size.threshold !== clampedValue) {
             currentCriteria.size.threshold = clampedValue;
             isUnsaved = true;
@@ -90,16 +90,16 @@ window.t2CriteriaManager = (() => {
 
     function resetCriteria() {
         const defaultCriteria = getDefaultT2Criteria();
-        currentCriteria = window.utils.cloneDeep(defaultCriteria);
+        currentCriteria = cloneDeep(defaultCriteria);
         currentLogic = defaultCriteria.logic;
         isUnsaved = true;
     }
 
     function applyCriteria() {
-        appliedCriteria = window.utils.cloneDeep(currentCriteria);
+        appliedCriteria = cloneDeep(currentCriteria);
         appliedLogic = currentLogic;
-        window.utils.saveToLocalStorage(window.APP_CONFIG.STORAGE_KEYS.APPLIED_CRITERIA, appliedCriteria);
-        window.utils.saveToLocalStorage(window.APP_CONFIG.STORAGE_KEYS.APPLIED_LOGIC, appliedLogic);
+        saveToLocalStorage(window.APP_CONFIG.STORAGE_KEYS.APPLIED_CRITERIA, appliedCriteria);
+        saveToLocalStorage(window.APP_CONFIG.STORAGE_KEYS.APPLIED_LOGIC, appliedLogic);
         isUnsaved = false;
     }
 
@@ -176,7 +176,7 @@ window.t2CriteriaManager = (() => {
         if (!Array.isArray(dataset)) return [];
         if (!criteria || (logic !== 'AND' && logic !== 'OR')) {
             return dataset.map(p => ({
-                ...window.utils.cloneDeep(p),
+                ...cloneDeep(p),
                 t2Status: null,
                 countT2NodesPositive: 0,
                 t2NodesEvaluated: (p.t2Nodes || []).map(lk => ({...lk, isPositive: false, checkResult: {}}))
@@ -185,7 +185,7 @@ window.t2CriteriaManager = (() => {
 
         return dataset.map(patient => {
             if (!patient) return null;
-            const patientCopy = window.utils.cloneDeep(patient);
+            const patientCopy = cloneDeep(patient);
             const { t2Status, positiveNodeCount, evaluatedNodes } = evaluatePatient(patientCopy, criteria, logic);
             patientCopy.t2Status = t2Status;
             patientCopy.countT2NodesPositive = positiveNodeCount;
