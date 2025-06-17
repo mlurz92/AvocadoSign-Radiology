@@ -59,37 +59,34 @@ function formatCriteriaForDisplay(criteria, logic = null) {
     return parts.join(separator);
 }
 
-// Replaced with a robust cloneDeep from utils.js logic
 function cloneDeep(obj) {
-    if (obj === null || typeof obj !== 'object') {
+    if (obj === null || typeof obj !== 'object') return obj;
+    try {
+        if (typeof self !== 'undefined' && self.structuredClone) {
+            return self.structuredClone(obj);
+        } else {
+            return JSON.parse(JSON.stringify(obj));
+        }
+    } catch (e) {
+        if (Array.isArray(obj)) {
+            const arrCopy = [];
+            for (let i = 0; i < obj.length; i++) {
+                arrCopy[i] = cloneDeep(obj[i]);
+            }
+            return arrCopy;
+        }
+        if (typeof obj === 'object') {
+            const objCopy = {};
+            for (const key in obj) {
+                if (Object.prototype.hasOwnProperty.call(obj, key)) {
+                    objCopy[key] = cloneDeep(obj[key]);
+                }
+            }
+            return objCopy;
+        }
         return obj;
     }
-
-    // Handle Date objects (though not expected in current worker data, for completeness)
-    if (obj instanceof Date) {
-        return new Date(obj.getTime());
-    }
-
-    // Handle Array
-    if (Array.isArray(obj)) {
-        return obj.map(item => cloneDeep(item));
-    }
-
-    // Handle Object
-    if (typeof obj === 'object') {
-        const copy = {};
-        for (const key in obj) {
-            if (Object.prototype.hasOwnProperty.call(obj, key)) {
-                copy[key] = cloneDeep(obj[key]);
-            }
-        }
-        return copy;
-    }
-
-    // For primitive types, just return the value
-    return obj;
 }
-
 
 function checkNode(lymphNode, criteria) {
     const checkResult = { size: null, shape: null, border: null, homogeneity: null, signal: null };
@@ -309,9 +306,7 @@ function runBruteForce() {
         try {
             metricValue = calculateMetric(currentData, combo.criteria, combo.logic, targetMetric);
         } catch (error) {
-            metricValue = -Infinity; // Ensure metricValue is a number in case of error in calculateMetric
-            // Optionally log the error more verbosely in a real application
-            console.error("Error calculating metric for combination:", combo, error);
+            metricValue = -Infinity;
         }
 
         const result = { logic: combo.logic, criteria: combo.criteria, metricValue: metricValue };
@@ -339,14 +334,14 @@ function runBruteForce() {
     }
     const endTime = performance.now();
 
-    if (isRunning) { // Only send result if not explicitly cancelled during the loop
+    if (isRunning) {
         const validResults = allResults.filter(r => r && isFinite(r.metricValue));
         validResults.sort((a, b) => b.metricValue - a.metricValue);
 
         const topResults = [];
-        const precision = 1e-8; // Numerical precision for floating point comparison
+        const precision = 1e-8;
         let rank = 0;
-        let countAtRank = 0; // Not used for ranking logic, but good for understanding
+        let countAtRank = 0;
         let lastScore = Infinity;
 
         for (let i = 0; i < validResults.length; i++) {
@@ -364,7 +359,6 @@ function runBruteForce() {
             if (rank <= 10) {
                 topResults.push(validResults[i]);
             } else {
-                // If it's rank 11 but has the same score as rank 10, include it
                 if (rank === 11 && Math.abs(currentScore - (topResults[topResults.length - 1]?.metricValue ?? -Infinity)) < precision) {
                     topResults.push(validResults[i]);
                 } else {
@@ -404,9 +398,9 @@ function runBruteForce() {
             }
         });
     }
-    isRunning = false; // Reset state regardless of success or cancellation
-    currentData = []; // Clear data to free memory
-    allResults = []; // Clear results to free memory
+    isRunning = false;
+    currentData = [];
+    allResults = [];
 }
 
 self.onmessage = function(event) {
@@ -440,13 +434,12 @@ self.onmessage = function(event) {
             isRunning = true;
             runBruteForce();
         } catch (error) {
-            // Catch errors during initialization or before the main loop starts
             self.postMessage({ type: 'error', payload: { message: `Initialization error in worker: ${error.message}` } });
             isRunning = false;
         }
     } else if (action === 'cancel') {
         if (isRunning) {
-            isRunning = false; // This will cause the runBruteForce loop to break
+            isRunning = false;
             self.postMessage({ type: 'cancelled', payload: { cohort: cohortName } });
         }
     } else {
@@ -455,7 +448,6 @@ self.onmessage = function(event) {
 };
 
 self.onerror = function(error) {
-    // This catches uncaught exceptions that happen anywhere in the worker
     self.postMessage({ type: 'error', payload: { message: `Global worker error: ${error.message || 'Unknown worker error'}` } });
-    isRunning = false; // Ensure isRunning is reset on any fatal error
+    isRunning = false;
 };
