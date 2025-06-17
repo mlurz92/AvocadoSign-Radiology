@@ -385,4 +385,4 @@ class App {
     getRawData() { return this.rawData; }
     getProcessedData() { return this.processedData; }
     getComparisonDataForExport() { return this.comparisonDataForExport; }
-} 
+}

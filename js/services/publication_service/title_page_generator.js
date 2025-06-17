@@ -70,4 +70,4 @@ window.titlePageGenerator = (() => {
         generateTitlePageHTML
     });
 
-})(); 
+})();

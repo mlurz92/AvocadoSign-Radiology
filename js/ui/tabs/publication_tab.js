@@ -149,8 +149,19 @@ window.publicationTab = (() => {
         return finalHTML;
     }
 
+    function getSectionContentForExport(sectionId, lang, allCohortStats, commonData) {
+        if (sectionId === 'stard_checklist') {
+            return renderStardChecklist();
+        }
+        if (typeof window.publicationService === 'undefined') {
+            return `Error: publicationService not available for section '${sectionId}'.`;
+        }
+        return window.publicationService.generateSectionHTML(sectionId, allCohortStats, commonData);
+    }
+
     return Object.freeze({
-        render
+        render,
+        getSectionContentForExport
     });
 
 })();
