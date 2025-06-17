@@ -58,7 +58,22 @@ window.dataProcessor = (() => {
     function processAllData(rawData) {
         if (!Array.isArray(rawData)) return [];
         if (typeof window.APP_CONFIG === 'undefined') return [];
-        return rawData.map((patient, index) => processSinglePatient(patient, index));
+        
+        const processedData = [];
+        const uniquePatientKeys = new Set();
+
+        rawData.forEach((rawPatient, index) => {
+            if (!rawPatient) return;
+            const uniqueKey = `${rawPatient.lastName?.trim()}_${rawPatient.birthDate}`;
+            
+            if (!uniquePatientKeys.has(uniqueKey)) {
+                uniquePatientKeys.add(uniqueKey);
+                const processedPatient = processSinglePatient(rawPatient, index);
+                processedData.push(processedPatient);
+            }
+        });
+        
+        return processedData;
     }
 
     function filterDataByCohort(data, cohortId) {
