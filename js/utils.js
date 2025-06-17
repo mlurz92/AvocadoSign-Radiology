@@ -218,7 +218,19 @@ function getPValueText(pValue) {
 
     const prefix = 'p';
     if (p < 0.001) return `${prefix} < 0.001`;
-    return `${prefix} = ${p.toFixed(3)}`;
+    if (p > 0.99) return `${prefix} > .99`;
+    
+    const pRoundedTo3 = parseFloat(p.toFixed(3));
+    if (p < 0.01) {
+        return `${prefix} = ${pRoundedTo3.toFixed(3)}`;
+    }
+    
+    const pRoundedTo2 = parseFloat(p.toFixed(2));
+    if (pRoundedTo2 === 0.05 && p.toPrecision(15) < (0.05).toPrecision(15)) {
+        return `${prefix} = ${pRoundedTo3.toFixed(3)}`;
+    }
+
+    return `${prefix} = ${pRoundedTo2.toFixed(2)}`;
 }
 
 
@@ -283,7 +295,7 @@ function getORInterpretation(orValue) {
 
 function escapeHTML(text) {
     if (typeof text !== 'string') return text === null ? '' : String(text);
-    const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+    const map = { '&': '&', '<': '<', '>': '>', '"': '"', "'": ''' };
     return text.replace(/[&<>"']/g, match => map[match]);
 }
 
