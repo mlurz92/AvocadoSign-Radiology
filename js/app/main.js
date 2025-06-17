@@ -36,7 +36,9 @@ class App {
             }
             
             this.recalculateAllStats();
-            this.refreshCurrentTab();
+            this.filterAndPrepareData();
+            this.updateUI();
+            this.renderCurrentTab();
             
             if (!loadFromLocalStorage(window.APP_CONFIG.STORAGE_KEYS.FIRST_APP_START)) {
                 window.uiManager.showQuickGuide();
@@ -117,14 +119,17 @@ class App {
                 } else {
                     window.uiManager.showToast('Optimization finished with no valid results.', 'warning');
                 }
+                this.updateUI();
             },
             onCancelled: (payload) => {
                 window.uiManager.updateBruteForceUI('cancelled', {}, window.bruteForceManager.isWorkerAvailable(), payload.cohort);
                 window.uiManager.showToast('Optimization cancelled.', 'warning');
+                this.updateUI();
             },
             onError: (payload) => {
                 window.uiManager.showToast(`Optimization Error: ${payload?.message || 'Unknown'}`, 'danger');
                 window.uiManager.updateBruteForceUI('error', payload, window.bruteForceManager.isWorkerAvailable(), payload.cohort);
+                this.updateUI();
             }
         };
         window.bruteForceManager.init(bfCallbacks);
@@ -139,7 +144,7 @@ class App {
             const evaluatedData = window.t2CriteriaManager.evaluateDataset(filteredByCohort, appliedCriteria, appliedLogic);
 
             const activeTabId = window.state.getActiveTabId();
-            const sortState = activeTabId === 'data-tab' ? window.state.getDataTableSort() : window.state.getAnalysisTableSort();
+            const sortState = activeTabId === 'data' ? window.state.getDataTableSort() : window.state.getAnalysisTableSort();
             if(sortState && sortState.key) {
                  evaluatedData.sort(getSortFunction(sortState.key, sortState.direction, sortState.subKey));
             }
@@ -216,7 +221,7 @@ class App {
 
         const activeTabId = window.state.getActiveTabId();
         let isCohortSelectionLocked = false;
-        if (activeTabId === 'comparison-tab' && window.state.getComparisonView() === 'as-vs-t2') {
+        if (activeTabId === 'comparison' && window.state.getComparisonView() === 'as-vs-t2') {
             const studyId = window.state.getComparisonStudyId();
             if (studyId && studyId !== window.APP_CONFIG.SPECIAL_IDS.APPLIED_CRITERIA_STUDY_ID) {
                 const studySet = window.studyT2CriteriaManager.getStudyCriteriaSetById(studyId);
@@ -227,11 +232,11 @@ class App {
         }
         window.uiManager.updateCohortButtonsUI(currentCohort, isCohortSelectionLocked);
         
-        if (activeTabId === 'statistics-tab') {
+        if (activeTabId === 'statistics') {
             window.uiManager.updateStatisticsSelectorsUI(window.state.getStatsLayout(), window.state.getStatsCohort1(), window.state.getStatsCohort2());
-        } else if (activeTabId === 'comparison-tab') {
+        } else if (activeTabId === 'comparison') {
             window.uiManager.updateComparisonViewUI(window.state.getComparisonView(), window.state.getComparisonStudyId());
-        } else if (activeTabId === 'publication-tab') {
+        } else if (activeTabId === 'publication') {
             window.uiManager.updatePublicationUI(window.state.getPublicationSection(), window.state.getPublicationBruteForceMetric());
         }
         
@@ -258,18 +263,18 @@ class App {
         };
 
         let currentComparisonData = null;
-        if (tabId === 'comparison-tab') {
+        if (tabId === 'comparison') {
             currentComparisonData = this._prepareComparisonData();
             this.comparisonDataForExport = currentComparisonData;
         }
 
         switch (tabId) {
-            case 'data-tab': window.uiManager.renderTabContent('data', () => window.dataTab.render(this.currentCohortData, window.state.getDataTableSort())); break;
-            case 'analysis-tab': window.uiManager.renderTabContent('analysis', () => window.analysisTab.render(this.currentCohortData, window.t2CriteriaManager.getCurrentCriteria(), window.t2CriteriaManager.getCurrentLogic(), window.state.getAnalysisTableSort(), cohort, window.bruteForceManager.isWorkerAvailable(), this.allPublicationStats[cohort], allBruteForceResults)); break;
-            case 'statistics-tab': window.uiManager.renderTabContent('statistics', () => window.statisticsTab.render(this.processedData, criteria, logic, window.state.getStatsLayout(), window.state.getStatsCohort1(), window.state.getStatsCohort2(), cohort)); break;
-            case 'comparison-tab': window.uiManager.renderTabContent('comparison', () => window.comparisonTab.render(window.state.getComparisonView(), currentComparisonData, window.state.getComparisonStudyId(), cohort, this.processedData, criteria, logic)); break;
-            case 'publication-tab': window.uiManager.renderTabContent('publication', () => window.publicationTab.render(publicationData, window.state.getPublicationSection())); break;
-            case 'export-tab': window.uiManager.renderTabContent('export', () => window.exportTab.render(cohort)); break;
+            case 'data': window.uiManager.renderTabContent('data', () => window.dataTab.render(this.currentCohortData, window.state.getDataTableSort())); break;
+            case 'analysis': window.uiManager.renderTabContent('analysis', () => window.analysisTab.render(this.currentCohortData, window.t2CriteriaManager.getCurrentCriteria(), window.t2CriteriaManager.getCurrentLogic(), window.state.getAnalysisTableSort(), cohort, window.bruteForceManager.isWorkerAvailable(), this.allPublicationStats[cohort], allBruteForceResults)); break;
+            case 'statistics': window.uiManager.renderTabContent('statistics', () => window.statisticsTab.render(this.processedData, criteria, logic, window.state.getStatsLayout(), window.state.getStatsCohort1(), window.state.getStatsCohort2(), cohort)); break;
+            case 'comparison': window.uiManager.renderTabContent('comparison', () => window.comparisonTab.render(window.state.getComparisonView(), currentComparisonData, window.state.getComparisonStudyId(), cohort, this.processedData, criteria, logic)); break;
+            case 'publication': window.uiManager.renderTabContent('publication', () => window.publicationTab.render(publicationData, window.state.getPublicationSection())); break;
+            case 'export': window.uiManager.renderTabContent('export', () => window.exportTab.render(cohort)); break;
         }
     }
 
@@ -376,8 +381,8 @@ class App {
 
     refreshCurrentTab() {
         this.filterAndPrepareData();
-        this.updateUI();
         this.renderCurrentTab();
+        this.updateUI();
     }
     
     getRawData() { return this.rawData; }
