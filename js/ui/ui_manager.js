@@ -599,4 +599,4 @@ window.uiManager = (() => {
         updateElementHTML,
         highlightElement
     });
-})(); 
+})();
