@@ -5,11 +5,25 @@ window.uiManager = (() => {
 
     function updateHeaderStatsUI(stats) {
         if (!window.utils || !window.APP_CONFIG) return;
-        document.getElementById('header-cohort').textContent = stats.cohort;
-        document.getElementById('header-patient-count').textContent = stats.patientCount;
-        document.getElementById('header-status-n').textContent = stats.statusN;
-        document.getElementById('header-status-as').textContent = stats.statusAS;
-        document.getElementById('header-status-t2').textContent = stats.statusT2;
+        const placeholder = window.APP_CONFIG.NA_PLACEHOLDER || '--';
+        
+        const cohort = stats?.cohort ?? placeholder;
+        const patientCount = stats?.patientCount ?? placeholder;
+        const statusN = stats?.statusN ?? placeholder;
+        const statusAS = stats?.statusAS ?? placeholder;
+        const statusT2 = stats?.statusT2 ?? placeholder;
+
+        const cohortEl = document.getElementById('header-cohort');
+        const patientCountEl = document.getElementById('header-patient-count');
+        const statusNEl = document.getElementById('header-status-n');
+        const statusASEl = document.getElementById('header-status-as');
+        const statusT2El = document.getElementById('header-status-t2');
+
+        if (cohortEl) cohortEl.textContent = cohort;
+        if (patientCountEl) patientCountEl.textContent = patientCount;
+        if (statusNEl) statusNEl.textContent = statusN;
+        if (statusASEl) statusASEl.textContent = statusAS;
+        if (statusT2El) statusT2El.textContent = statusT2;
     }
 
     function updateCohortButtonsUI(currentCohortId, isLocked) {
@@ -261,18 +275,18 @@ window.uiManager = (() => {
         });
 
         const sizeThreshold = currentCriteria.size?.threshold ?? window.APP_CONFIG.DEFAULT_T2_CRITERIA.size.threshold;
-        const formattedThreshold = window.utils.formatNumber(sizeThreshold, 1, '', true);
+        const formattedThresholdForInput = window.utils.formatNumber(sizeThreshold, 1, '5.0', true);
         const rangeSize = document.getElementById('range-size');
         const inputSize = document.getElementById('input-size');
         const valueSize = document.getElementById('value-size');
         const isSizeActive = currentCriteria.size?.active;
 
         if (rangeSize) {
-            rangeSize.value = formattedThreshold;
+            rangeSize.value = formattedThresholdForInput;
             rangeSize.disabled = !isSizeActive;
         }
         if (inputSize) {
-            inputSize.value = formattedThreshold;
+            inputSize.value = formattedThresholdForInput;
             inputSize.disabled = !isSizeActive;
         }
         if (valueSize) {
