@@ -35,9 +35,14 @@ class App {
                 this.bruteForceModal = new bootstrap.Modal(modalElement);
             }
             
-            this.recalculateAllStats();
+            // Corrected Initialization Order:
+            // 1. Prepare data for the current view first.
             this.filterAndPrepareData();
+            // 2. Update the UI immediately with the prepared data.
             this.updateUI();
+            // 3. Now, calculate all other complex stats needed for other tabs.
+            this.recalculateAllStats();
+            // 4. Render the active tab, which now has all necessary data.
             this.renderCurrentTab();
             
             if (!loadFromLocalStorage(window.APP_CONFIG.STORAGE_KEYS.FIRST_APP_START)) {
