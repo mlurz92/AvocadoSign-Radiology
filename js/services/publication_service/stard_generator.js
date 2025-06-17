@@ -189,4 +189,4 @@ window.stardGenerator = (() => {
         generateStardChecklistData
     });
 
-})();
+})(); 
