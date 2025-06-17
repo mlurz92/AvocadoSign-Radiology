@@ -585,7 +585,7 @@ window.statisticsService = (() => {
                 return;
             }
 
-            const evaluatedDataApplied = window.t2CriteriaManager.evaluateDataset(cloneDeep(cohortData), appliedT2Criteria, appliedT2Logic);
+            const evaluatedDataApplied = window.t2CriteriaManager.evaluateDataset(window.utils.cloneDeep(cohortData), appliedT2Criteria, appliedT2Logic);
             
             results[cohortId] = {
                 descriptive: calculateDescriptiveStats(evaluatedDataApplied),
@@ -602,7 +602,7 @@ window.statisticsService = (() => {
 
             allLiteratureSets.forEach(studySet => {
                 if (studySet.applicableCohort === cohortId) {
-                    const evaluatedDataStudy = window.studyT2CriteriaManager.evaluateDatasetWithStudyCriteria(cloneDeep(cohortData), studySet);
+                    const evaluatedDataStudy = window.studyT2CriteriaManager.evaluateDatasetWithStudyCriteria(window.utils.cloneDeep(cohortData), studySet);
                     results[cohortId].performanceT2Literature[studySet.id] = calculateDiagnosticPerformance(evaluatedDataStudy, 't2Status', 'nStatus');
                     results[cohortId].comparisonASvsT2Literature[studySet.id] = compareDiagnosticMethods(evaluatedDataStudy, 'asStatus', 't2Status', 'nStatus');
                 }
@@ -613,7 +613,7 @@ window.statisticsService = (() => {
                 Object.keys(cohortBfResults).forEach(metricName => {
                     const bfResult = cohortBfResults[metricName];
                     if (bfResult && bfResult.bestResult?.criteria) {
-                        const evaluatedDataBF = window.t2CriteriaManager.evaluateDataset(cloneDeep(cohortData), bfResult.bestResult.criteria, bfResult.bestResult.logic);
+                        const evaluatedDataBF = window.t2CriteriaManager.evaluateDataset(window.utils.cloneDeep(cohortData), bfResult.bestResult.criteria, bfResult.bestResult.logic);
                         results[cohortId].performanceT2Bruteforce[metricName] = calculateDiagnosticPerformance(evaluatedDataBF, 't2Status', 'nStatus');
                         results[cohortId].comparisonASvsT2Bruteforce[metricName] = compareDiagnosticMethods(evaluatedDataBF, 'asStatus', 't2Status', 'nStatus');
                         results[cohortId].bruteforceDefinitions[metricName] = { 
@@ -712,7 +712,7 @@ window.statisticsService = (() => {
                 results[key] = {
                     matrix: { tp: a, fp: b, fn: c, tn: d }, testName: fisher.method, pValue: fisher.pValue,
                     or: calculateORCI(a, b, c, d), rd: calculateRDCI(a, b, c, d), phi: { value: calculatePhi(a, b, c, d) },
-                    featureName: `T2 ${key}=${key === 'size' ? '>=' + formatNumber(criterion.threshold, 1, '', true) : criterion.value}`
+                    featureName: `T2 ${key}=${key === 'size' ? '>=' + window.utils.formatNumber(criterion.threshold, 1, '', true) : criterion.value}`
                 };
             }
         });
