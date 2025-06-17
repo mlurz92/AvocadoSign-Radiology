@@ -283,7 +283,7 @@ function getORInterpretation(orValue) {
 
 function escapeHTML(text) {
     if (typeof text !== 'string') return text === null ? '' : String(text);
-    const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+    const map = { '&': '&', '<': '<', '>': '>', '"': '"', "'": ''' };
     return text.replace(/[&<>"']/g, match => map[match]);
 }
 
