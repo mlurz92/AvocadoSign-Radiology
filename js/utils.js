@@ -310,7 +310,8 @@ window.utils = (() => {
 
     function escapeHTML(text) {
         if (typeof text !== 'string') return text === null ? '' : String(text);
-        const map = { '&': '&', '<': '<', '>': '>', '"': '"', '\'': ''' };
+        // Corrected map definition using only double quotes to avoid syntax errors
+        const map = { "&": "&", "<": "<", ">": ">", "\"": """, "'": "'" };
         return text.replace(/[&<>"']/g, match => map[match]);
     }
 
