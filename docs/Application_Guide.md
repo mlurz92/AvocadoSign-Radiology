@@ -23,7 +23,7 @@ The application supports the entire research workflow, from data exploration and
 The user interface is designed to support an intuitive and efficient scientific workflow.
 
 ### 2.1. Application Layout
-*   **Header:** A fixed header contains the application title, global cohort selection, and dynamic meta-statistics for the currently selected data basis.
+*   **Header:** A fixed header contains the application title and the global cohort selection controls.
 *   **Navigation Bar (Tabs):** A horizontal tab navigation allows for quick switching between the six main modules of the application.
 *   **Content Area:** The central workspace where the specific content and tools of the currently active tab are displayed.
 
@@ -35,13 +35,7 @@ The global cohort selection is a central control concept. Three buttons in the h
 
 This selection is global and immediately affects all data, tables, charts, and statistical calculations in all tabs.
 
-### 2.3. Dynamic Header Statistics
-A section in the header provides a live summary of key figures for the active cohort:
-*   **Cohort:** Displays the name of the currently selected cohort.
-*   **Patients:** Shows the total number of patients in the active cohort.
-*   **N-Status, AS-Status, T2-Status:** Show the percentage of positive patients for the pathological N-status, the Avocado Sign, and the currently *interactively applied* T2 criteria, respectively.
-
-### 2.4. Interactive Help
+### 2.3. Interactive Help
 *   **Tooltips:** Nearly all UI elements are equipped with detailed tooltips that explain the element's function or the definition of a metric on mouse-over.
 *   **Quick Guide:** A **?** button in the header opens a modal window with a comprehensive quick guide to all features.
 
