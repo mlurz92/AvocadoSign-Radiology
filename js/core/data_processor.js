@@ -3,35 +3,25 @@ window.dataProcessor = (() => {
     function _deduplicateRawData(rawData) {
         if (!Array.isArray(rawData)) return [];
         const patientMap = new Map();
-        const duplicates = new Map();
 
         rawData.forEach(patient => {
             if (!patient || !patient.lastName || !patient.birthDate) return;
             const key = `${patient.lastName.toLowerCase()}_${patient.birthDate}`;
+            
             if (!patientMap.has(key)) {
-                patientMap.set(key, patient);
+                patientMap.set(key, JSON.parse(JSON.stringify(patient)));
             } else {
-                if (!duplicates.has(key)) {
-                    duplicates.set(key, [patientMap.get(key)]);
+                const existingPatient = patientMap.get(key);
+                if (Array.isArray(patient.t2Nodes)) {
+                    existingPatient.t2Nodes = [...(existingPatient.t2Nodes || []), ...patient.t2Nodes];
                 }
-                duplicates.get(key).push(patient);
-            }
-        });
-
-        duplicates.forEach((duplicatePatients, key) => {
-            duplicatePatients.sort((a, b) => a.id - b.id);
-            const primaryPatient = duplicatePatients[0];
-
-            for (let i = 1; i < duplicatePatients.length; i++) {
-                const secondaryPatient = duplicatePatients[i];
-                if (Array.isArray(secondaryPatient.t2Nodes)) {
-                    primaryPatient.t2Nodes = [...(primaryPatient.t2Nodes || []), ...secondaryPatient.t2Nodes];
+                if (patient.notes && !existingPatient.notes.includes(patient.notes)) {
+                    existingPatient.notes = [existingPatient.notes, patient.notes].filter(Boolean).join('; ');
                 }
-                if (secondaryPatient.notes && !primaryPatient.notes.includes(secondaryPatient.notes)) {
-                    primaryPatient.notes = [primaryPatient.notes, secondaryPatient.notes].filter(Boolean).join('; ');
+                if (patient.id < existingPatient.id) {
+                    const { t2Nodes, notes, ...primaryFields } = patient;
+                    Object.assign(existingPatient, primaryFields, { t2Nodes: existingPatient.t2Nodes, notes: existingPatient.notes });
                 }
-                patientMap.delete(key); 
-                patientMap.set(key, primaryPatient); 
             }
         });
 
