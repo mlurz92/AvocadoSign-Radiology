@@ -107,48 +107,9 @@ window.dataProcessor = (() => {
         return [];
     }
 
-    function calculateHeaderStats(data, cohortId) {
-        const n = data?.length ?? 0;
-        const cohortName = getCohortDisplayName(cohortId);
-        const placeholder = '--';
-
-        if (!Array.isArray(data) || n === 0) {
-            return { cohort: cohortName, patientCount: 0, statusN: placeholder, statusAS: placeholder, statusT2: placeholder, nPos: 0, nNeg: 0, asPos: 0, asNeg: 0, t2Pos: 0, t2Neg: 0 };
-        }
-
-        let nPos = 0, nNeg = 0, asPos = 0, asNeg = 0, t2Pos = 0, t2Neg = 0;
-        data.forEach(p => {
-            if (p) {
-                if (p.nStatus === '+') nPos++; else if (p.nStatus === '-') nNeg++;
-                if (p.asStatus === '+') asPos++; else if (p.asStatus === '-') asNeg++;
-                if (p.t2Status === '+') t2Pos++; else if (p.t2Status === '-') t2Neg++;
-            }
-        });
-
-        const formatStatus = (pos, neg) => {
-            const totalKnown = pos + neg;
-            return totalKnown > 0 ? `${formatPercent(pos / totalKnown, 0)} (+)` : placeholder;
-        };
-
-        return {
-            cohort: cohortName,
-            patientCount: n,
-            statusN: formatStatus(nPos, nNeg),
-            statusAS: formatStatus(asPos, asNeg),
-            statusT2: formatStatus(t2Pos, t2Neg),
-            nPos: nPos,
-            nNeg: nNeg,
-            asPos: asPos,
-            asNeg: asNeg,
-            t2Pos: t2Pos,
-            t2Neg: t2Neg
-        };
-    }
-
     return Object.freeze({
         processAllData,
-        filterDataByCohort,
-        calculateHeaderStats
+        filterDataByCohort
     });
 
 })();
