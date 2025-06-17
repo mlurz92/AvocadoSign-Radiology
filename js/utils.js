@@ -212,13 +212,30 @@ function getStatisticalSignificanceSymbol(pValue) {
     return 'ns';
 }
 
-function getPValueText(pValue) {
+function getPValueText(pValue, forPublication = true) {
     const p = parseFloat(pValue);
     if (p === null || p === undefined || isNaN(p) || !isFinite(p)) return 'N/A';
 
-    const prefix = 'p';
-    if (p < 0.001) return `${prefix} < 0.001`;
-    return `${prefix} = ${p.toFixed(3)}`;
+    if (forPublication) {
+        const prefix = 'P';
+        if (p < 0.001) return `${prefix} < .001`;
+        if (p > 0.99) return `${prefix} > .99`;
+        
+        const pRoundedTo2 = parseFloat(p.toFixed(2));
+        const pRoundedTo3 = parseFloat(p.toFixed(3));
+
+        if (p < 0.01) {
+            return `${prefix} = .${pRoundedTo3.toFixed(3).substring(2)}`;
+        }
+        if (pRoundedTo2 === 0.05 && p < 0.05) {
+            return `${prefix} = .${pRoundedTo3.toFixed(3).substring(2)}`;
+        }
+        return `${prefix} = .${pRoundedTo2.toFixed(2).substring(2)}`;
+    } else {
+        const prefix = 'p';
+        if (p < 0.001) return `${prefix} < 0.001`;
+        return `${prefix} = ${p.toFixed(3)}`;
+    }
 }
 
 
@@ -283,7 +300,7 @@ function getORInterpretation(orValue) {
 
 function escapeHTML(text) {
     if (typeof text !== 'string') return text === null ? '' : String(text);
-    const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+    const map = { '&': '&', '<': '<', '>': '>', '"': '"', "'": ''' };
     return text.replace(/[&<>"']/g, match => map[match]);
 }
 
@@ -333,7 +350,7 @@ function getInterpretationTooltip(metricKey, data, context = {}) {
              break;
 
         case 'pValue':
-            const pValueFormatted = getPValueText(value);
+            const pValueFormatted = getPValueText(value, false);
             const significance = value < window.APP_CONFIG.STATISTICAL_CONSTANTS.SIGNIFICANCE_LEVEL;
             const significanceText = significance ? templates.significance.significant : templates.significance.not_significant;
             const pStrength = significance ? templates.strength.strong : templates.strength.very_weak;
