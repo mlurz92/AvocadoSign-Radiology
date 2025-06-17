@@ -11,6 +11,7 @@ window.resultsGenerator = (() => {
         
         const helpers = window.publicationHelpers;
         const { nOverall, nSurgeryAlone, nNeoadjuvantTherapy, nPositive } = commonData;
+        const descriptiveComparison = stats?.interCohortDemographicComparison;
 
         const text = `
             <h3 id="ergebnisse_patientencharakteristika">Patient Characteristics</h3>
@@ -38,19 +39,15 @@ window.resultsGenerator = (() => {
             return `${helpers.formatValueForPublication(count, 0)} (${helpers.formatValueForPublication(count / total, 0, true)}%)`;
         };
         
-        const agePValue = '.12'; 
-        const sexPValue = '.65';
-        const nStatusPValue = '.04';
-
         const tableConfig = {
             id: 'table-results-patient-char',
             caption: 'Table 1: Patient Demographics and Clinical Characteristics',
             headers: [`Characteristic`, `Overall Cohort (n=${nOverall})`, `Surgery alone (n=${nSurgeryAlone})`, `Neoadjuvant therapy (n=${nNeoadjuvantTherapy})`, '<em>P</em> value'],
             rows: [
-                ['Age (y), mean ± SD', getAgeRow(overallStats.descriptive, 'mean'), getAgeRow(surgeryAloneStats.descriptive, 'mean'), getAgeRow(neoadjuvantStats.descriptive, 'mean'), agePValue],
+                ['Age (y), mean ± SD', getAgeRow(overallStats.descriptive, 'mean'), getAgeRow(surgeryAloneStats.descriptive, 'mean'), getAgeRow(neoadjuvantStats.descriptive, 'mean'), helpers.formatPValueForPublication(descriptiveComparison?.age?.pValue)],
                 ['   Age (y), median (IQR)', getAgeRow(overallStats.descriptive, 'median'), getAgeRow(surgeryAloneStats.descriptive, 'median'), getAgeRow(neoadjuvantStats.descriptive, 'median'), ''],
-                ['Men', getCountRow(overallStats.descriptive.sex.m, nOverall), getCountRow(surgeryAloneStats.descriptive.sex.m, nSurgeryAlone), getCountRow(neoadjuvantStats.descriptive.sex.m, nNeoadjuvantTherapy), sexPValue],
-                ['Histopathologic N-status, positive', getCountRow(overallStats.descriptive.nStatus.plus, nOverall), getCountRow(surgeryAloneStats.descriptive.nStatus.plus, nSurgeryAlone), getCountRow(neoadjuvantStats.descriptive.nStatus.plus, nNeoadjuvantTherapy), nStatusPValue]
+                ['Men', getCountRow(overallStats.descriptive.sex.m, nOverall), getCountRow(surgeryAloneStats.descriptive.sex.m, nSurgeryAlone), getCountRow(neoadjuvantStats.descriptive.sex.m, nNeoadjuvantTherapy), helpers.formatPValueForPublication(descriptiveComparison?.sex?.pValue)],
+                ['Histopathologic N-status, positive', getCountRow(overallStats.descriptive.nStatus.plus, nOverall), getCountRow(surgeryAloneStats.descriptive.nStatus.plus, nSurgeryAlone), getCountRow(neoadjuvantStats.descriptive.nStatus.plus, nNeoadjuvantTherapy), helpers.formatPValueForPublication(descriptiveComparison?.nStatus?.pValue)]
             ],
             notes: "Data are numbers of patients, with percentages in parentheses, or mean ± standard deviation or median and interquartile range (IQR). P values were derived from t-tests for continuous variables and chi-square or Fisher exact tests for categorical variables comparing the surgery-alone and neoadjuvant therapy groups and are included for descriptive purposes."
         };
