@@ -214,23 +214,29 @@ function getStatisticalSignificanceSymbol(pValue) {
 
 function getPValueText(pValue) {
     const p = parseFloat(pValue);
-    if (p === null || p === undefined || isNaN(p) || !isFinite(p)) return 'N/A';
+    if (p === null || p === undefined || isNaN(p) || !isFinite(p)) {
+        return 'N/A';
+    }
 
     const prefix = 'p';
-    if (p < 0.001) return `${prefix} < 0.001`;
+    if (p < 0.001) return `${prefix} < .001`;
     if (p > 0.99) return `${prefix} > .99`;
-    
+
     const pRoundedTo3 = parseFloat(p.toFixed(3));
     if (p < 0.01) {
-        return `${prefix} = ${pRoundedTo3.toFixed(3)}`;
-    }
-    
-    const pRoundedTo2 = parseFloat(p.toFixed(2));
-    if (pRoundedTo2 === 0.05 && p.toPrecision(15) < (0.05).toPrecision(15)) {
-        return `${prefix} = ${pRoundedTo3.toFixed(3)}`;
+        return `${prefix} = .${pRoundedTo3.toFixed(3).substring(2)}`;
     }
 
-    return `${prefix} = ${pRoundedTo2.toFixed(2)}`;
+    const pRoundedTo2 = parseFloat(p.toFixed(2));
+    if (pRoundedTo2 === 0.05 && p.toPrecision(15) < (0.05).toPrecision(15)) {
+        return `${prefix} = .${pRoundedTo3.toFixed(3).substring(2)}`;
+    }
+
+    let formattedP = pRoundedTo2.toFixed(2);
+    if (formattedP.startsWith("0.")) {
+        formattedP = formattedP.substring(1);
+    }
+    return `${prefix} = ${formattedP}`;
 }
 
 
