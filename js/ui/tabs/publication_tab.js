@@ -38,38 +38,6 @@ window.publicationTab = (() => {
         });
     }
 
-    function renderStardChecklist() {
-        const stardData = window.stardGenerator.generateStardChecklistData();
-        let html = `
-            <h2 id="stard_checklist">STARD 2015 Checklist</h2>
-            <p class="small text-muted">This checklist indicates where each of the 30 items from the Standards for Reporting of Diagnostic Accuracy Studies (STARD) is addressed within the generated manuscript.</p>
-            <div class="table-responsive">
-                <table class="table table-sm table-bordered small">
-                    <thead class="table-light">
-                        <tr>
-                            <th style="width: 15%;">Section</th>
-                            <th style="width: 10%;">Item</th>
-                            <th>Description</th>
-                            <th style="width: 25%;">Reported in Section</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-        `;
-        stardData.forEach(item => {
-            html += `
-                <tr>
-                    <td>${item.section}</td>
-                    <td>${item.item}</td>
-                    <td>${item.label}</td>
-                    <td><em>${item.location}</em></td>
-                </tr>
-            `;
-        });
-        html += '</tbody></table></div>';
-        return html;
-    }
-
-
     function render(data, currentSectionId) {
         const { rawData, allCohortStats, bruteForceResults, currentLanguage } = data;
         
@@ -98,7 +66,7 @@ window.publicationTab = (() => {
         
         let finalContentHTML = '';
         if (isChecklistActive) {
-            finalContentHTML = renderStardChecklist();
+            finalContentHTML = window.stardGenerator.renderStardChecklist();
         } else {
             finalContentHTML = window.publicationService.generateFullPublicationHTML(allCohortStats, commonData);
         }
@@ -151,7 +119,7 @@ window.publicationTab = (() => {
 
     function getSectionContentForExport(sectionId, lang, allCohortStats, commonData) {
         if (sectionId === 'stard_checklist') {
-            return renderStardChecklist();
+            return window.stardGenerator.renderStardChecklist();
         }
         if (typeof window.publicationService === 'undefined') {
             return `Error: publicationService not available for section '${sectionId}'.`;
