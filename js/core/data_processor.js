@@ -80,12 +80,12 @@ window.dataProcessor = (() => {
         if (!Array.isArray(data)) return [];
         
         if (cohortId === window.APP_CONFIG.COHORTS.OVERALL.id) {
-            return cloneDeep(data);
+            return window.utils.cloneDeep(data);
         }
 
         const cohortConfig = Object.values(window.APP_CONFIG.COHORTS).find(c => c.id === cohortId);
         if (cohortConfig && cohortConfig.therapyValue) {
-            return cloneDeep(data.filter(p => p && p.therapy === cohortConfig.therapyValue));
+            return window.utils.cloneDeep(data.filter(p => p && p.therapy === cohortConfig.therapyValue));
         }
         
         return [];
@@ -93,7 +93,7 @@ window.dataProcessor = (() => {
 
     function calculateHeaderStats(data, cohortId) {
         const n = data?.length ?? 0;
-        const cohortName = getCohortDisplayName(cohortId);
+        const cohortName = window.utils.getCohortDisplayName(cohortId);
         const placeholder = '--';
 
         if (!Array.isArray(data) || n === 0) {
@@ -111,7 +111,7 @@ window.dataProcessor = (() => {
 
         const formatStatus = (pos, neg) => {
             const totalKnown = pos + neg;
-            return totalKnown > 0 ? `${formatPercent(pos / totalKnown, 0)} (+)` : placeholder;
+            return totalKnown > 0 ? `${window.utils.formatPercent(pos / totalKnown, 0)} (+)` : placeholder;
         };
 
         return {
