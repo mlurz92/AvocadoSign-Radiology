@@ -344,4 +344,4 @@ window.statisticsTab = (() => {
     }
 
     return { render };
-})();
+})(); 
