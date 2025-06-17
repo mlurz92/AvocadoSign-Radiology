@@ -12,7 +12,6 @@ window.publicationService = (() => {
         'ergebnisse_patientencharakteristika': window.resultsGenerator.generatePatientCharacteristicsHTML,
         'ergebnisse_vergleich_as_vs_t2': window.resultsGenerator.generateComparisonHTML,
         'discussion_main': window.discussionGenerator.generateDiscussionHTML,
-        'references_main': window.referencesGenerator.generateReferencesHTML,
         'stard_checklist': window.stardGenerator.renderStardChecklist
     };
 
