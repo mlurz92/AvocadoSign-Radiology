@@ -221,4 +221,4 @@ window.stardGenerator = (() => {
         renderStardChecklist
     });
 
-})(); 
+})();
