@@ -385,6 +385,7 @@ class App {
 
     refreshCurrentTab() {
         this.filterAndPrepareData();
+        this.recalculateAllStats();
         this.renderCurrentTab();
         this.updateUI();
     }
