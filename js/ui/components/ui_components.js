@@ -436,4 +436,4 @@ window.uiComponents = (() => {
         createBruteForceOverviewTableHTML,
         createBruteForceRunnerCardHTML
     });
-})();
+})(); 
