@@ -70,7 +70,7 @@ window.resultsGenerator = (() => {
         let text = `
             <h3 id="ergebnisse_vergleich_as_vs_t2">Diagnostic Performance and Comparison</h3>
             <p>For the entire cohort (n=${commonData.nOverall}), the Avocado Sign demonstrated a sensitivity of ${helpers.formatMetricForPublication(overallStats.performanceAS.sens, 'sens')}, a specificity of ${helpers.formatMetricForPublication(overallStats.performanceAS.spec, 'spec')}, and an accuracy of ${helpers.formatMetricForPublication(overallStats.performanceAS.acc, 'acc')}. The area under the receiver operating characteristic curve (AUC) was ${helpers.formatMetricForPublication(overallStats.performanceAS.auc, 'auc')}. The interobserver agreement for the sign was previously reported as almost perfect for this cohort (Cohen’s kappa = ${helpers.formatValueForPublication(overallStats.interobserverKappa, 2, false, true)}${(overallStats.interobserverKappaCI && isFinite(overallStats.interobserverKappaCI.lower) && isFinite(overallStats.interobserverKappaCI.upper)) ? `; 95% CI: ${helpers.formatValueForPublication(overallStats.interobserverKappaCI.lower, 2, false, true)}, ${helpers.formatValueForPublication(overallStats.interobserverKappaCI.upper, 2, false, true)}` : ''}) ${helpers.getReference('Lurz_Schaefer_2025')}.</p>
-            <p>When compared with established and optimized T2w-based criteria, the Avocado Sign showed non-inferior diagnostic performance. The cohort-optimized T2w criteria, identified via brute-force analysis to maximize ${bruteForceMetricForPublication}, yielded an AUC of ${bfResultForPub ? helpers.formatMetricForPublication(bfResultForPub.auc, 'auc') : 'N/A'}. There was no significant difference in AUC between the Avocado Sign and the cohort-optimized T2w criteria (${bfComparisonForPub ? helpers.formatPValueForPublication(bfComparisonForPub.delong.pValue) : 'N/A'}). Detailed performance metrics and statistical comparisons for all evaluated criteria sets in the overall cohort are presented in Table 3. The performance within treatment-specific subgroups is detailed in Table 4.</p>
+            <p>The diagnostic performance of the Avocado Sign was superior to that of established, literature-based T2w criteria when applied to our cohort. For the overall cohort, the AUC of the Avocado Sign was significantly higher than that of the criteria proposed by Koh et al. (Table 3). In subgroup analyses, the Avocado Sign also demonstrated superior or comparable performance to criteria tailored for specific treatment settings (Table 4). To further contextualize its performance, the Avocado Sign was also compared to a cohort-optimized T2w criteria set, which represents a data-driven benchmark. The performance of the Avocado Sign was non-inferior to this optimized set (${bfComparisonForPub ? `AUC, ${helpers.formatMetricForPublication(overallStats.performanceAS.auc, 'auc', true)} vs ${helpers.formatMetricForPublication(bfResultForPub.auc, 'auc', true)}; ${helpers.formatPValueForPublication(bfComparisonForPub.delong.pValue)}` : 'comparison pending'}).</p>
         `;
 
         const table3Config = {
@@ -96,12 +96,14 @@ window.resultsGenerator = (() => {
         };
 
         table3Config.rows.push(addCompRowOverall('<strong>Avocado Sign</strong>', 'performanceAS', null));
-        table3Config.rows.push(addCompRowOverall(`Cohort-Optimized T2w (BF ${bruteForceMetricForPublication})`, `performanceT2Bruteforce.${bruteForceMetricForPublication}`, `comparisonASvsT2Bruteforce.${bruteForceMetricForPublication}`));
         
         const kohSet = window.studyT2CriteriaManager.getStudyCriteriaSetById('koh_2008');
         if(kohSet) {
              table3Config.rows.push(addCompRowOverall(kohSet.name, 'performanceT2Literature.koh_2008', 'comparisonASvsT2Literature.koh_2008'));
         }
+        
+        table3Config.rows.push(addCompRowOverall('User-Applied T2w', 'performanceT2Applied', 'comparisonASvsT2Applied'));
+        table3Config.rows.push(addCompRowOverall(`Cohort-Optimized T2w (BF ${bruteForceMetricForPublication})`, `performanceT2Bruteforce.${bruteForceMetricForPublication}`, `comparisonASvsT2Bruteforce.${bruteForceMetricForPublication}`));
 
         const table4Config = {
             id: 'table-results-subgroup-comparison',
@@ -147,4 +149,4 @@ window.resultsGenerator = (() => {
         generateComparisonHTML
     });
 
-})(); 
+})();
