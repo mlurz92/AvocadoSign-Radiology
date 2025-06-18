@@ -210,4 +210,4 @@ window.comparisonTab = (() => {
     return Object.freeze({
         render
     });
-})();
+})(); 
