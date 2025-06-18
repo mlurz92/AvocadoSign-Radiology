@@ -137,8 +137,8 @@ class App {
     
     filterAndPrepareData() {
         try {
-            const currentCohort = window.state.getCurrentCohort();
-            const filteredByCohort = window.dataProcessor.filterDataByCohort(this.processedData, currentCohort);
+            const activeCohortId = window.state.getActiveCohortId();
+            const filteredByCohort = window.dataProcessor.filterDataByCohort(this.processedData, activeCohortId);
             const appliedCriteria = window.t2CriteriaManager.getAppliedCriteria();
             const appliedLogic = window.t2CriteriaManager.getAppliedLogic();
             const evaluatedData = window.t2CriteriaManager.evaluateDataset(filteredByCohort, appliedCriteria, appliedLogic);
@@ -206,7 +206,7 @@ class App {
         }
 
         return {
-            cohort: globalCohort, patientCount: this.currentCohortData.length,
+            globalCohort, patientCount: this.currentCohortData.length,
             statsGesamt: statsOverall, statsSurgeryAlone, statsNeoadjuvantTherapy,
             statsCurrentCohort: this.allPublicationStats[globalCohort],
             performanceAS, performanceT2, comparison: comparisonASvsT2,
@@ -217,17 +217,9 @@ class App {
     updateUI() {
         const currentCohort = window.state.getCurrentCohort();
         const activeTabId = window.state.getActiveTabId();
-        let isCohortSelectionLocked = false;
-        if (activeTabId === 'comparison' && window.state.getComparisonView() === 'as-vs-t2') {
-            const studyId = window.state.getComparisonStudyId();
-            if (studyId && studyId !== window.APP_CONFIG.SPECIAL_IDS.APPLIED_CRITERIA_STUDY_ID) {
-                const studySet = window.studyT2CriteriaManager.getStudyCriteriaSetById(studyId);
-                if (studySet?.applicableCohort) {
-                    isCohortSelectionLocked = true;
-                }
-            }
-        }
-        window.uiManager.updateCohortButtonsUI(currentCohort, isCohortSelectionLocked);
+        const analysisContext = window.state.getAnalysisContext();
+        
+        window.uiManager.updateCohortButtonsUI(currentCohort, !!analysisContext);
         
         if (activeTabId === 'statistics') {
             window.uiManager.updateStatisticsSelectorsUI(window.state.getStatsLayout(), window.state.getStatsCohort1(), window.state.getStatsCohort2());
@@ -249,7 +241,8 @@ class App {
 
     renderCurrentTab() {
         const tabId = window.state.getActiveTabId();
-        const cohort = window.state.getCurrentCohort();
+        const globalCohort = window.state.getCurrentCohort();
+        const activeCohort = window.state.getActiveCohortId();
         const criteria = window.t2CriteriaManager.getAppliedCriteria();
         const logic = window.t2CriteriaManager.getAppliedLogic();
         const allBruteForceResults = window.bruteForceManager.getAllResults();
@@ -267,16 +260,17 @@ class App {
 
         switch (tabId) {
             case 'data': window.uiManager.renderTabContent('data', () => window.dataTab.render(this.currentCohortData, window.state.getDataTableSort())); break;
-            case 'analysis': window.uiManager.renderTabContent('analysis', () => window.analysisTab.render(this.currentCohortData, window.t2CriteriaManager.getCurrentCriteria(), window.t2CriteriaManager.getCurrentLogic(), window.state.getAnalysisTableSort(), cohort, window.bruteForceManager.isWorkerAvailable(), this.allPublicationStats[cohort], allBruteForceResults)); break;
-            case 'statistics': window.uiManager.renderTabContent('statistics', () => window.statisticsTab.render(this.processedData, criteria, logic, window.state.getStatsLayout(), window.state.getStatsCohort1(), window.state.getStatsCohort2(), cohort)); break;
-            case 'comparison': window.uiManager.renderTabContent('comparison', () => window.comparisonTab.render(window.state.getComparisonView(), currentComparisonData, window.state.getComparisonStudyId(), cohort, this.processedData, criteria, logic)); break;
+            case 'analysis': window.uiManager.renderTabContent('analysis', () => window.analysisTab.render(this.currentCohortData, window.t2CriteriaManager.getCurrentCriteria(), window.t2CriteriaManager.getCurrentLogic(), window.state.getAnalysisTableSort(), activeCohort, window.bruteForceManager.isWorkerAvailable(), this.allPublicationStats[activeCohort], allBruteForceResults)); break;
+            case 'statistics': window.uiManager.renderTabContent('statistics', () => window.statisticsTab.render(this.processedData, criteria, logic, window.state.getStatsLayout(), window.state.getStatsCohort1(), window.state.getStatsCohort2(), globalCohort)); break;
+            case 'comparison': window.uiManager.renderTabContent('comparison', () => window.comparisonTab.render(window.state.getComparisonView(), currentComparisonData, window.state.getComparisonStudyId(), globalCohort, this.processedData, criteria, logic)); break;
             case 'publication': window.uiManager.renderTabContent('publication', () => window.publicationTab.render(publicationData, window.state.getPublicationSection())); break;
-            case 'export': window.uiManager.renderTabContent('export', () => window.exportTab.render(cohort)); break;
+            case 'export': window.uiManager.renderTabContent('export', () => window.exportTab.render(globalCohort)); break;
         }
     }
 
     handleCohortChange(newCohort, source = "user") {
         if (window.state.setCurrentCohort(newCohort)) {
+            window.state.clearAnalysisContext();
             this.refreshCurrentTab();
             if (source === "user") {
                 window.uiManager.showToast(`Cohort '${getCohortDisplayName(newCohort)}' selected.`, 'info');
@@ -303,7 +297,7 @@ class App {
 
     startBruteForceAnalysis() {
         const metric = document.getElementById('brute-force-metric')?.value || 'Balanced Accuracy';
-        const cohortId = window.state.getCurrentCohort();
+        const cohortId = window.state.getActiveCohortId();
         const dataForWorker = window.dataProcessor.filterDataByCohort(this.processedData, cohortId).map(p => ({
             id: p.id, nStatus: p.nStatus, t2Nodes: p.t2Nodes
         }));
@@ -316,7 +310,7 @@ class App {
     }
 
     applyBestBruteForceCriteria(metric, cohortId = null) {
-        const targetCohort = cohortId || window.state.getCurrentCohort();
+        const targetCohort = cohortId || window.state.getActiveCohortId();
         const bfResult = window.bruteForceManager.getResultsForCohortAndMetric(targetCohort, metric);
         
         if (!bfResult?.bestResult?.criteria) {
@@ -345,7 +339,7 @@ class App {
     }
 
     showBruteForceDetails(metric) {
-        const cohortId = window.state.getCurrentCohort();
+        const cohortId = window.state.getActiveCohortId();
         const resultData = window.bruteForceManager.getResultsForCohortAndMetric(cohortId, metric);
         window.uiManager.updateElementHTML('brute-force-modal-body', window.uiComponents.createBruteForceModalContent(resultData));
         window.uiManager.initializeTooltips(document.getElementById('brute-force-modal-body'));
@@ -355,7 +349,7 @@ class App {
     }
     
     handleSingleExport(exportType) {
-        const cohort = window.state.getCurrentCohort();
+        const cohort = window.state.getActiveCohortId();
         const data = this.processedData;
         const bfResults = window.bruteForceManager.getAllResults();
         const criteria = window.t2CriteriaManager.getAppliedCriteria();
