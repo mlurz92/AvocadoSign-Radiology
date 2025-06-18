@@ -206,7 +206,7 @@ window.uiComponents = (() => {
                     <li><strong>Patient Count (N):</strong> ${formatNumber(nTotal, 0)} (N+: ${formatNumber(nPlus, 0)}, N-: ${formatNumber(nMinus, 0)})</li>
                 </ul>
             </div>
-            <h5>Top 10 Results:</h5>
+            <h5>Top Results (including ties):</h5>
             <div class="table-responsive">
                 <table class="table table-sm table-striped small" id="bruteforce-results-table">
                     <thead>
@@ -223,7 +223,7 @@ window.uiComponents = (() => {
         let rank = 1;
         let displayedCount = 0;
         let lastMetricValue = -Infinity;
-        const precision = 8;
+        const precision = 1e-8;
 
         for (let i = 0; i < results.length; i++) {
             const result = results[i];
@@ -233,7 +233,7 @@ window.uiComponents = (() => {
             const lastMetricValueRounded = parseFloat(lastMetricValue.toFixed(precision));
 
             let currentRank = rank;
-            const isNewRank = Math.abs(currentMetricValueRounded - lastMetricValueRounded) > 1e-8;
+            const isNewRank = Math.abs(currentMetricValueRounded - lastMetricValueRounded) > precision;
 
             if (i > 0 && isNewRank) {
                 rank = displayedCount + 1;
@@ -334,6 +334,7 @@ window.uiComponents = (() => {
 
         const currentCohortResults = window.bruteForceManager.getAllResultsForCohort(currentCohort);
         const currentBestResultForMetric = currentCohortResults?.[selectedMetric]?.bestResult;
+        const formatCriteriaFunc = typeof window.studyT2CriteriaManager !== 'undefined' ? window.studyT2CriteriaManager.formatCriteriaForDisplay : (c, l) => 'N/A';
 
         switch (state) {
             case 'initial':
@@ -356,7 +357,7 @@ window.uiComponents = (() => {
                 const total = payload?.total || 1;
                 const percent = total > 0 ? Math.floor((tested / total) * 100) : 0;
                 const currentBest = payload?.currentBest;
-                const currentBestInfo = currentBest ? `Current Best: <strong>${formatNumber(currentBest.metricValue, 4)}</strong> with <code>${window.studyT2CriteriaManager.formatCriteriaForDisplay(currentBest.criteria, currentBest.logic, true)}</code>` : 'No best found yet.';
+                const currentBestInfo = currentBest ? `Current Best: <strong>${formatNumber(currentBest.metricValue, 4)}</strong> with <code>${formatCriteriaFunc(currentBest.criteria, currentBest.logic, true)}</code>` : 'No best found yet.';
                 progressHTML = `
                     <p class="mb-2 small text-muted">Running on cohort: <strong>${getCohortDisplayName(currentCohort)}</strong>, Metric: <strong>${payload?.metric || selectedMetric}</strong></p>
                     <div class="progress" style="height: 5px;"><div class="progress-bar progress-bar-striped progress-bar-animated bg-primary" role="progressbar" style="width: ${percent}%;" aria-valuenow="${percent}" aria-valuemin="0" aria-valuemax="100"></div></div>
@@ -375,7 +376,7 @@ window.uiComponents = (() => {
                     <p class="mb-2 small text-muted">Optimization finished for cohort: <strong>${getCohortDisplayName(best?.cohort || currentCohort)}</strong>, Metric: <strong>${best?.metric || selectedMetric}</strong></p>
                     <div class="progress" style="height: 5px;"><div class="progress-bar bg-success" role="progressbar" style="width: 100%;" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div></div>
                     <p class="small text-muted mt-2 mb-0">Total Tested: ${formatNumber(best?.totalTested || 0, 0)} in ${formatNumber(durationSeconds, 1)} seconds</p>
-                    <p class="small text-muted mb-0">Best Result: <strong>${formatNumber(best?.bestResult?.metricValue, 4)}</strong> with <code>${window.studyT2CriteriaManager.formatCriteriaForDisplay(best?.bestResult?.criteria, best?.bestResult?.logic, true)}</code></p>
+                    <p class="small text-muted mb-0">Best Result: <strong>${formatNumber(best?.bestResult?.metricValue, 4)}</strong> with <code>${formatCriteriaFunc(best?.bestResult?.criteria, best?.bestResult?.logic, true)}</code></p>
                 `;
                 break;
             case 'cancelled':
