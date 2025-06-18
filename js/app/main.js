@@ -315,13 +315,20 @@ class App {
         }
     }
 
-    applyBestBruteForceCriteria(metric) {
-        const cohortId = window.state.getCurrentCohort();
-        const bfResult = window.bruteForceManager.getResultsForCohortAndMetric(cohortId, metric);
+    applyBestBruteForceCriteria(metric, cohortId = null) {
+        const targetCohort = cohortId || window.state.getCurrentCohort();
+        const bfResult = window.bruteForceManager.getResultsForCohortAndMetric(targetCohort, metric);
+        
         if (!bfResult?.bestResult?.criteria) {
-            window.uiManager.showToast(`No valid brute-force result for metric '${metric}' to apply.`, 'warning');
+            window.uiManager.showToast(`No valid brute-force result for metric '${metric}' in cohort '${getCohortDisplayName(targetCohort)}' to apply.`, 'warning');
             return;
         }
+
+        if (cohortId && window.state.getCurrentCohort() !== cohortId) {
+            this.handleCohortChange(cohortId, "user");
+            window.uiManager.showToast(`Cohort automatically switched to '${getCohortDisplayName(cohortId)}' to apply criteria.`, 'info');
+        }
+
         const best = bfResult.bestResult;
         Object.keys(best.criteria).forEach(key => {
             if (key === 'logic') return;
