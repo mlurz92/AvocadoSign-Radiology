@@ -352,7 +352,7 @@ function getInterpretationTooltip(metricKey, data, context = {}) {
              break;
 
         case 'pValue':
-            const pValueFormatted = getPValueText(value);
+            const pValueFormatted = getPValueText(value, false);
             const significance = value < window.APP_CONFIG.STATISTICAL_CONSTANTS.SIGNIFICANCE_LEVEL;
             const significanceText = significance ? templates.significance.significant : templates.significance.not_significant;
             const pStrength = significance ? templates.strength.strong : templates.strength.very_weak;
