@@ -212,4 +212,4 @@ window.analysisTab = (() => {
     return Object.freeze({
         render
     });
-})();
+})(); 
