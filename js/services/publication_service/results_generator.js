@@ -101,9 +101,9 @@ window.resultsGenerator = (() => {
 
         table3Config.rows.push(addCompRowOverall('<strong>Avocado Sign</strong>', 'performanceAS', null));
         
-        const kohSet = window.studyT2CriteriaManager.getStudyCriteriaSetById('koh_2008');
+        const kohSet = window.studyT2CriteriaManager.getStudyCriteriaSetById('Koh_2008');
         if(kohSet) {
-             table3Config.rows.push(addCompRowOverall(kohSet.name, 'performanceT2Literature.koh_2008', 'comparisonASvsT2Literature.koh_2008'));
+             table3Config.rows.push(addCompRowOverall(kohSet.name, 'performanceT2Literature.Koh_2008', 'comparisonASvsT2Literature.Koh_2008'));
         }
         
         table3Config.rows.push(addCompRowOverall('User-Applied T2w', 'performanceT2Applied', 'comparisonASvsT2Applied'));
@@ -133,16 +133,19 @@ window.resultsGenerator = (() => {
             ];
         };
 
-        const esgarSet = window.studyT2CriteriaManager.getStudyCriteriaSetById('rutegard_et_al_esgar');
-        const barbaroSet = window.studyT2CriteriaManager.getStudyCriteriaSetById('barbaro_2024');
+        const surgeryAloneCohortId = window.APP_CONFIG.COHORTS.SURGERY_ALONE.id;
+        const neoadjuvantCohortId = window.APP_CONFIG.COHORTS.NEOADJUVANT.id;
 
-        table4Config.rows.push(addSubgroupRow('surgeryAlone', '<strong>Avocado Sign</strong>', 'performanceAS'));
+        const esgarSet = window.studyT2CriteriaManager.getStudyCriteriaSetById('Rutegard_2025');
+        const barbaroSet = window.studyT2CriteriaManager.getStudyCriteriaSetById('Barbaro_2024');
+
+        table4Config.rows.push(addSubgroupRow(surgeryAloneCohortId, '<strong>Avocado Sign</strong>', 'performanceAS'));
         if (esgarSet) {
-             table4Config.rows.push(addSubgroupRow('surgeryAlone', esgarSet.name, 'performanceT2Literature.rutegard_et_al_esgar'));
+             table4Config.rows.push(addSubgroupRow(surgeryAloneCohortId, esgarSet.name, 'performanceT2Literature.Rutegard_2025'));
         }
-        table4Config.rows.push(addSubgroupRow('neoadjuvantTherapy', '<strong>Avocado Sign</strong>', 'performanceAS'));
+        table4Config.rows.push(addSubgroupRow(neoadjuvantCohortId, '<strong>Avocado Sign</strong>', 'performanceAS'));
         if (barbaroSet) {
-            table4Config.rows.push(addSubgroupRow('neoadjuvantTherapy', barbaroSet.name, 'performanceT2Literature.barbaro_2024'));
+            table4Config.rows.push(addSubgroupRow(neoadjuvantCohortId, barbaroSet.name, 'performanceT2Literature.Barbaro_2024'));
         }
 
         return text + helpers.createPublicationTableHTML(table3Config) + helpers.createPublicationTableHTML(table4Config);
