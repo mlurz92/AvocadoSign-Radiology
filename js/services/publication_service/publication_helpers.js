@@ -154,8 +154,8 @@ window.publicationHelpers = (() => {
     }
 
     function getReference(id) {
-        const ref = window.APP_CONFIG.REFERENCES_FOR_PUBLICATION[id];
-        return ref ? `(${ref.id})` : '[REF NOT FOUND]';
+        if (!id) return '[REF_KEY_MISSING]';
+        return `[${id}]`;
     }
 
     return Object.freeze({
