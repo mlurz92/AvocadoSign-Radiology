@@ -288,6 +288,7 @@ window.uiComponents = (() => {
                             <th>Target Metric</th>
                             <th>Best Value</th>
                             <th>Criteria</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -309,6 +310,15 @@ window.uiComponents = (() => {
                                 <td>${metricName}</td>
                                 <td>${formatNumber(result.bestResult.metricValue, 4, na, true)}</td>
                                 <td><code>${formatCriteriaFunc(result.bestResult.criteria, result.bestResult.logic, true)}</code></td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary p-0 px-2" 
+                                            data-action="apply-saved-bf" 
+                                            data-cohort="${cohortId}" 
+                                            data-metric="${metricName}"
+                                            data-tippy-content="Apply this set of criteria to the 'Define T2 Malignancy Criteria' panel.">
+                                        Apply
+                                    </button>
+                                </td>
                             </tr>
                         `;
                     }
@@ -418,7 +428,7 @@ window.uiComponents = (() => {
                     <button class="btn btn-sm btn-outline-primary me-2" id="btn-start-brute-force" ${startButtonDisabled ? 'disabled' : ''}><i class="fas fa-play me-1"></i> Start</button>
                     <button class="btn btn-sm btn-outline-warning me-2" id="btn-cancel-brute-force" ${cancelButtonDisabled ? 'disabled' : ''}><i class="fas fa-stop me-1"></i> Cancel</button>
                     <button class="btn btn-sm btn-info me-2" id="btn-show-bf-details" ${showDetailsButtonDisabled ? 'disabled' : ''}><i class="fas fa-info-circle me-1"></i> Top 10</button>
-                    <button class="btn btn-sm btn-success" id="btn-apply-best-bf-criteria" ${applyBestButtonDisabled ? 'disabled' : ''}><i class="fas fa-arrow-alt-circle-up me-1"></i> Apply Best</button>
+                    <button class="btn btn-sm btn-success" id="btn-apply-best-bf-criteria" data-metric="${selectedMetric}" ${applyBestButtonDisabled ? 'disabled' : ''}><i class="fas fa-arrow-alt-circle-up me-1"></i> Apply Best</button>
                 </div>
             </div>
         `;
@@ -436,4 +446,4 @@ window.uiComponents = (() => {
         createBruteForceOverviewTableHTML,
         createBruteForceRunnerCardHTML
     });
-})(); 
+})();
