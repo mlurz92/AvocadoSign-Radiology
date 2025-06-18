@@ -16,10 +16,8 @@ window.abstractGenerator = (() => {
         const bfResultsAvailable = !!(bfResultForPub && bfComparisonForPub);
 
         const medianAgeFormatted = helpers.formatValueForPublication(descriptive.age.median, 0);
-        const q1AgeFormatted = helpers.formatValueForPublication(descriptive.age.q1, 0);
-        const q3AgeFormatted = helpers.formatValueForPublication(descriptive.age.q3, 0);
-        const ageIQR = `${q1AgeFormatted}–${q3AgeFormatted}`;
-        const demographicsString = `${nOverall} patients (median age, ${medianAgeFormatted} years; IQR, ${ageIQR}; ${descriptive.sex.m} men)`;
+        const ageSDFormatted = helpers.formatValueForPublication(descriptive.age.sd, 0);
+        const demographicsString = `${nOverall} patients (mean age, ${helpers.formatValueForPublication(descriptive.age.mean, 0)} years ± ${ageSDFormatted} [standard deviation]; ${descriptive.sex.m} men)`;
 
         const resultsSectionHTML = `
             <p>A total of ${demographicsString} were evaluated, of whom ${nPositive} of ${nOverall} (${helpers.formatValueForPublication(nPositive / nOverall, 0, true)}%) were N-positive at histopathology. The Avocado Sign demonstrated a sensitivity of ${helpers.formatMetricForPublication(performanceAS.sens, 'sens')} and a specificity of ${helpers.formatMetricForPublication(performanceAS.spec, 'spec')}, with an AUC of ${helpers.formatMetricForPublication(performanceAS.auc, 'auc')}. Its performance was superior to established literature-based T2w criteria. Furthermore, its diagnostic accuracy was non-inferior to a cohort-optimized T2w criteria set derived from brute-force analysis (${bfResultsAvailable ? `AUC, ${helpers.formatMetricForPublication(performanceAS.auc, 'auc', true)} vs ${helpers.formatMetricForPublication(bfResultForPub.auc, 'auc', true)}; ${helpers.formatPValueForPublication(bfComparisonForPub.delong.pValue)}` : 'comparison pending'}).</p>
