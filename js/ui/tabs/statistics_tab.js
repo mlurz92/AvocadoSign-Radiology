@@ -341,7 +341,6 @@ window.statisticsTab = (() => {
                     }
                 }
             });
-            window.uiManager.initializeTooltips(outerRow);
         }, 50);
         return outerRow.outerHTML;
     }

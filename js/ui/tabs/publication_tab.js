@@ -27,13 +27,13 @@ window.publicationTab = (() => {
                 countIndicator.textContent = `${currentCount} / ${section.limit}`;
                 
                 const ratio = currentCount / section.limit;
-                let bgColor = 'bg-success-subtle text-success-emphasis';
+                let bgColorClass = 'bg-success-subtle text-success-emphasis';
                 if (ratio > 1) {
-                    bgColor = 'bg-danger text-white';
+                    bgColorClass = 'bg-danger text-white';
                 } else if (ratio > 0.9) {
-                    bgColor = 'bg-warning-subtle text-warning-emphasis';
+                    bgColorClass = 'bg-warning-subtle text-warning-emphasis';
                 }
-                countIndicator.className = `badge rounded-pill ms-2 word-count-indicator ${bgColor}`;
+                countIndicator.className = `badge rounded-pill ms-2 word-count-indicator ${bgColorClass}`;
             }
         });
     }
@@ -105,13 +105,7 @@ window.publicationTab = (() => {
                     window.flowchartRenderer.renderFlowchart(flowchartStats, flowchartContainerId);
                 }
             }
-
             renderWordCounts();
-            
-            if (typeof window.uiManager !== 'undefined') {
-                const contentArea = document.getElementById('publication-content-area');
-                if(contentArea) window.uiManager.initializeTooltips(contentArea);
-            }
         }, 50);
             
         return finalHTML;
