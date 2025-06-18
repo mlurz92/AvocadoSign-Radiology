@@ -200,7 +200,7 @@ window.statisticsTab = (() => {
 
                 innerContainer.innerHTML += window.uiComponents.createStatisticsCard(`descriptive-stats-${i}`, 'Descriptive Statistics', createDescriptiveStatsContentHTML(stats, i, cohortId), true, null, [{id: `dl-desc-table-${i}-png`, icon: 'fa-image', format: 'png', tableId: `table-descriptive-demographics-${i}`, tableName: `Descriptive_Demographics_${cohortId.replace(/\s+/g, '_')}`}], `table-descriptive-demographics-${i}`);
 
-                const fCI_p_stat = (m, k) => { const d = (k === 'auc' || k ==='f1' || k==='youden') ? 3 : 1; const p = !(k === 'auc'||k==='f1'||k==='youden'); return formatCI(m?.value, m?.ci?.lower, m?.ci?.upper, d, p, na_stat); };
+                const fCI_p_stat = (m, k) => { const d = (k === 'auc' || k ==='f1' || k==='youden' || k === 'balAcc') ? 3 : 1; const p = !(k === 'auc'||k==='f1'||k==='youden' || k === 'balAcc'); return formatCI(m?.value, m?.ci?.lower, m?.ci?.upper, d, p, na_stat); };
                 
                 const createPerfTableHTML = (perfStats) => {
                     if (!perfStats || typeof perfStats.matrix !== 'object') return '<p class="text-muted small p-2">No diagnostic performance data.</p>';
@@ -327,6 +327,21 @@ window.statisticsTab = (() => {
             outerRow.appendChild(criteriaComparisonCard);
         }
 
+        const viewSelectorHTML = `
+            <div class="d-flex justify-content-end mb-3">
+                <div class="btn-group btn-group-sm">
+                    <button id="statistics-toggle-single" class="btn btn-outline-primary ${layout === 'einzel' ? 'active' : ''}">Single View</button>
+                    <button id="statistics-toggle-comparison" class="btn btn-outline-primary ${layout === 'vergleich' ? 'active' : ''}">Comparison View</button>
+                </div>
+                <div id="statistics-cohort-select-2-container" class="ms-3" style="display: ${layout === 'vergleich' ? 'block' : 'none'};">
+                    <div class="input-group input-group-sm">
+                         <select class="form-select" id="statistics-cohort-select-1" aria-label="Select first cohort"></select>
+                         <span class="input-group-text">vs.</span>
+                         <select class="form-select" id="statistics-cohort-select-2" aria-label="Select second cohort"></select>
+                    </div>
+                </div>
+            </div>`;
+
         setTimeout(() => {
             cohortIdsToShow.forEach((cohortId, i) => {
                 const stats = allCohortStats[cohortId];
@@ -342,7 +357,7 @@ window.statisticsTab = (() => {
                 }
             });
         }, 50);
-        return outerRow.outerHTML;
+        return viewSelectorHTML + outerRow.outerHTML;
     }
 
     return { render };
