@@ -137,15 +137,17 @@ window.analysisTab = (() => {
         const bruteForceRunnerHTML = window.uiComponents.createBruteForceRunnerCardHTML(bfRunnerState, bruteForceResultForCurrentCohortAndMetric, bfWorkerAvailable, currentCohort, metricSelectValue);
 
         let metricsOverviewHTML = '';
-        if (currentCohortStats && currentCohortStats.performanceT2Applied) {
-            const statsT2 = currentCohortStats.performanceT2Applied;
+        const evaluatedDataForPerf = window.t2CriteriaManager.evaluateDataset(data, currentCriteria, currentLogic);
+        const statsT2 = window.statisticsService.calculateDiagnosticPerformance(evaluatedDataForPerf, 't2Status', 'nStatus');
+
+        if (statsT2) {
             const fCI = (m, d=1, p=true) => {
                 const digits = (m?.name === 'auc') ? 3 : ((m?.name === 'f1') ? 3 : d);
                 return formatCI(m?.value, m?.ci?.lower, m?.ci?.upper, digits, p, '--');
             };
             
-            const formattedAppliedT2 = window.studyT2CriteriaManager.formatCriteriaForDisplay(currentCriteria, currentLogic, true);
-            const perfCardTitle = `Diagnostic Performance (Applied T2: ${formattedAppliedT2})`;
+            const formattedCurrentT2 = window.studyT2CriteriaManager.formatCriteriaForDisplay(currentCriteria, currentLogic, true);
+            const perfCardTitle = `Diagnostic Performance (Current T2: ${formattedCurrentT2})`;
 
             const metricsTable = `
                 <div class="table-responsive">
@@ -212,4 +214,4 @@ window.analysisTab = (() => {
     return Object.freeze({
         render
     });
-})(); 
+})();
