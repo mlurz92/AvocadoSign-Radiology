@@ -1,28 +1,28 @@
 window.comparisonTab = (() => {
 
     function _createASPerformanceViewHTML(comparisonData) {
-        const { statsGesamt, statsSurgeryAlone, statsNeoadjuvantTherapy, cohort, statsCurrentCohort, patientCount } = comparisonData || {};
+        const { statsGesamt, statsSurgeryAlone, statsNeoadjuvantTherapy, globalCohort, statsCurrentCohort, patientCount } = comparisonData || {};
         const na = window.APP_CONFIG.NA_PLACEHOLDER;
 
         const cohortsData = [
-            { id: window.APP_CONFIG.COHORTS.OVERALL.id, stats: statsGesamt },
-            { id: window.APP_CONFIG.COHORTS.SURGERY_ALONE.id, stats: statsSurgeryAlone },
-            { id: window.APP_CONFIG.COHORTS.NEOADJUVANT.id, stats: statsNeoadjuvantTherapy }
+            { id: window.APP_CONFIG.COHORTS.OVERALL.id, stats: statsGesamt?.performanceAS },
+            { id: window.APP_CONFIG.COHORTS.SURGERY_ALONE.id, stats: statsSurgeryAlone?.performanceAS },
+            { id: window.APP_CONFIG.COHORTS.NEOADJUVANT.id, stats: statsNeoadjuvantTherapy?.performanceAS }
         ];
 
-        const currentCohortName = getCohortDisplayName(cohort);
+        const currentCohortName = getCohortDisplayName(globalCohort);
         const displayPatientCount = patientCount > 0 ? patientCount : (statsCurrentCohort?.matrix?.tp + statsCurrentCohort?.matrix?.fp + statsCurrentCohort?.matrix?.fn + statsCurrentCohort?.matrix?.tn) || 0;
         const hasDataForCurrent = !!(statsCurrentCohort && statsCurrentCohort.matrix && displayPatientCount > 0);
 
         const createPerfTableRow = (stats, cohortKey) => {
             const cohortDisplayName = getCohortDisplayName(cohortKey);
             const fCI_p = (m, k) => { 
-                const d = (k === 'auc' || k === 'f1' || k ==='youden') ? 2 : 0; 
-                const p = !(k === 'auc' || k === 'f1' || k ==='youden'); 
+                const d = (k === 'auc' || k === 'f1' || k ==='youden' || k === 'balAcc') ? 3 : 1; 
+                const p = !(k === 'auc' || k === 'f1' || k ==='youden' || k === 'balAcc'); 
                 return formatCI(m?.value, m?.ci?.lower, m?.ci?.upper, d, p, na); 
             };
             if (!stats || typeof stats.matrix !== 'object') {
-                const nPatients = stats?.descriptive?.patientCount || '?'; 
+                const nPatients = (cohortKey === 'Overall' ? statsGesamt?.descriptive?.patientCount : (cohortKey === 'surgeryAlone' ? statsSurgeryAlone?.descriptive?.patientCount : statsNeoadjuvantTherapy?.descriptive?.patientCount)) || '?';
                 return `<tr><td class="fw-bold">${cohortDisplayName} (N=${nPatients})</td><td colspan="6" class="text-muted text-center">Data missing</td></tr>`;
             }
             const count = stats.matrix ? (stats.matrix.tp + stats.matrix.fp + stats.matrix.fn + stats.matrix.tn) : 0;
@@ -103,7 +103,7 @@ window.comparisonTab = (() => {
             let comparisonTableHTML = `<div class="table-responsive"><table class="table table-sm table-striped small mb-0" id="comp-as-vs-t2-comp-table"><thead class="small"><tr><th>Metric</th><th>AS (Value, 95% CI)</th><th>${t2ShortNameEffective} (Value, 95% CI)</th></tr></thead><tbody>`;
             metrics.forEach(key => {
                 const isRate = !(key === 'f1' || key === 'auc' || key === 'balAcc'); 
-                const digits = (key === 'auc' || key === 'f1' || key === 'balAcc') ? 2 : 0;
+                const digits = (key === 'auc' || key === 'f1' || key === 'balAcc') ? 3 : 1;
                 const valAS = formatCI(performanceAS[key]?.value, performanceAS[key]?.ci?.lower, performanceAS[key]?.ci?.upper, digits, isRate, '--');
                 const valT2 = formatCI(performanceT2[key]?.value, performanceT2[key]?.ci?.lower, performanceT2[key]?.ci?.upper, digits, isRate, '--');
                 comparisonTableHTML += `<tr><td data-tippy-content="${getDefinitionTooltip(key)}">${metricNames[key]}</td><td data-tippy-content="${getInterpretationTooltip(key, performanceAS[key])}">${valAS}</td><td data-tippy-content="${getInterpretationTooltip(key, performanceT2[key])}">${valT2}</td></tr>`;
@@ -140,18 +140,20 @@ window.comparisonTab = (() => {
                     </div>
                 </div>`;
         } else {
-             resultsHTML = `<div class="alert alert-info">Please select a comparison basis for cohort '<strong>${displayCohortForComparison}</strong>'.</div>`;
+             resultsHTML = `<div class="alert alert-info">Please select a comparison basis. The analysis will be performed on the methodologically correct cohort for the selected criteria set.</div>`;
         }
 
-        const displayGlobalCohort = getCohortDisplayName(currentGlobalCohort);
-        let cohortNotice = `(Global cohort: <strong>${displayGlobalCohort}</strong>)`;
-        if (cohortForComparison !== currentGlobalCohort) {
-            cohortNotice = `<span class="text-warning">Note: T2 criteria are evaluated on cohort '<strong>${displayCohortForComparison}</strong>' (N=${patientCountForComparison || '?'}), while AS performance reflects the global cohort '<strong>${displayGlobalCohort}</strong>'. The global cohort was automatically set.</span>`;
+        let cohortNotice = '';
+        if (selectedStudyId && selectedStudyId !== window.APP_CONFIG.SPECIAL_IDS.APPLIED_CRITERIA_STUDY_ID) {
+            cohortNotice = `<div class="alert alert-info small p-2 mt-3 text-center" role="alert">
+                <i class="fas fa-info-circle me-1"></i>
+                Comparison is performed on the <strong>${displayCohortForComparison}</strong> cohort (N=${patientCountForComparison || '?'}) to match the selected literature criteria. The global cohort selection is temporarily disabled.
+            </div>`;
         } else {
-            cohortNotice = `(N=${patientCountForComparison || '?'})`;
+            cohortNotice = `<p class="text-center text-muted small mb-3">Current cohort: <strong>${getCohortDisplayName(currentGlobalCohort)}</strong> (N=${patientCountForComparison || '?'})</p>`;
         }
 
-        return `<div class="row mb-4"><div class="col-12"><h4 class="text-center mb-1">Comparison: Avocado Sign vs. T2 Criteria</h4><p class="text-center text-muted small mb-3">Current comparison cohort: <strong>${displayCohortForComparison}</strong> ${cohortNotice}</p><div class="row justify-content-center"><div class="col-md-9 col-lg-7"><div class="input-group input-group-sm"><label class="input-group-text" for="comp-study-select">T2 Comparison Basis:</label><select class="form-select" id="comp-study-select"><option value="" ${!selectedStudyId ? 'selected' : ''} disabled>-- Please select --</option>${appliedOptionHTML}<option value="" disabled>--- Published Criteria ---</option>${studyOptionsHTML}</select></div></div></div></div></div><div id="comparison-as-vs-t2-results">${resultsHTML}</div>`;
+        return `<div class="row mb-4"><div class="col-12"><h4 class="text-center mb-1">Comparison: Avocado Sign vs. T2 Criteria</h4>${cohortNotice}<div class="row justify-content-center mt-2"><div class="col-md-9 col-lg-7"><div class="input-group input-group-sm"><label class="input-group-text" for="comp-study-select">T2 Comparison Basis:</label><select class="form-select" id="comp-study-select"><option value="" ${!selectedStudyId ? 'selected' : ''} disabled>-- Please select --</option>${appliedOptionHTML}<option value="" disabled>--- Published Criteria ---</option>${studyOptionsHTML}</select></div></div></div></div></div><div id="comparison-as-vs-t2-results">${resultsHTML}</div>`;
     }
 
     function render(view, comparisonData, selectedStudyIdFromState, currentGlobalCohort, processedData, criteria, logic) {
@@ -190,11 +192,11 @@ window.comparisonTab = (() => {
         setTimeout(() => {
             if (view === 'as-pur' && comparisonData?.statsCurrentCohort) {
                 const chartId = "comp-as-perf-chart";
-                const dataForROC = window.dataProcessor.filterDataByCohort(processedData, comparisonData.cohort);
+                const dataForROC = window.dataProcessor.filterDataByCohort(processedData, comparisonData.globalCohort);
                 if (document.getElementById(chartId) && dataForROC.length > 0) {
                     window.chartRenderer.renderDiagnosticPerformanceChart(dataForROC, 'asStatus', 'nStatus', chartId, window.APP_CONFIG.UI_TEXTS.legendLabels.avocadoSign);
                 } else if (document.getElementById(chartId)) {
-                    window.uiManager.updateElementHTML(chartId, `<p class="text-center text-muted p-3">No data for chart (${getCohortDisplayName(comparisonData.cohort)}).</p>`);
+                    window.uiManager.updateElementHTML(chartId, `<p class="text-center text-muted p-3">No data for chart (${getCohortDisplayName(comparisonData.globalCohort)}).</p>`);
                 }
             } else if (view === 'as-vs-t2' && comparisonData?.performanceAS && comparisonData?.performanceT2) {
                 const chartContainerId = "comp-chart-container";
@@ -210,4 +212,4 @@ window.comparisonTab = (() => {
     return Object.freeze({
         render
     });
-})(); 
+})();
