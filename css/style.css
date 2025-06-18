@@ -145,6 +145,6 @@ tr[aria-expanded="true"] .row-toggle-icon { transform: rotate(180deg); }
     .table th, .table td { border: 1px solid #ccc !important; }
     #publication-pane .sticky-top { position: static !important; }
     #publication-pane .row > .col-md-3 { display: none !important; }
-    #publication-pane .row > .col-md-9 { width: 100% !important; max-width:100% !important; }
-    #publication-content-area { border: none !important; padding: 0 !important; max-height: none !important; }
+    #publication-pane .row > .col-md-9 { width: 100% !important; max-width:100% !important; flex: 0 0 100%; }
+    #publication-content-area { border: none !important; padding: 0 !important; max-height: none !important; overflow-y: visible !important; }
 }
