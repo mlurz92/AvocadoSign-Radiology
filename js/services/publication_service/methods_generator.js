@@ -85,4 +85,4 @@ window.methodsGenerator = (() => {
         generateStatisticalAnalysisHTML
     });
 
-})();
+})(); 
