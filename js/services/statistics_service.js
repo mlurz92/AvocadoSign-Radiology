@@ -577,9 +577,18 @@ window.statisticsService = (() => {
         const age1 = data1.map(p => p.age).filter(a => a !== null && !isNaN(a));
         const age2 = data2.map(p => p.age).filter(a => a !== null && !isNaN(a));
         if (age1.length > 1 && age2.length > 1) {
-            const t = (getMean(age1) - getMean(age2)) / Math.sqrt(getStdDev(age1)**2 / age1.length + getStdDev(age2)**2 / age2.length);
-            const df = age1.length + age2.length - 2;
-            res.age = { pValue: 2 * (1 - normalCDF(Math.abs(t))), test: 't-test' };
+            const mean1 = getMean(age1);
+            const mean2 = getMean(age2);
+            const sd1 = getStdDev(age1);
+            const sd2 = getStdDev(age2);
+            const n1 = age1.length;
+            const n2 = age2.length;
+            const se_diff = Math.sqrt((sd1 * sd1 / n1) + (sd2 * sd2 / n2));
+            const t = (mean1 - mean2) / se_diff;
+            const df_num = Math.pow((sd1*sd1/n1) + (sd2*sd2/n2), 2);
+            const df_den = (Math.pow(sd1*sd1/n1, 2) / (n1-1)) + (Math.pow(sd2*sd2/n2, 2) / (n2-1));
+            const df = df_num / df_den;
+            res.age = { pValue: 2 * (1 - normalCDF(Math.abs(t))), test: "Welch's t-test" };
         }
         const sex1_m = data1.filter(p => p.sex === 'm').length;
         const sex1_f = data1.filter(p => p.sex === 'f').length;

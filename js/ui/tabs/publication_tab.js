@@ -38,6 +38,44 @@ window.publicationTab = (() => {
         });
     }
 
+    function generateAbbreviationsList(fullHtmlContent) {
+        const potentialAbbreviations = {
+            'AS': 'Avocado Sign',
+            'AUC': 'Area under the receiver operating characteristic curve',
+            'CI': 'Confidence interval',
+            'nCRT': 'neoadjuvant chemoradiotherapy',
+            'T2w': 'T2-weighted',
+            'VIBE': 'volumetric interpolated breath-hold examination',
+            'DWI': 'diffusion-weighted imaging',
+            'ESGAR': 'European Society of Gastrointestinal and Abdominal Radiology',
+            'STARD': 'Standards for Reporting of Diagnostic Accuracy Studies'
+        };
+
+        const textContent = fullHtmlContent.replace(/<[^>]+>/g, ' ');
+        const counts = {};
+
+        Object.keys(potentialAbbreviations).forEach(abbr => {
+            const regex = new RegExp(`\\b${abbr}\\b`, 'g');
+            const matches = textContent.match(regex);
+            counts[abbr] = matches ? matches.length : 0;
+        });
+
+        const validAbbreviations = Object.entries(counts)
+            .filter(([abbr, count]) => count >= 5)
+            .sort(([, countA], [, countB]) => countB - countA)
+            .slice(0, 10)
+            .map(([abbr]) => `<li><strong>${abbr}</strong> = ${potentialAbbreviations[abbr]}</li>`)
+            .join('');
+
+        if (validAbbreviations) {
+            return `<div id="abbreviations-list" style="margin-top: 1.5rem;">
+                        <h4 style="font-size: 1.1rem; font-weight: bold;">Abbreviations</h4>
+                        <ul style="padding-left: 20px; margin-top: 0.5rem; list-style-position: inside; text-align: left;">${validAbbreviations}</ul>
+                    </div>`;
+        }
+        return '';
+    }
+
     function render(data, currentSectionId) {
         const { rawData, allCohortStats, bruteForceResults, currentLanguage } = data;
         
@@ -68,7 +106,16 @@ window.publicationTab = (() => {
         if (isChecklistActive) {
             finalContentHTML = window.stardGenerator.renderStardChecklist();
         } else {
-            finalContentHTML = window.publicationService.generateFullPublicationHTML(allCohortStats, commonData);
+            const fullManuscriptHTML = window.publicationService.generateFullPublicationHTML(allCohortStats, commonData);
+            const abbreviationsHTML = generateAbbreviationsList(fullManuscriptHTML);
+            
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = fullManuscriptHTML;
+            const titlePageElement = tempDiv.querySelector('#title_main');
+            if (titlePageElement) {
+                titlePageElement.innerHTML += abbreviationsHTML;
+            }
+            finalContentHTML = tempDiv.innerHTML;
         }
         
         const finalHTML = `

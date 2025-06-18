@@ -11,15 +11,13 @@ window.publicationHelpers = (() => {
         if (p < 0.001) return `${prefix} < .001`;
         if (p > 0.99) return `${prefix} > .99`;
 
-        const pRoundedTo3 = parseFloat(p.toFixed(3));
-        
         if (p < 0.01) {
-            return `${prefix} = .${pRoundedTo3.toFixed(3).substring(2)}`;
+            return `${prefix} = .${p.toFixed(3).substring(2)}`;
         }
         
         const pRoundedTo2 = parseFloat(p.toFixed(2));
         if (pRoundedTo2 === 0.05 && p.toPrecision(15) < (0.05).toPrecision(15)) {
-             return `${prefix} = .${pRoundedTo3.toFixed(3).substring(2)}`;
+             return `${prefix} = .${p.toFixed(3).substring(2)}`;
         }
 
         let formattedP = pRoundedTo2.toFixed(2);
@@ -32,22 +30,16 @@ window.publicationHelpers = (() => {
         return `${prefix} = ${formattedP}`;
     }
 
-    function formatValueForPublication(value, digits = 0, isPercent = false) {
+    function formatValueForPublication(value, digits = 0, isPercent = false, noLeadingZero = false) {
         const num = parseFloat(value);
         if (num === null || num === undefined || isNaN(num) || !isFinite(num)) {
             return 'N/A';
         }
 
         const finalValue = isPercent ? num * 100 : num;
-        let formattedString;
+        let formattedString = finalValue.toFixed(digits);
 
-        if (isPercent) {
-            formattedString = finalValue.toFixed(0);
-        } else {
-            formattedString = finalValue.toFixed(digits);
-        }
-
-        if (!isPercent && Math.abs(parseFloat(formattedString)) < 1 && (formattedString.startsWith('0.') || formattedString.startsWith('-0.'))) {
+        if (noLeadingZero && Math.abs(parseFloat(formattedString)) < 1 && (formattedString.startsWith('0.') || formattedString.startsWith('-0.'))) {
             return formattedString.replace('0.', '.');
         }
         
@@ -59,7 +51,7 @@ window.publicationHelpers = (() => {
             return 'N/A';
         }
 
-        let isPercent, digits;
+        let isPercent, digits, noLeadingZero;
         const metricLower = name.toLowerCase();
 
         switch (metricLower) {
@@ -70,6 +62,7 @@ window.publicationHelpers = (() => {
             case 'acc':
                 isPercent = true;
                 digits = 0;
+                noLeadingZero = false;
                 break;
             case 'auc':
             case 'kappa':
@@ -82,14 +75,16 @@ window.publicationHelpers = (() => {
             case 'rr':
                 isPercent = false;
                 digits = 2;
+                noLeadingZero = true;
                 break;
             default:
                 isPercent = false;
                 digits = 2;
+                noLeadingZero = false;
                 break;
         }
         
-        const valueStr = formatValueForPublication(metric.value, digits, isPercent);
+        const valueStr = formatValueForPublication(metric.value, digits, isPercent, noLeadingZero);
         let valueWithUnit = isPercent ? `${valueStr}%` : valueStr;
 
         if (showValueOnly) {
@@ -105,8 +100,8 @@ window.publicationHelpers = (() => {
             return `${valueWithUnit}${numeratorInfo}`;
         }
         
-        const lowerStr = formatValueForPublication(metric.ci.lower, digits, isPercent);
-        const upperStr = formatValueForPublication(metric.ci.upper, digits, isPercent);
+        const lowerStr = formatValueForPublication(metric.ci.lower, digits, isPercent, noLeadingZero);
+        const upperStr = formatValueForPublication(metric.ci.upper, digits, isPercent, noLeadingZero);
         
         const ciStr = isPercent ? `${lowerStr}%, ${upperStr}%` : `${lowerStr}, ${upperStr}`;
 

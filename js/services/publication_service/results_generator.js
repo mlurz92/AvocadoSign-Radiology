@@ -36,7 +36,7 @@ window.resultsGenerator = (() => {
 
         const getCountRow = (count, total) => {
             if(total === 0) return '0 (N/A)';
-            return `${helpers.formatValueForPublication(count, 0)} (${helpers.formatValueForPublication(count / total, 0, true)}%)`;
+            return `${helpers.formatValueForPublication(count, 0)} (${helpers.formatValueForPublication(count / total, 0, true)})`;
         };
         
         const tableConfig = {
@@ -49,7 +49,7 @@ window.resultsGenerator = (() => {
                 ['Men', getCountRow(overallStats.descriptive.sex.m, nOverall), getCountRow(surgeryAloneStats.descriptive.sex.m, nSurgeryAlone), getCountRow(neoadjuvantStats.descriptive.sex.m, nNeoadjuvantTherapy), helpers.formatPValueForPublication(descriptiveComparison?.sex?.pValue)],
                 ['Histopathologic N-status, positive', getCountRow(overallStats.descriptive.nStatus.plus, nOverall), getCountRow(surgeryAloneStats.descriptive.nStatus.plus, nSurgeryAlone), getCountRow(neoadjuvantStats.descriptive.nStatus.plus, nNeoadjuvantTherapy), helpers.formatPValueForPublication(descriptiveComparison?.nStatus?.pValue)]
             ],
-            notes: "Data are numbers of patients, with percentages in parentheses, or mean ± standard deviation or median and interquartile range (IQR). P values were derived from t-tests for continuous variables and chi-square or Fisher exact tests for categorical variables comparing the surgery-alone and neoadjuvant therapy groups and are included for descriptive purposes."
+            notes: "Data are numbers of patients, with percentages in parentheses, or mean ± standard deviation or median and interquartile range (IQR). P values were derived from Welch's t-tests for continuous variables and Fisher exact tests for categorical variables comparing the surgery-alone and neoadjuvant therapy groups."
         };
         
         return text + figurePlaceholder + helpers.createPublicationTableHTML(tableConfig);
@@ -69,7 +69,7 @@ window.resultsGenerator = (() => {
         
         let text = `
             <h3 id="ergebnisse_vergleich_as_vs_t2">Diagnostic Performance and Comparison</h3>
-            <p>For the entire cohort (n=${commonData.nOverall}), the Avocado Sign demonstrated a sensitivity of ${helpers.formatMetricForPublication(overallStats.performanceAS.sens, 'sens')}, a specificity of ${helpers.formatMetricForPublication(overallStats.performanceAS.spec, 'spec')}, and an accuracy of ${helpers.formatMetricForPublication(overallStats.performanceAS.acc, 'acc')}. The area under the receiver operating characteristic curve (AUC) was ${helpers.formatMetricForPublication(overallStats.performanceAS.auc, 'auc')}. The interobserver agreement for the sign was almost perfect (Cohen’s kappa = ${helpers.formatValueForPublication({value: overallStats.interobserverKappa}, 'kappa')}${(overallStats.interobserverKappaCI && isFinite(overallStats.interobserverKappaCI.lower) && isFinite(overallStats.interobserverKappaCI.upper)) ? `; 95% CI: ${helpers.formatValueForPublication(overallStats.interobserverKappaCI.lower, 2)}, ${helpers.formatValueForPublication(overallStats.interobserverKappaCI.upper, 2)}` : ''}).</p>
+            <p>For the entire cohort (n=${commonData.nOverall}), the Avocado Sign demonstrated a sensitivity of ${helpers.formatMetricForPublication(overallStats.performanceAS.sens, 'sens')}, a specificity of ${helpers.formatMetricForPublication(overallStats.performanceAS.spec, 'spec')}, and an accuracy of ${helpers.formatMetricForPublication(overallStats.performanceAS.acc, 'acc')}. The area under the receiver operating characteristic curve (AUC) was ${helpers.formatMetricForPublication(overallStats.performanceAS.auc, 'auc')}. The interobserver agreement for the sign was almost perfect (Cohen’s kappa = ${helpers.formatValueForPublication(overallStats.interobserverKappa, 2, false, true)}${(overallStats.interobserverKappaCI && isFinite(overallStats.interobserverKappaCI.lower) && isFinite(overallStats.interobserverKappaCI.upper)) ? `; 95% CI: ${helpers.formatValueForPublication(overallStats.interobserverKappaCI.lower, 2, false, true)}, ${helpers.formatValueForPublication(overallStats.interobserverKappaCI.upper, 2, false, true)}` : ''}).</p>
             <p>When compared with established and optimized T2w-based criteria, the Avocado Sign showed non-inferior diagnostic performance. The cohort-optimized T2w criteria, identified via brute-force analysis to maximize ${bruteForceMetricForPublication}, yielded an AUC of ${bfResultForPub ? helpers.formatMetricForPublication(bfResultForPub.auc, 'auc') : 'N/A'}. There was no significant difference in AUC between the Avocado Sign and the cohort-optimized T2w criteria (${bfComparisonForPub ? helpers.formatPValueForPublication(bfComparisonForPub.delong.pValue) : 'N/A'}). Detailed performance metrics and statistical comparisons for all evaluated criteria sets in the overall cohort are presented in Table 3. The performance within treatment-specific subgroups is detailed in Table 4.</p>
         `;
 
@@ -96,7 +96,7 @@ window.resultsGenerator = (() => {
         };
 
         table3Config.rows.push(addCompRowOverall('<strong>Avocado Sign</strong>', 'performanceAS', null));
-        table3Config.rows.push(addCompRowOverall('Cohort-Optimized T2w (BF)', `performanceT2Bruteforce.${bruteForceMetricForPublication}`, `comparisonASvsT2Bruteforce.${bruteForceMetricForPublication}`));
+        table3Config.rows.push(addCompRowOverall(`Cohort-Optimized T2w (BF ${bruteForceMetricForPublication})`, `performanceT2Bruteforce.${bruteForceMetricForPublication}`, `comparisonASvsT2Bruteforce.${bruteForceMetricForPublication}`));
         
         const kohSet = window.studyT2CriteriaManager.getStudyCriteriaSetById('koh_2008');
         if(kohSet) {

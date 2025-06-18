@@ -22,11 +22,11 @@ window.abstractGenerator = (() => {
         const q1AgeFormatted = helpers.formatValueForPublication(descriptive.age.q1, 0);
         const q3AgeFormatted = helpers.formatValueForPublication(descriptive.age.q3, 0);
         const ageIQR = `${q1AgeFormatted}–${q3AgeFormatted}`;
-        const demographicsString = `${nOverall} patients (median age, ${medianAgeFormatted} years; interquartile range, ${ageIQR}; ${descriptive.sex.m} men)`;
+        const demographicsString = `${nOverall} patients (median age, ${medianAgeFormatted} years; IQR, ${ageIQR}; ${descriptive.sex.m} men)`;
 
         if (bfResultsAvailable) {
             resultsSectionHTML = `
-                <p>A total of ${demographicsString} were evaluated. Of these, ${nPositive} of ${nOverall} (${helpers.formatValueForPublication(nPositive / nOverall, 0, true)}%) were N-positive at histopathology. The Avocado Sign demonstrated a sensitivity of ${helpers.formatMetricForPublication(performanceAS.sens, 'sens')} and a specificity of ${helpers.formatMetricForPublication(performanceAS.spec, 'spec')}, with an AUC of ${helpers.formatMetricForPublication(performanceAS.auc, 'auc')}. A brute-force optimized T2w criteria set (target metric: ${bruteForceMetricForPublication}) yielded a numerically similar AUC of ${helpers.formatMetricForPublication(bfResultForPub.auc, 'auc')}. The difference in diagnostic performance between the Avocado Sign and the optimized T2w criteria was not statistically significant (${helpers.formatPValueForPublication(bfComparisonForPub.delong.pValue)}).</p>
+                <p>A total of ${demographicsString} were evaluated, of whom ${nPositive} of ${nOverall} (${helpers.formatValueForPublication(nPositive / nOverall, 0, true)}%) were N-positive at histopathology. The Avocado Sign demonstrated a sensitivity of ${helpers.formatMetricForPublication(performanceAS.sens, 'sens')} and a specificity of ${helpers.formatMetricForPublication(performanceAS.spec, 'spec')}, with an AUC of ${helpers.formatMetricForPublication(performanceAS.auc, 'auc')}. A brute-force optimized T2w criteria set (target metric: ${bruteForceMetricForPublication}) yielded a numerically similar AUC of ${helpers.formatMetricForPublication(bfResultForPub.auc, 'auc')}. The difference in diagnostic performance between the Avocado Sign and the optimized T2w criteria was not statistically significant (${helpers.formatPValueForPublication(bfComparisonForPub.delong.pValue)}).</p>
             `;
             conclusionText = `
                 <p>The Avocado Sign is an accurate and reproducible MRI marker for predicting lymph node status in rectal cancer, demonstrating diagnostic performance non-inferior to cohort-optimized T2-weighted criteria.</p>
