@@ -1,8 +1,12 @@
 window.methodsGenerator = (() => {
 
     function generateStudyDesignHTML(stats, commonData) {
-        const { nOverall, nNeoadjuvantTherapy, nSurgeryAlone } = commonData;
+        const { nOverall, nNeoadjuvantTherapy, nSurgeryAlone } = commonData || {};
         const helpers = window.publicationHelpers;
+
+        if (nOverall === undefined || nNeoadjuvantTherapy === undefined || nSurgeryAlone === undefined) {
+            return '<h3 id="methoden_studienanlage_ethik">Study Design and Patients</h3><p class="text-warning">Patient cohort data is missing.</p>';
+        }
 
         return `
             <h3 id="methoden_studienanlage_ethik">Study Design and Patients</h3>
@@ -23,8 +27,12 @@ window.methodsGenerator = (() => {
     }
 
     function generateComparativeCriteriaHTML(stats, commonData) {
-        const { bruteForceMetricForPublication } = commonData;
+        const { bruteForceMetricForPublication } = commonData || {};
         const helpers = window.publicationHelpers;
+
+        if (!bruteForceMetricForPublication) {
+            return '<h3 id="methoden_vergleichskriterien_t2">Comparative T2w Criteria Sets</h3><p class="text-warning">Brute-force metric for publication is not defined.</p>';
+        }
 
         const table2Config = {
             id: 'table-methods-t2-literature',
@@ -33,15 +41,17 @@ window.methodsGenerator = (() => {
             rows: []
         };
 
-        const literatureSets = window.PUBLICATION_CONFIG.literatureCriteriaSets;
+        const literatureSets = window.PUBLICATION_CONFIG?.literatureCriteriaSets || [];
         literatureSets.forEach(set => {
-            table2Config.rows.push([
-                set.name,
-                set.studyInfo.reference,
-                set.studyInfo.patientCohort,
-                set.studyInfo.keyCriteriaSummary,
-                set.logic === 'KOMBINIERT' ? 'Combined' : set.logic
-            ]);
+            if (set && set.studyInfo) {
+                table2Config.rows.push([
+                    set.name || 'N/A',
+                    set.studyInfo.reference || 'N/A',
+                    set.studyInfo.patientCohort || 'N/A',
+                    set.studyInfo.keyCriteriaSummary || 'N/A',
+                    set.logic === 'KOMBINIERT' ? 'Combined' : set.logic || 'N/A'
+                ]);
+            }
         });
 
         return `
@@ -62,9 +72,13 @@ window.methodsGenerator = (() => {
 
     function generateStatisticalAnalysisHTML(stats, commonData) {
         const helpers = window.publicationHelpers;
-        const statisticalSignificanceLevel = window.APP_CONFIG.STATISTICAL_CONSTANTS.SIGNIFICANCE_LEVEL;
-        const nBootstrap = window.APP_CONFIG.STATISTICAL_CONSTANTS.BOOTSTRAP_CI_REPLICATIONS;
-        const appVersion = window.APP_CONFIG.APP_VERSION;
+        const statisticalSignificanceLevel = window.APP_CONFIG?.STATISTICAL_CONSTANTS?.SIGNIFICANCE_LEVEL;
+        const nBootstrap = window.APP_CONFIG?.STATISTICAL_CONSTANTS?.BOOTSTRAP_CI_REPLICATIONS;
+        const appVersion = window.APP_CONFIG?.APP_VERSION;
+
+        if (!statisticalSignificanceLevel || !nBootstrap || !appVersion) {
+            return '<h3 id="methoden_statistische_analyse_methoden">Statistical Analysis</h3><p class="text-warning">Configuration for statistical analysis is missing.</p>';
+        }
 
         const methodsText = `Descriptive statistics were used to summarize patient characteristics. Diagnostic performance metrics—including sensitivity, specificity, positive and negative predictive values, and accuracy—were calculated for each diagnostic method. The Wilson score method was used for 95% confidence intervals (CIs) of proportions, and the bootstrap percentile method (${helpers.formatValueForPublication(nBootstrap, 0)} replications) was used for CIs of the area under the receiver operating characteristic curve (AUC).`;
 
@@ -85,4 +99,4 @@ window.methodsGenerator = (() => {
         generateStatisticalAnalysisHTML
     });
 
-})(); 
+})();
