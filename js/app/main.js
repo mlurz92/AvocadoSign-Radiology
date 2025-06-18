@@ -112,7 +112,7 @@ class App {
                 const cohortBfResults = bfResults[payload.cohort] || {};
                 window.uiManager.updateBruteForceUI('result', cohortBfResults[payload.metric], true, payload.cohort);
                 if (payload?.results?.length > 0) {
-                    this.showBruteForceDetails(payload.metric);
+                    this.showBruteForceDetails(payload.metric, payload.cohort);
                     window.uiManager.showToast('Optimization finished.', 'success');
                     this.recalculateAllStats();
                     this.refreshCurrentTab();
@@ -338,10 +338,19 @@ class App {
         window.uiManager.showToast(`Best brute-force criteria for '${metric}' applied & saved.`, 'success');
     }
 
-    showBruteForceDetails(metric) {
-        const cohortId = window.state.getActiveCohortId();
-        const resultData = window.bruteForceManager.getResultsForCohortAndMetric(cohortId, metric);
+    showBruteForceDetails(metric, cohortId = null) {
+        const targetCohortId = cohortId || window.state.getActiveCohortId();
+        const resultData = window.bruteForceManager.getResultsForCohortAndMetric(targetCohortId, metric);
         window.uiManager.updateElementHTML('brute-force-modal-body', window.uiComponents.createBruteForceModalContent(resultData));
+        const exportButton = document.getElementById('export-bruteforce-modal-txt');
+        if(exportButton) {
+            if (resultData) {
+                exportButton.dataset.metric = metric;
+                exportButton.disabled = false;
+            } else {
+                exportButton.disabled = true;
+            }
+        }
         window.uiManager.initializeTooltips(document.getElementById('brute-force-modal-body'));
         if (this.bruteForceModal) {
             this.bruteForceModal.show();

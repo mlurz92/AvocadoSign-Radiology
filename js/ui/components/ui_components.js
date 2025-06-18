@@ -436,6 +436,25 @@ window.uiComponents = (() => {
         return createStatisticsCard('bf-runner-card', 'Criteria Optimization (Brute-Force)', content, false);
     }
 
+    function createAnalysisContextBannerHTML(context) {
+        if (!context) return '';
+        const { cohortId, reason } = context;
+        const cohortName = getCohortDisplayName(cohortId);
+        const stats = window.state.allPublicationStats?.[cohortId];
+        const count = stats?.descriptive?.patientCount || '?';
+        
+        let text = window.APP_CONFIG.UI_TEXTS.analysisContextBanner.text
+            .replace('[COHORT_NAME]', cohortName)
+            .replace('[COUNT]', count);
+        
+        return `
+            <div class="alert alert-info small p-2 mt-3 text-center" role="alert" id="analysis-context-banner">
+                <i class="fas fa-info-circle me-1"></i>
+                <strong>${window.APP_CONFIG.UI_TEXTS.analysisContextBanner.title}:</strong> ${text}
+            </div>
+        `;
+    }
+
     return Object.freeze({
         createHeaderButtonHTML,
         createDashboardCard,
@@ -444,6 +463,7 @@ window.uiComponents = (() => {
         createPublicationNav,
         createBruteForceModalContent,
         createBruteForceOverviewTableHTML,
-        createBruteForceRunnerCardHTML
+        createBruteForceRunnerCardHTML,
+        createAnalysisContextBannerHTML
     });
 })();

@@ -25,7 +25,7 @@ window.APP_CONFIG = Object.freeze({
         STATS_COHORT1: 'Overall',
         STATS_COHORT2: 'neoadjuvantTherapy',
         COMPARISON_VIEW: 'as-vs-t2',
-        COMPARISON_STUDY_ID: 'rutegard_2025',
+        COMPARISON_STUDY_ID: 'Rutegard_2025',
         PUBLICATION_SECTION: 'title_main',
         PUBLICATION_BRUTE_FORCE_METRIC: 'Balanced Accuracy',
         PUBLICATION_LANG: 'en'
@@ -173,6 +173,10 @@ window.APP_CONFIG = Object.freeze({
         Barbaro_2024: { id: 9, text: "Barbaro B, Carafa MRP, Minordi LM, et al. Magnetic resonance imaging for assessment of rectal cancer nodes after chemoradiotherapy: a single center experience. Radiother Oncol. 2024;193:110124. doi:10.1016/j.radonc.2024.110124" }
     }),
     UI_TEXTS: Object.freeze({
+        analysisContextBanner: {
+            title: "Analysis Context Active",
+            text: "Comparison is performed on the <strong>[COHORT_NAME]</strong> cohort (N=[COUNT]) to match the selected literature criteria. The global cohort selection is temporarily disabled."
+        },
         t2LogicDisplayNames: {
             'AND': 'AND',
             'OR': 'OR',

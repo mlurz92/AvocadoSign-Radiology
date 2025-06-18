@@ -95,7 +95,7 @@ window.analysisTab = (() => {
         if (!data || !currentCriteria || !currentLogic) throw new Error("Data or criteria for Analysis Tab not available.");
         
         const criteriaControlsHTML = window.uiComponents.createT2CriteriaControls(currentCriteria, currentLogic);
-        const analysisTableCardHTML = createAnalysisTableCardHTML(data, sortState, currentCriteria, currentLogic);
+        const analysisTableCardHTML = createAnalysisTableCardHTML(data, sortState, window.t2CriteriaManager.getAppliedCriteria(), window.t2CriteriaManager.getAppliedLogic());
 
         const dashboardContainerId = 'analysis-dashboard';
         const metricsOverviewContainerId = 't2-metrics-overview';
@@ -181,7 +181,7 @@ window.analysisTab = (() => {
                 metricsTable,
                 false,
                 null,
-                [{id: 'dl-t2-metrics-overview-png', icon: 'fa-image', format: 'png', tableId: 't2-metrics-overview-card-content table', tableName: `T2_Metrics_Overview_${getCohortDisplayName(currentCohort).replace(/\s+/g, '_')}`}],
+                [{id: `dl-t2-metrics-overview-png`, icon: 'fa-image', format: 'png', tableId: 't2-metrics-overview-card-content table', tableName: `T2_Metrics_Overview_${getCohortDisplayName(currentCohort).replace(/\s+/g, '_')}`}],
                 't2-metrics-overview-card-content table'
             );
         } else {

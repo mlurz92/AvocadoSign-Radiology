@@ -1,6 +1,6 @@
 window.comparisonTab = (() => {
 
-    function _createASPerformanceViewHTML(comparisonData) {
+    function _createASPerformanceViewHTML(comparisonData, processedData) {
         const { statsGesamt, statsSurgeryAlone, statsNeoadjuvantTherapy, globalCohort, statsCurrentCohort, patientCount } = comparisonData || {};
         const na = window.APP_CONFIG.NA_PLACEHOLDER;
 
@@ -143,17 +143,15 @@ window.comparisonTab = (() => {
              resultsHTML = `<div class="alert alert-info">Please select a comparison basis. The analysis will be performed on the methodologically correct cohort for the selected criteria set.</div>`;
         }
 
-        let cohortNotice = '';
-        if (selectedStudyId && selectedStudyId !== window.APP_CONFIG.SPECIAL_IDS.APPLIED_CRITERIA_STUDY_ID) {
-            cohortNotice = `<div class="alert alert-info small p-2 mt-3 text-center" role="alert">
-                <i class="fas fa-info-circle me-1"></i>
-                Comparison is performed on the <strong>${displayCohortForComparison}</strong> cohort (N=${patientCountForComparison || '?'}) to match the selected literature criteria. The global cohort selection is temporarily disabled.
-            </div>`;
+        let contextBannerHTML = '';
+        const analysisContext = window.state.getAnalysisContext();
+        if (analysisContext) {
+            contextBannerHTML = window.uiComponents.createAnalysisContextBannerHTML(analysisContext);
         } else {
-            cohortNotice = `<p class="text-center text-muted small mb-3">Current cohort: <strong>${getCohortDisplayName(currentGlobalCohort)}</strong> (N=${patientCountForComparison || '?'})</p>`;
+            contextBannerHTML = `<p class="text-center text-muted small mb-3">Current cohort: <strong>${getCohortDisplayName(currentGlobalCohort)}</strong> (N=${patientCountForComparison || '?'})</p>`;
         }
 
-        return `<div class="row mb-4"><div class="col-12"><h4 class="text-center mb-1">Comparison: Avocado Sign vs. T2 Criteria</h4>${cohortNotice}<div class="row justify-content-center mt-2"><div class="col-md-9 col-lg-7"><div class="input-group input-group-sm"><label class="input-group-text" for="comp-study-select">T2 Comparison Basis:</label><select class="form-select" id="comp-study-select"><option value="" ${!selectedStudyId ? 'selected' : ''} disabled>-- Please select --</option>${appliedOptionHTML}<option value="" disabled>--- Published Criteria ---</option>${studyOptionsHTML}</select></div></div></div></div></div><div id="comparison-as-vs-t2-results">${resultsHTML}</div>`;
+        return `<div class="row mb-4"><div class="col-12"><h4 class="text-center mb-1">Comparison: Avocado Sign vs. T2 Criteria</h4>${contextBannerHTML}<div class="row justify-content-center mt-2"><div class="col-md-9 col-lg-7"><div class="input-group input-group-sm"><label class="input-group-text" for="comp-study-select">T2 Comparison Basis:</label><select class="form-select" id="comp-study-select"><option value="" ${!selectedStudyId ? 'selected' : ''} disabled>-- Please select --</option>${appliedOptionHTML}<option value="" disabled>--- Published Criteria ---</option>${studyOptionsHTML}</select></div></div></div></div></div><div id="comparison-as-vs-t2-results">${resultsHTML}</div>`;
     }
 
     function render(view, comparisonData, selectedStudyIdFromState, currentGlobalCohort, processedData, criteria, logic) {
@@ -186,7 +184,7 @@ window.comparisonTab = (() => {
             </div>`;
 
         let contentHTML = (view === 'as-pur') 
-            ? _createASPerformanceViewHTML(comparisonData)
+            ? _createASPerformanceViewHTML(comparisonData, processedData)
             : _createASvsT2ComparisonViewHTML(comparisonData, selectedStudyIdFromState, currentGlobalCohort);
         
         setTimeout(() => {
