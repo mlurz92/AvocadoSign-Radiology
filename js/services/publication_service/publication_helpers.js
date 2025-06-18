@@ -1,7 +1,7 @@
 window.publicationHelpers = (() => {
 
     function formatPValueForPublication(pValue) {
-        return window.utils.getPValueText(pValue, true);
+        return getPValueText(pValue, true);
     }
 
     function formatValueForPublication(value, digits = 0, isPercent = false, noLeadingZero = false) {
