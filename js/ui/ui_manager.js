@@ -201,7 +201,7 @@ window.uiManager = (() => {
         });
     }
 
-    function showToast(message, type = 'info', duration = window.APP_CONFIG?.UI_SETTINGS?.TOAST_DURATION_MS || 4500) {
+    function showToast(message, type = 'info', duration = window.APP_CONFIG?.UI_SETTINGS?.TOAST_DURATION_MS || 1500) {
         if (typeof bootstrap === 'undefined') return;
         const toastContainer = document.getElementById('toast-container');
         if (!toastContainer) return;
