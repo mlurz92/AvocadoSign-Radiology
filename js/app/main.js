@@ -36,8 +36,8 @@ class App {
             }
             
             this.filterAndPrepareData();
-            this.updateUI();
             this.recalculateAllStats();
+            this.updateUI();
             this.renderCurrentTab();
             
             if (!loadFromLocalStorage(window.APP_CONFIG.STORAGE_KEYS.FIRST_APP_START)) {
