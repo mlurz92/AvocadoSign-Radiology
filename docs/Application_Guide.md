@@ -77,14 +77,15 @@ The application is divided into six main modules, accessible via the navigation 
 *   **Components & Workflow:**
     *   **View Selection:** Focuses on either the standalone performance of the AS ("AS Performance") or the direct comparison with T2 criteria ("AS vs. T2 Comparison").
     *   **T2 Comparison Basis:** In "AS vs. T2" mode, the user can choose to compare the AS against the interactively set criteria or one of the predefined literature criteria sets.
-    *   **Dynamic Content:** Automatically generates comparison tables, statistical tests, and a bar chart. All elements are exportable as CSV, Markdown, PNG, or SVG.
+    *   **Dynamic Content:** Automatically generates comparison tables, statistical tests, and a bar chart. All elements are exportable as CSV, Markdown, PNG, oder SVG.
+    *   **Automatic Cohort Switching:** When a literature-based criterion is selected for comparison, the application automatically switches the global cohort to the one most appropriate for that criterion (e.g., "Surgery alone" for ESGAR criteria) to ensure a methodologically sound comparison. The UI provides clear feedback about this automatic switch.
 
 ### 3.5. Publication Tab
 *   **Purpose:** An assistant for creating a scientific manuscript according to the style guidelines of the journal *Radiology*.
 *   **Components & Workflow:**
     *   **Title Page & Outline:** The view starts with a *Radiology*-compliant title page (including Key Results) and is clearly structured into main sections (Abstract, Introduction, etc.), which are navigable via a sticky sidebar.
     *   **Dynamic Text Generation:** The application generates professionally formulated, English-language text for each section, dynamically integrating the **latest analysis results** (from comparisons with literature and brute-force criteria) and correctly formatting all values and citations (e.g., *P* < .001).
-    *   **Embedded Content:** Tables and figures are generated directly within the text flow, including a rendered flowchart in the results section.
+    *   **Embedded Content:** Tables and figures are generated directly within the text flow, including a rendered flowchart in the results section and a STARD checklist.
     *   **BF Metric Selection:** A dropdown menu allows the user to select which brute-force optimization result should be cited in the text.
     *   **Word Count Monitoring:** The navigation sidebar displays a live word/item count for each section with a defined limit, providing color-coded feedback (green/orange/red) to aid in adhering to journal guidelines.
 
