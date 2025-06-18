@@ -4,6 +4,10 @@ window.referencesGenerator = (() => {
         const citedRefKeys = new Map();
         let refCounter = 1;
 
+        if (typeof html !== 'string' || !allReferences) {
+            return { processedHtml: html || '', referencesHtml: '' };
+        }
+
         const processedHtml = html.replace(/\[([A-Za-z0-9_]+)\]/g, (match, refKey) => {
             if (!allReferences[refKey]) {
                 return `[REF_NOT_FOUND: ${refKey}]`;
@@ -21,7 +25,7 @@ window.referencesGenerator = (() => {
         if (sortedCitedRefs.length > 0) {
             const listItems = sortedCitedRefs.map(([key, number]) => {
                 const refData = allReferences[key];
-                if (!refData) {
+                if (!refData || !refData.text) {
                     return `<li>Reference for key '${key}' not found.</li>`;
                 }
                 const formattedText = refData.text.replace(/(\d{4};\d{1,3}:\d{1,4}–\d{1,4})/, '<strong>$1</strong>');
