@@ -41,6 +41,10 @@ window.publicationService = (() => {
             }
         }
         
+        if (sectionId === 'references_main') {
+            return '';
+        }
+
         return `<div class="alert alert-warning">Content generator for section ID '${sectionId}' not found.</div>`;
     }
     
@@ -73,4 +77,4 @@ window.publicationService = (() => {
         generateSectionHTML
     });
 
-})(); 
+})();
