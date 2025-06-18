@@ -73,4 +73,4 @@ window.publicationService = (() => {
         generateSectionHTML
     });
 
-})();
+})(); 
