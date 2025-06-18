@@ -4,6 +4,21 @@ window.uiManager = (() => {
 
     function updateCohortButtonsUI(currentCohortId, isLocked) {
         if (!window.APP_CONFIG) return;
+        const cohortButtonGroup = document.querySelector('.btn-group[aria-label="Cohort Selection"]');
+        
+        if (cohortButtonGroup) {
+            const tooltipContent = isLocked 
+                ? "Cohort selection is locked because a specific analysis context (e.g., literature comparison) is active." 
+                : "Select the patient cohort for analysis.";
+            
+            let tippyInstance = cohortButtonGroup._tippy;
+            if (tippyInstance) {
+                tippyInstance.setContent(tooltipContent);
+            } else {
+                tippy(cohortButtonGroup, { content: tooltipContent });
+            }
+        }
+
         Object.values(window.APP_CONFIG.COHORTS).forEach(cohort => {
             const button = document.getElementById(`btn-cohort-${cohort.id}`);
             if (button) {
@@ -395,10 +410,6 @@ window.uiManager = (() => {
 
         if (compStudySelect) {
             compStudySelect.disabled = (view === 'as-pur');
-            const allStudySets = window.studyT2CriteriaManager.getAllStudyCriteriaSets();
-            const appliedOptionHTML = `<option value="${window.APP_CONFIG.SPECIAL_IDS.APPLIED_CRITERIA_STUDY_ID}" ${selectedStudyId === window.APP_CONFIG.SPECIAL_IDS.APPLIED_CRITERIA_STUDY_ID ? 'selected' : ''}>-- ${window.APP_CONFIG.SPECIAL_IDS.APPLIED_CRITERIA_DISPLAY_NAME} --</option>`;
-            const studyOptionsHTML = allStudySets.map(set => `<option value="${set.id}" ${selectedStudyId === set.id ? 'selected' : ''}>${set.name || set.id}</option>`).join('');
-            compStudySelect.innerHTML = `<option value="" ${!selectedStudyId ? 'selected' : ''} disabled>-- Please select --</option>${appliedOptionHTML}<option value="" disabled>--- Published Criteria ---</option>${studyOptionsHTML}`;
         }
     }
 
@@ -469,4 +480,4 @@ window.uiManager = (() => {
         updateElementHTML,
         highlightElement
     });
-})(); 
+})();
