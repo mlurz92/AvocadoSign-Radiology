@@ -149,4 +149,4 @@ window.resultsGenerator = (() => {
         generateComparisonHTML
     });
 
-})();
+})(); 
