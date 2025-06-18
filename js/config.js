@@ -9,7 +9,7 @@ window.DEFAULT_T2_CRITERIA = Object.freeze({
 
 window.APP_CONFIG = Object.freeze({
     APP_NAME: "Nodal Staging: Avocado Sign vs. T2 Criteria",
-    APP_VERSION: "3.2.1-radiology-edition",
+    APP_VERSION: "4.0.0-context-refactor",
     NA_PLACEHOLDER: '--',
     COHORTS: Object.freeze({
         OVERALL: { id: 'Overall', therapyValue: null, displayName: 'Overall' },
@@ -25,7 +25,7 @@ window.APP_CONFIG = Object.freeze({
         STATS_COHORT1: 'Overall',
         STATS_COHORT2: 'neoadjuvantTherapy',
         COMPARISON_VIEW: 'as-vs-t2',
-        COMPARISON_STUDY_ID: 'rutegard_et_al_esgar',
+        COMPARISON_STUDY_ID: 'rutegard_2025',
         PUBLICATION_SECTION: 'title_main',
         PUBLICATION_BRUTE_FORCE_METRIC: 'Balanced Accuracy',
         PUBLICATION_LANG: 'en'
@@ -51,7 +51,7 @@ window.APP_CONFIG = Object.freeze({
         COMPARISON_VIEW: 'currentComparisonView_v4.2_detailed',
         COMPARISON_STUDY_ID: 'currentComparisonStudyId_v4.2_detailed',
         CHART_COLOR_SCHEME: 'chartColorScheme_v4.2_detailed',
-        FIRST_APP_START: 'appFirstStart_v3.2.1'
+        FIRST_APP_START: 'appFirstStart_v4.0.0'
     }),
     PATHS: Object.freeze({
         BRUTE_FORCE_WORKER: 'workers/brute_force_worker.js'
@@ -421,7 +421,7 @@ window.PUBLICATION_CONFIG = Object.freeze({
     ],
     literatureCriteriaSets: [
         {
-            id: 'koh_2008',
+            id: 'Koh_2008',
             name: 'Koh et al. (2008)',
             displayShortName: 'Koh 2008',
             logic: 'OR',
@@ -441,7 +441,7 @@ window.PUBLICATION_CONFIG = Object.freeze({
             }
         },
         {
-            id: 'barbaro_2024',
+            id: 'Barbaro_2024',
             name: 'Barbaro et al. (2024)',
             displayShortName: 'Barbaro 2024',
             logic: 'OR',
@@ -462,7 +462,7 @@ window.PUBLICATION_CONFIG = Object.freeze({
             }
         },
         {
-            id: 'rutegard_et_al_esgar',
+            id: 'Rutegard_2025',
             name: 'ESGAR 2016 (Rutegård et al.)',
             displayShortName: 'ESGAR 2016',
             logic: 'KOMBINIERT',
