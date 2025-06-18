@@ -1,33 +1,7 @@
 window.publicationHelpers = (() => {
 
     function formatPValueForPublication(pValue) {
-        const p = parseFloat(pValue);
-        if (p === null || p === undefined || isNaN(p) || !isFinite(p)) {
-            return 'N/A';
-        }
-
-        const prefix = '<em>P</em>';
-
-        if (p < 0.001) return `${prefix} < .001`;
-        if (p > 0.99) return `${prefix} > .99`;
-
-        if (p < 0.01) {
-            return `${prefix} = .${p.toFixed(3).substring(2)}`;
-        }
-        
-        const pRoundedTo2 = parseFloat(p.toFixed(2));
-        if (pRoundedTo2 === 0.05 && p.toPrecision(15) < (0.05).toPrecision(15)) {
-             return `${prefix} = .${p.toFixed(3).substring(2)}`;
-        }
-
-        let formattedP = pRoundedTo2.toFixed(2);
-        if (formattedP.startsWith("0.")) {
-            formattedP = formattedP.substring(1);
-        } else if (formattedP === "1.00") {
-            return `${prefix} > .99`;
-        }
-        
-        return `${prefix} = ${formattedP}`;
+        return window.utils.getPValueText(pValue, true);
     }
 
     function formatValueForPublication(value, digits = 0, isPercent = false, noLeadingZero = false) {
@@ -192,4 +166,4 @@ window.publicationHelpers = (() => {
         getReference
     });
 
-})(); 
+})();
