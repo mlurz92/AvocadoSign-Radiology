@@ -21,24 +21,26 @@ window.publicationService = (() => {
             try {
                 return generator(stats, commonData);
             } catch (error) {
-                return `<div class="alert alert-danger">An error occurred while generating content for section '${sectionId}'.</div>`;
+                console.error(`Error in generator for section '${sectionId}':`, error);
+                return `<div class="alert alert-danger">An error occurred while generating content for section '${sectionId}'. Check console for details.</div>`;
             }
         }
         
         const mainSection = window.PUBLICATION_CONFIG.sections.find(s => s.id === sectionId);
         if (mainSection && Array.isArray(mainSection.subSections) && mainSection.subSections.length > 0) {
             let combinedHTML = '';
-            try {
-                mainSection.subSections.forEach(sub => {
-                    const subGenerator = contentGenerators[sub.id];
-                    if (typeof subGenerator === 'function') {
+            mainSection.subSections.forEach(sub => {
+                const subGenerator = contentGenerators[sub.id];
+                if (typeof subGenerator === 'function') {
+                    try {
                         combinedHTML += subGenerator(stats, commonData);
+                    } catch (error) {
+                        console.error(`Error in sub-generator for section '${sub.id}' (part of '${sectionId}'):`, error);
+                        combinedHTML += `<div class="alert alert-danger">An error occurred while generating content for sub-section '${sub.label}'. Check console for details.</div>`;
                     }
-                });
-                return combinedHTML;
-            } catch (error) {
-                return `<div class="alert alert-danger">An error occurred while generating combined content for section '${sectionId}'.</div>`;
-            }
+                }
+            });
+            return combinedHTML;
         }
         
         if (sectionId === 'references_main') {
@@ -56,7 +58,9 @@ window.publicationService = (() => {
         let rawContentHTML = generateSectionHTML('title_main', allCohortStats, commonData);
 
         window.PUBLICATION_CONFIG.sections.forEach(section => {
-            if (section.id === 'references_main' || section.id === 'title_main' || section.id === 'stard_checklist') return;
+            if (section.id === 'references_main' || section.id === 'title_main' || section.id === 'stard_checklist') {
+                return;
+            }
 
             const sectionLabel = window.APP_CONFIG.UI_TEXTS.publicationTab.sectionLabels[section.labelKey] || section.labelKey;
             
