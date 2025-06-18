@@ -469,4 +469,4 @@ window.uiManager = (() => {
         updateElementHTML,
         highlightElement
     });
-})();
+})(); 
