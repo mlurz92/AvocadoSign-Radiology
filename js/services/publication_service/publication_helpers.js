@@ -192,4 +192,4 @@ window.publicationHelpers = (() => {
         getReference
     });
 
-})();
+})(); 
