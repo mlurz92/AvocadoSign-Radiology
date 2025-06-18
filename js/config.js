@@ -71,8 +71,10 @@ window.APP_CONFIG = Object.freeze({
         DEFAULT_CI_METHOD_PROPORTION: 'Wilson Score',
         DEFAULT_CI_METHOD_EFFECTSIZE: 'Bootstrap Percentile',
         FISHER_EXACT_THRESHOLD: 5,
-        INTEROBSERVER_KAPPA: 0.92,
-        INTEROBSERVER_KAPPA_CI: { lower: 0.85, upper: 0.99 }
+        INTEROBSERVER_KAPPA: Object.freeze({
+            value: 0.92,
+            ci: { lower: 0.85, upper: 0.99 }
+        })
     }),
     T2_CRITERIA_SETTINGS: Object.freeze({
         SIZE_RANGE: Object.freeze({ min: 0.1, max: 25.0, step: 0.1 }),

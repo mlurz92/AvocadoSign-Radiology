@@ -584,12 +584,16 @@ window.statisticsService = (() => {
             const n1 = age1.length;
             const n2 = age2.length;
             const se_diff = Math.sqrt((sd1 * sd1 / n1) + (sd2 * sd2 / n2));
-            const t = (mean1 - mean2) / se_diff;
-            const df_num = Math.pow((sd1*sd1/n1) + (sd2*sd2/n2), 2);
-            const df_den = (Math.pow(sd1*sd1/n1, 2) / (n1-1)) + (Math.pow(sd2*sd2/n2, 2) / (n2-1));
-            const df = df_num / df_den;
-            res.age = { pValue: 2 * (1 - normalCDF(Math.abs(t))), test: "Welch's t-test" };
+            if (se_diff > 0) {
+                const t = (mean1 - mean2) / se_diff;
+                res.age = { pValue: 2 * (1 - normalCDF(Math.abs(t))), test: "Welch's t-test" };
+            } else {
+                res.age = { pValue: 1.0, test: "Welch's t-test (Zero Variance)" };
+            }
+        } else {
+            res.age = { pValue: NaN, test: "Welch's t-test (Insufficient Data)" };
         }
+        
         const sex1_m = data1.filter(p => p.sex === 'm').length;
         const sex1_f = data1.filter(p => p.sex === 'f').length;
         const sex2_m = data2.filter(p => p.sex === 'm').length;
@@ -660,8 +664,8 @@ window.statisticsService = (() => {
         });
 
         if (results.Overall) {
-            results.Overall.interobserverKappa = window.APP_CONFIG.STATISTICAL_CONSTANTS.INTEROBSERVER_KAPPA;
-            results.Overall.interobserverKappaCI = window.APP_CONFIG.STATISTICAL_CONSTANTS.INTEROBSERVER_KAPPA_CI;
+            results.Overall.interobserverKappa = window.APP_CONFIG.STATISTICAL_CONSTANTS.INTEROBSERVER_KAPPA.value;
+            results.Overall.interobserverKappaCI = window.APP_CONFIG.STATISTICAL_CONSTANTS.INTEROBSERVER_KAPPA.ci;
         }
 
         const dataSurgery = window.dataProcessor.filterDataByCohort(data, window.APP_CONFIG.COHORTS.SURGERY_ALONE.id);
