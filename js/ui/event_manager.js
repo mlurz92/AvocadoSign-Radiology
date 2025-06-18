@@ -262,14 +262,14 @@ window.eventManager = (() => {
     function handlePublicationSectionChange(sectionId) {
         if (window.state.setPublicationSection(sectionId)) {
             app.updateUI();
-            if (window.state.getActiveTabId() === 'publication') {
-                app.refreshCurrentTab();
-                setTimeout(() => {
-                    const element = document.getElementById(sectionId);
-                    if (element) {
-                        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    }
-                }, 100);
+            const contentArea = document.getElementById('publication-content-area');
+            const element = document.getElementById(sectionId);
+            if (contentArea && element) {
+                const offsetTop = element.offsetTop - contentArea.offsetTop;
+                contentArea.scrollTo({
+                    top: offsetTop,
+                    behavior: 'smooth'
+                });
             }
         }
     }
@@ -284,4 +284,4 @@ window.eventManager = (() => {
     return Object.freeze({
         init
     });
-})(); 
+})();
