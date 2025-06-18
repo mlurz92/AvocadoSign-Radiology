@@ -284,4 +284,4 @@ window.eventManager = (() => {
     return Object.freeze({
         init
     });
-})();
+})(); 
