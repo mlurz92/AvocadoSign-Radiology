@@ -43,7 +43,7 @@ window.eventManager = (() => {
                     category, 
                     app.getProcessedData(), 
                     window.bruteForceManager.getAllResults(), 
-                    window.state.getCurrentCohort(), 
+                    window.state.getActiveCohortId(), 
                     window.t2CriteriaManager.getAppliedCriteria(), 
                     window.t2CriteriaManager.getAppliedLogic()
                 );
@@ -57,7 +57,7 @@ window.eventManager = (() => {
         const target = event.target;
         const button = target.closest('button');
 
-        if (button?.dataset.cohort) {
+        if (button?.dataset.cohort && !button.disabled) {
             app.handleCohortChange(button.dataset.cohort, "user");
             return;
         }
@@ -104,11 +104,12 @@ window.eventManager = (() => {
                  const metricSelect = document.getElementById('brute-force-metric');
                  if (metricSelect) app.showBruteForceDetails(metricSelect.value);
             },
-            'statistics-toggle-comparison': () => handleStatsLayoutToggle(button),
+            'statistics-toggle-single': () => handleStatsLayoutToggle('einzel'),
+            'statistics-toggle-comparison': () => handleStatsLayoutToggle('vergleich'),
             'export-bruteforce-modal-txt': () => {
                 const metric = button.dataset.metric;
                 if (metric) {
-                    const cohortId = window.state.getCurrentCohort();
+                    const cohortId = window.state.getActiveCohortId();
                     const resultData = window.bruteForceManager.getResultsForCohortAndMetric(cohortId, metric);
                     window.exportService.exportBruteForceReport(resultData);
                 }
@@ -132,14 +133,14 @@ window.eventManager = (() => {
             window.exportService.exportSingleChart(
                 button.dataset.chartId, 
                 button.dataset.format, 
-                window.state.getCurrentCohort(), 
+                window.state.getActiveCohortId(), 
                 { chartName: button.dataset.chartName || button.dataset.defaultName }
             );
             return;
         }
 
         if (button.classList.contains('table-download-png-btn')) {
-            window.exportService.exportTablePNG(button.dataset.tableId, window.state.getCurrentCohort(), 'TABLE_PNG_EXPORT', button.dataset.tableName);
+            window.exportService.exportTablePNG(button.dataset.tableId, window.state.getActiveCohortId(), 'TABLE_PNG_EXPORT', button.dataset.tableName);
             return;
         }
 
@@ -224,8 +225,7 @@ window.eventManager = (() => {
         }
     }
 
-    function handleStatsLayoutToggle(button) {
-        const newLayout = button.classList.contains('active') ? 'einzel' : 'vergleich';
+    function handleStatsLayoutToggle(newLayout) {
         if (window.state.setStatsLayout(newLayout)) {
             app.updateUI();
             if (window.state.getActiveTabId() === 'statistics') app.refreshCurrentTab();
@@ -247,20 +247,12 @@ window.eventManager = (() => {
 
     function handleComparisonViewChange(view) {
         if (window.state.setComparisonView(view)) {
-            app.updateUI();
-            if (window.state.getActiveTabId() === 'comparison') app.refreshCurrentTab();
+            app.refreshCurrentTab();
         }
     }
 
     function handleComparisonStudyChange(studyId) {
-        if (window.state.getComparisonStudyId() === studyId) return;
-        
-        const stateNeedsRefresh = window.state.setComparisonStudyId(studyId);
-        const studySet = window.studyT2CriteriaManager.getStudyCriteriaSetById(studyId);
-        
-        if (studySet?.applicableCohort && window.state.getCurrentCohort() !== studySet.applicableCohort) {
-            app.handleCohortChange(studySet.applicableCohort, "auto_comparison");
-        } else if (stateNeedsRefresh) {
+        if (window.state.setComparisonStudyId(studyId)) {
             app.refreshCurrentTab();
         }
     }
