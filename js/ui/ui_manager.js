@@ -8,7 +8,7 @@ window.uiManager = (() => {
         
         if (cohortButtonGroup) {
             const tooltipContent = isLocked 
-                ? "Cohort selection is locked because a specific analysis context (e.g., literature comparison) is active." 
+                ? "Cohort selection is locked because a specific analysis context (e.g., literature comparison) or view (e.g., statistics comparison) is active." 
                 : "Select the patient cohort for analysis.";
             
             let tippyInstance = cohortButtonGroup._tippy;
@@ -324,12 +324,12 @@ window.uiManager = (() => {
         updateElementHTML(runnerCardContainer.id, runnerCardHTML);
     }
     
-    function updateExportButtonStates(currentTabId, hasBruteForceResults, hasPatientData) {
+    function updateExportButtonStates(currentTabId, hasBruteForceResults, hasPatientData, libraryStatus) {
         if (!window.APP_CONFIG) return;
         const exportPane = document.getElementById('export-pane');
         if (!exportPane) return;
 
-        const isExportTab = currentTabId === 'export-tab';
+        const isExportTab = currentTabId === 'export';
         const buttons = exportPane.querySelectorAll('button[id^="export-"]');
 
         buttons.forEach(button => {
@@ -339,19 +339,25 @@ window.uiManager = (() => {
             switch (exportType) {
                 case 'stats-csv':
                 case 'filtered-data-csv':
-                case 'comprehensivereport-html':
                 case 'datatable-md':
                 case 'analysistable-md':
+                    shouldBeEnabled = hasPatientData;
+                    break;
+                case 'comprehensivereport-html':
+                    shouldBeEnabled = hasPatientData && libraryStatus.html2canvas;
+                    break;
+                case 'bruteforce-txt':
+                    shouldBeEnabled = hasBruteForceResults;
+                    break;
                 case 'all-zip':
                 case 'csv-zip':
                 case 'md-zip':
                 case 'png-zip':
                 case 'svg-zip':
-                case 'radiology-submission-zip':
-                    shouldBeEnabled = hasPatientData;
+                    shouldBeEnabled = hasPatientData && libraryStatus.JSZip;
                     break;
-                case 'bruteforce-txt':
-                    shouldBeEnabled = hasBruteForceResults;
+                case 'radiology-submission-zip':
+                    shouldBeEnabled = hasPatientData && libraryStatus.JSZip && libraryStatus.htmlToDocx;
                     break;
                 default:
                     shouldBeEnabled = hasPatientData;
@@ -362,7 +368,7 @@ window.uiManager = (() => {
             if (isExportTab) {
                 const tooltipInstance = button._tippy;
                 if (tooltipInstance) {
-                    if (!shouldBeEnabled) tooltipInstance.disable();
+                    if (!shouldBeEnabled) tooltipInstance.enable();
                     else tooltipInstance.enable();
                 }
             }

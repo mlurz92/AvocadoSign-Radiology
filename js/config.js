@@ -9,7 +9,7 @@ window.DEFAULT_T2_CRITERIA = Object.freeze({
 
 window.APP_CONFIG = Object.freeze({
     APP_NAME: "Nodal Staging: Avocado Sign vs. T2 Criteria",
-    APP_VERSION: "4.0.0-context-refactor",
+    APP_VERSION: "4.1.0-radiology-optimized",
     NA_PLACEHOLDER: '--',
     COHORTS: Object.freeze({
         OVERALL: { id: 'Overall', therapyValue: null, displayName: 'Overall' },
@@ -31,7 +31,7 @@ window.APP_CONFIG = Object.freeze({
         PUBLICATION_LANG: 'en'
     }),
     AVAILABLE_BRUTE_FORCE_METRICS: Object.freeze([
-        { value: 'Balanced Accuracy', label: 'Balanced Accuracy' },
+        { value: 'Balanced Accuracy', label: 'Balanced Accuracy (AUC)' },
         { value: 'Accuracy', label: 'Accuracy' },
         { value: 'F1-Score', label: 'F1-Score' },
         { value: 'PPV', label: 'PPV' },
@@ -51,7 +51,7 @@ window.APP_CONFIG = Object.freeze({
         COMPARISON_VIEW: 'currentComparisonView_v4.2_detailed',
         COMPARISON_STUDY_ID: 'currentComparisonStudyId_v4.2_detailed',
         CHART_COLOR_SCHEME: 'chartColorScheme_v4.2_detailed',
-        FIRST_APP_START: 'appFirstStart_v4.0.0'
+        FIRST_APP_START: 'appFirstStart_v4.1.0'
     }),
     PATHS: Object.freeze({
         BRUTE_FORCE_WORKER: 'workers/brute_force_worker.js'
@@ -97,12 +97,12 @@ window.APP_CONFIG = Object.freeze({
         DEFAULT_HEIGHT: 350,
         DEFAULT_MARGIN: Object.freeze({ top: 30, right: 40, bottom: 70, left: 70 }),
         COMPACT_PIE_MARGIN: Object.freeze({ top: 15, right: 15, bottom: 50, left: 15 }),
-        AS_COLOR: '#4472C4',
-        T2_COLOR: '#E0DC2C',
+        AS_COLOR: '#005f73',
+        T2_COLOR: '#ae2012',
         ANIMATION_DURATION_MS: 750,
-        AXIS_LABEL_FONT_SIZE: '11px',
-        TICK_LABEL_FONT_SIZE: '10px',
-        LEGEND_FONT_SIZE: '10px',
+        AXIS_LABEL_FONT_SIZE: '12px',
+        TICK_LABEL_FONT_SIZE: '11px',
+        LEGEND_FONT_SIZE: '11px',
         TOOLTIP_FONT_SIZE: '11px',
         PLOT_BACKGROUND_COLOR: '#ffffff',
         ENABLE_GRIDLINES: true
@@ -175,7 +175,7 @@ window.APP_CONFIG = Object.freeze({
     UI_TEXTS: Object.freeze({
         analysisContextBanner: {
             title: "Analysis Context Active",
-            text: "Comparison is performed on the <strong>[COHORT_NAME]</strong> cohort (N=[COUNT]) to match the selected literature criteria. The global cohort selection is temporarily disabled."
+            text: "Comparing against <strong>[CRITERIA_NAME]</strong>. Analysis is locked to the <strong>[COHORT_NAME]</strong> cohort (N=[COUNT]) to ensure methodological validity."
         },
         t2LogicDisplayNames: {
             'AND': 'AND',
@@ -198,7 +198,7 @@ window.APP_CONFIG = Object.freeze({
         PUBLICATION_TEXTS: Object.freeze({
             MIM_REGULATORY_STATEMENT: "This retrospective, single-institution study was performed in compliance with the Health Insurance Portability and Accountability Act and received approval from the institutional review board. The requirement for written informed consent was waived for this retrospective analysis.",
             STATISTICAL_ANALYSIS_METHODS: "Descriptive statistics were used to summarize patient characteristics. Diagnostic performance metrics—including sensitivity, specificity, positive predictive value, negative predictive value, and accuracy—were calculated for each diagnostic method. Wilson score method was used for 95% confidence intervals (CIs) of proportions, and the bootstrap percentile method ([N_BOOTSTRAP] replications) was used for CIs of the area under the receiver operating characteristic curve (AUC).",
-            STATISTICAL_ANALYSIS_COMPARISON: "The primary comparison between the AUC of the Avocado Sign and other criteria was performed using the method described by DeLong et al. for correlated ROC curves. McNemar’s test was used to compare accuracies. For associations between individual categorical features and N-status, Fisher's exact test was used. All statistical analyses were performed using custom software scripts (JavaScript, ES2020+) implemented in the analysis tool itself (Version [APP_VERSION]). A two-sided P value of less than [P_LEVEL] was considered to indicate statistical significance."
+            STATISTICAL_ANALYSIS_COMPARISON: "The primary comparison between the AUC of the Avocado Sign and other criteria was performed using the method described by DeLong et al. for correlated ROC curves. McNemar’s test was used to compare accuracies. For associations between individual categorical features and N-status, Fisher's exact test was used. For comparison of demographic data and AUCs between independent cohorts, Welch's t-test and Fisher's exact test were used, respectively. All statistical analyses were performed using custom software scripts (JavaScript, ES2020+) implemented in the analysis tool itself (Version [APP_VERSION]). A two-sided P value of less than [P_LEVEL] was considered to indicate statistical significance."
         }),
         chartTitles: {
             ageDistribution: 'Age Distribution',
@@ -238,9 +238,8 @@ window.APP_CONFIG = Object.freeze({
                 ppv: { title: 'Positive Predictive Value (Precision)', text: 'The probability that a patient with a positive test result actually has the disease.<br><strong>Formula:</strong> TP / (TP + FP)' },
                 npv: { title: 'Negative Predictive Value', text: 'The probability that a patient with a negative test result actually does not have the disease.<br><strong>Formula:</strong> TN / (TN + FN)' },
                 acc: { title: 'Accuracy', text: 'The proportion of all tests that are correct.<br><strong>Formula:</strong> (TP + TN) / Total' },
-                balAcc: { title: 'Balanced Accuracy', text: 'The average of sensitivity and specificity. Useful for imbalanced datasets.<br><strong>Formula:</strong> (Sensitivity + Specificity) / 2' },
+                auc: { title: 'Area Under the ROC Curve (AUC)', text: 'A measure of the overall performance of a diagnostic test. A value of 1.0 represents a perfect test, while 0.5 represents a test with no discriminative ability. For binary tests, this is equivalent to Balanced Accuracy.' },
                 f1: { title: 'F1-Score', text: 'The harmonic mean of PPV and sensitivity. It provides a single score that balances both concerns.<br><strong>Formula:</strong> 2 * (PPV * Sensitivity) / (PPV + Sensitivity)' },
-                auc: { title: 'Area Under the ROC Curve', text: 'A measure of the overall performance of a diagnostic test. A value of 1.0 represents a perfect test, while 0.5 represents a test with no discriminative ability.' },
                 or: { title: 'Odds Ratio', text: 'Represents the odds that an outcome will occur given a particular exposure, compared to the odds of the outcome occurring in the absence of that exposure.<br><strong>Formula:</strong> (TP*TN) / (FP*FN)' },
                 rd: { title: 'Risk Difference (Absolute Risk Reduction)', text: 'The absolute difference in the outcome rates between the exposed and unexposed groups.<br><strong>Formula:</strong> (TP / (TP+FP)) - (FN / (FN+TN))' },
                 phi: { title: 'Phi Coefficient (Matthews Correlation Coefficient)', text: 'A measure of the quality of a binary classification, ranging from -1 (total disagreement) to +1 (perfect agreement). 0 indicates a random guess.' },
@@ -255,9 +254,8 @@ window.APP_CONFIG = Object.freeze({
                 ppv: 'A Positive Predictive Value of <strong>{value}</strong> means that if a patient tests positive, there is a <strong>{value}</strong> probability they are truly N+.<br>The 95% CI from <strong>{lower}</strong> to <strong>{upper}</strong>.',
                 npv: 'A Negative Predictive Value of <strong>{value}</strong> means that if a patient tests negative, there is a <strong>{value}</strong> probability they are truly N-.<br>The 95% CI from <strong>{lower}</strong> to <strong>{upper}</strong>.',
                 acc: 'An Accuracy of <strong>{value}</strong> means the test provided the correct classification for <strong>{value}</strong> of all patients.<br>The 95% CI from <strong>{lower}</strong> to <strong>{upper}</strong>.',
-                balAcc: 'A Balanced Accuracy of <strong>{value}</strong> represents the averaged proportion of correctly classified positive and negative cases. An AUC of <strong>{value}</strong> indicates a <strong>{strength}</strong> discriminatory ability for this binary test.',
-                f1: 'An F1-Score of <strong>{value}</strong> indicates the harmonic mean of PPV and sensitivity. A score of 1.0 is perfect.',
                 auc: 'An AUC of <strong>{value}</strong> indicates a <strong>{strength}</strong> overall ability of the test to discriminate between N+ and N- patients.',
+                f1: 'An F1-Score of <strong>{value}</strong> indicates the harmonic mean of PPV and sensitivity. A score of 1.0 is perfect.',
                 pValue: {
                     default: "A P value of {pValue} indicates that {significanceText}. This means there is a {strength} statistical evidence of a difference between {comparison} for the metric '{metric}'.",
                     mcnemar: "A P value of {pValue} for McNemar's test suggests that the difference in accuracy between {method1} and {method2} is {significanceText}. This indicates a {strength} evidence of a difference in their classification agreement with the reference standard.",

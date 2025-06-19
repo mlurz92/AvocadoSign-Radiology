@@ -42,7 +42,6 @@ window.publicationHelpers = (() => {
             case 'kappa':
             case 'icc':
             case 'f1':
-            case 'balacc':
             case 'youden':
             case 'or':
             case 'hr':

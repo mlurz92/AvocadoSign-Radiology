@@ -213,9 +213,8 @@ window.statisticsTab = (() => {
                         <tr><td data-tippy-content="${getDefinitionTooltip('ppv')}">PPV</td><td data-tippy-content="${getInterpretationTooltip('ppv', perfStats.ppv)}">${fCI_p_stat(perfStats.ppv, 'ppv')}</td><td>${perfStats.ppv?.method || na_stat}</td></tr>
                         <tr><td data-tippy-content="${getDefinitionTooltip('npv')}">NPV</td><td data-tippy-content="${getInterpretationTooltip('npv', perfStats.npv)}">${fCI_p_stat(perfStats.npv, 'npv')}</td><td>${perfStats.npv?.method || na_stat}</td></tr>
                         <tr><td data-tippy-content="${getDefinitionTooltip('acc')}">Accuracy</td><td data-tippy-content="${getInterpretationTooltip('acc', perfStats.acc)}">${fCI_p_stat(perfStats.acc, 'acc')}</td><td>${perfStats.acc?.method || na_stat}</td></tr>
-                        <tr><td data-tippy-content="${getDefinitionTooltip('balAcc')}">Balanced Accuracy</td><td data-tippy-content="${getInterpretationTooltip('balAcc', perfStats.balAcc)}">${fCI_p_stat(perfStats.balAcc, 'balAcc')}</td><td>${perfStats.balAcc?.method || na_stat}</td></tr>
-                        <tr><td data-tippy-content="${getDefinitionTooltip('f1')}">F1-Score</td><td data-tippy-content="${getInterpretationTooltip('f1', perfStats.f1)}">${fCI_p_stat(perfStats.f1, 'f1')}</td><td>${perfStats.f1?.method || na_stat}</td></tr>
                         <tr><td data-tippy-content="${getDefinitionTooltip('auc')}">AUC</td><td data-tippy-content="${getInterpretationTooltip('auc', perfStats.auc)}">${fCI_p_stat(perfStats.auc, 'auc')}</td><td>${perfStats.auc?.method || na_stat}</td></tr>
+                        <tr><td data-tippy-content="${getDefinitionTooltip('f1')}">F1-Score</td><td data-tippy-content="${getInterpretationTooltip('f1', perfStats.f1)}">${fCI_p_stat(perfStats.f1, 'f1')}</td><td>${perfStats.f1?.method || na_stat}</td></tr>
                     </tbody></table></div>`;
                 };
 
@@ -290,21 +289,25 @@ window.statisticsTab = (() => {
              const c1Stats = allCohortStats[cohort1];
              const c2Stats = allCohortStats[cohort2];
              const interComp = allCohortStats.interCohortComparison;
+             const interDemoComp = allCohortStats.interCohortDemographicComparison;
              
              let compContent = '<p class="text-muted small p-2">Not enough data for cohort comparison.</p>';
              
              if(interComp.as && interComp.t2Applied) {
                  compContent = `<div class="table-responsive"><table class="table table-sm table-striped small mb-0">
                     <thead><tr>
-                        <th>Method</th>
                         <th>Metric</th>
                         <th>${getCohortDisplayName(cohort1)}</th>
                         <th>${getCohortDisplayName(cohort2)}</th>
-                        <th data-tippy-content="P-value from Z-Test for two independent AUCs.">p-Value (unpaired)</th>
+                        <th data-tippy-content="P-value from Welch's t-test or Fisher's Exact Test for independent samples.">p-Value (unpaired)</th>
                     </tr></thead>
                     <tbody>
-                        <tr><td>Avocado Sign</td><td>AUC</td><td>${formatNumber(c1Stats.performanceAS.auc.value, 3, na_stat, true)}</td><td>${formatNumber(c2Stats.performanceAS.auc.value, 3, na_stat, true)}</td><td>${getPValueText(interComp.as.pValue, false)}</td></tr>
-                        <tr><td>${formattedAppliedT2Short}</td><td>AUC</td><td>${formatNumber(c1Stats.performanceT2Applied.auc.value, 3, na_stat, true)}</td><td>${formatNumber(c2Stats.performanceT2Applied.auc.value, 3, na_stat, true)}</td><td>${getPValueText(interComp.t2Applied.pValue, false)}</td></tr>
+                        <tr><td>Age (Mean ± SD)</td><td>${formatNumber(c1Stats.descriptive.age.mean, 1)} ± ${formatNumber(c1Stats.descriptive.age.sd, 1)}</td><td>${formatNumber(c2Stats.descriptive.age.mean, 1)} ± ${formatNumber(c2Stats.descriptive.age.sd, 1)}</td><td>${getPValueText(interDemoComp.age.pValue, false)}</td></tr>
+                        <tr><td>Sex (m / f)</td><td>${c1Stats.descriptive.sex.m} / ${c1Stats.descriptive.sex.f}</td><td>${c2Stats.descriptive.sex.m} / ${c2Stats.descriptive.sex.f}</td><td>${getPValueText(interDemoComp.sex.pValue, false)}</td></tr>
+                        <tr><td>N-Status (+ / -)</td><td>${c1Stats.descriptive.nStatus.plus} / ${c1Stats.descriptive.nStatus.minus}</td><td>${c2Stats.descriptive.nStatus.plus} / ${c2Stats.descriptive.nStatus.minus}</td><td>${getPValueText(interDemoComp.nStatus.pValue, false)}</td></tr>
+                        <tr class="table-group-divider"><td colspan="4"></td></tr>
+                        <tr><td>AUC (Avocado Sign)</td><td>${formatNumber(c1Stats.performanceAS.auc.value, 3, na_stat, true)}</td><td>${formatNumber(c2Stats.performanceAS.auc.value, 3, na_stat, true)}</td><td>${getPValueText(interComp.as.pValue, false)}</td></tr>
+                        <tr><td>AUC (${formattedAppliedT2Short})</td><td>${formatNumber(c1Stats.performanceT2Applied.auc.value, 3, na_stat, true)}</td><td>${formatNumber(c2Stats.performanceT2Applied.auc.value, 3, na_stat, true)}</td><td>${getPValueText(interComp.t2Applied.pValue, false)}</td></tr>
                     </tbody>
                  </table></div>`;
              }

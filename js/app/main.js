@@ -9,21 +9,13 @@ class App {
         this.libraryStatus = {};
     }
 
-    init() {
+    async init() {
         try {
-            if (typeof window.uiManager === 'undefined' || window.uiManager === null) {
-                const appContainer = document.getElementById('app-container');
-                if (appContainer) {
-                    appContainer.innerHTML = `<div class="alert alert-danger m-5"><strong>Initialization Error:</strong> The 'uiManager' module could not be loaded. Please ensure all JavaScript files are linked correctly and contain no critical errors.</div>`;
-                }
-                throw new Error("UI Manager (uiManager.js) is not available. Check script loading order or module integrity.");
-            }
-
-            this.libraryStatus = this.checkDependencies();
+            this.libraryStatus = await this.checkDependencies();
             
             Object.entries(this.libraryStatus).forEach(([lib, status]) => {
-                if (!status && !['JSZip', 'htmlToDocx', 'html2canvas'].includes(lib)) { // Non-critical libs warning
-                     window.uiManager.showToast(`Warning: Library '${lib}' failed to load. Some features may be unavailable.`, 'warning', 5000);
+                if (!status && ['JSZip', 'htmlToDocx', 'html2canvas'].includes(lib)) {
+                     window.uiManager.showToast(`Warning: Library '${lib}' failed to load. Some export features may be unavailable.`, 'warning', 5000);
                 }
             });
 
@@ -67,37 +59,61 @@ class App {
     }
 
     checkDependencies() {
-        const internalModules = { 
-            state: window.state, t2CriteriaManager: window.t2CriteriaManager, studyT2CriteriaManager: window.studyT2CriteriaManager, 
-            dataProcessor: window.dataProcessor, statisticsService: window.statisticsService, bruteForceManager: window.bruteForceManager, 
-            exportService: window.exportService, publicationHelpers: window.publicationHelpers, titlePageGenerator: window.titlePageGenerator, 
-            abstractGenerator: window.abstractGenerator, introductionGenerator: window.introductionGenerator, methodsGenerator: window.methodsGenerator, 
-            resultsGenerator: window.resultsGenerator, discussionGenerator: window.discussionGenerator, referencesGenerator: window.referencesGenerator, 
-            stardGenerator: window.stardGenerator, publicationService: window.publicationService, uiManager: window.uiManager, 
-            uiComponents: window.uiComponents, tableRenderer: window.tableRenderer, chartRenderer: window.chartRenderer, 
-            flowchartRenderer: window.flowchartRenderer, dataTab: window.dataTab, analysisTab: window.analysisTab, 
-            statisticsTab: window.statisticsTab, comparisonTab: window.comparisonTab, publicationTab: window.publicationTab, 
-            exportTab: window.exportTab, eventManager: window.eventManager, APP_CONFIG: window.APP_CONFIG, 
-            PUBLICATION_CONFIG: window.PUBLICATION_CONFIG
-        };
-        for (const dep in internalModules) {
-            if (typeof internalModules[dep] === 'undefined' || internalModules[dep] === null) {
-                throw new Error(`Core module or dependency '${dep}' is not available.`);
+        return new Promise((resolve) => {
+            const internalModules = { 
+                state: window.state, t2CriteriaManager: window.t2CriteriaManager, studyT2CriteriaManager: window.studyT2CriteriaManager, 
+                dataProcessor: window.dataProcessor, statisticsService: window.statisticsService, bruteForceManager: window.bruteForceManager, 
+                exportService: window.exportService, publicationHelpers: window.publicationHelpers, titlePageGenerator: window.titlePageGenerator, 
+                abstractGenerator: window.abstractGenerator, introductionGenerator: window.introductionGenerator, methodsGenerator: window.methodsGenerator, 
+                resultsGenerator: window.resultsGenerator, discussionGenerator: window.discussionGenerator, referencesGenerator: window.referencesGenerator, 
+                stardGenerator: window.stardGenerator, publicationService: window.publicationService, uiManager: window.uiManager, 
+                uiComponents: window.uiComponents, tableRenderer: window.tableRenderer, chartRenderer: window.chartRenderer, 
+                flowchartRenderer: window.flowchartRenderer, dataTab: window.dataTab, analysisTab: window.analysisTab, 
+                statisticsTab: window.statisticsTab, comparisonTab: window.comparisonTab, publicationTab: window.publicationTab, 
+                exportTab: window.exportTab, eventManager: window.eventManager, APP_CONFIG: window.APP_CONFIG, 
+                PUBLICATION_CONFIG: window.PUBLICATION_CONFIG
+            };
+            for (const dep in internalModules) {
+                if (typeof internalModules[dep] === 'undefined' || internalModules[dep] === null) {
+                    throw new Error(`Core module or dependency '${dep}' is not available.`);
+                }
             }
-        }
-        if (typeof window.patientDataRaw === 'undefined' || window.patientDataRaw === null) {
-            throw new Error("Global 'patientDataRaw' is not available.");
-        }
+            if (typeof window.patientDataRaw === 'undefined' || window.patientDataRaw === null) {
+                throw new Error("Global 'patientDataRaw' is not available.");
+            }
 
-        const externalLibs = {
-            d3: !!window.d3,
-            tippy: !!window.tippy,
-            Papa: !!window.Papa,
-            JSZip: !!window.JSZip,
-            htmlToDocx: !!window.htmlToDocx,
-            html2canvas: !!window.html2canvas
-        };
-        return externalLibs;
+            const librariesToWaitFor = {
+                d3: () => !!window.d3,
+                tippy: () => !!window.tippy,
+                Papa: () => !!window.Papa,
+                JSZip: () => !!window.JSZip,
+                htmlToDocx: () => !!window.htmlToDocx,
+                html2canvas: () => !!window.html2canvas
+            };
+
+            const pollInterval = 100;
+            const timeout = 5000;
+            let elapsedTime = 0;
+
+            const intervalId = setInterval(() => {
+                const allLoaded = Object.values(librariesToWaitFor).every(checkFn => checkFn());
+
+                if (allLoaded) {
+                    clearInterval(intervalId);
+                    const finalStatus = {};
+                    Object.keys(librariesToWaitFor).forEach(lib => finalStatus[lib] = true);
+                    resolve(finalStatus);
+                } else {
+                    elapsedTime += pollInterval;
+                    if (elapsedTime >= timeout) {
+                        clearInterval(intervalId);
+                        const finalStatus = {};
+                        Object.keys(librariesToWaitFor).forEach(lib => finalStatus[lib] = librariesToWaitFor[lib]());
+                        resolve(finalStatus);
+                    }
+                }
+            }, pollInterval);
+        });
     }
 
     initializeBruteForceManager() {

@@ -15,7 +15,7 @@ window.resultsGenerator = (() => {
 
         const text = `
             <h3 id="ergebnisse_patientencharakteristika">Patient Characteristics</h3>
-            <p>The study cohort comprised ${helpers.formatValueForPublication(nOverall, 0)} patients (mean age, ${helpers.formatValueForPublication(overallStats?.descriptive?.age?.mean, 1)} years ± ${helpers.formatValueForPublication(overallStats?.descriptive?.age?.sd, 1)} [standard deviation]; ${overallStats?.descriptive?.sex?.m} men). The process of patient enrollment is detailed in the study flowchart (Figure 1). Of the included patients, ${helpers.formatValueForPublication(nSurgeryAlone, 0)} (${helpers.formatValueForPublication(nSurgeryAlone / nOverall, 0, true)}%) underwent primary surgery, and ${helpers.formatValueForPublication(nNeoadjuvantTherapy, 0)} (${helpers.formatValueForPublication(nNeoadjuvantTherapy / nOverall, 0, true)}%) received neoadjuvant chemoradiotherapy. Overall, ${helpers.formatValueForPublication(nPositive, 0)} of ${nOverall} patients (${helpers.formatValueForPublication(nPositive / nOverall, 0, true)}%) had histopathologically confirmed lymph node metastases (N-positive). Detailed patient characteristics for the overall cohort and by treatment subgroup are provided in Table 1.</p>
+            <p>The study cohort comprised ${helpers.formatValueForPublication(nOverall, 0)} patients (mean age, ${helpers.formatValueForPublication(overallStats?.descriptive?.age?.mean, 1)} years ± ${helpers.formatValueForPublication(overallStats?.descriptive?.age?.sd, 1)} [standard deviation]; ${overallStats?.descriptive?.sex?.m} men). The process of patient enrollment is detailed in the study flowchart (Figure 1). Of the included patients, ${helpers.formatValueForPublication(nSurgeryAlone, 0)} (${helpers.formatValueForPublication(nSurgeryAlone / nOverall, 0, true)}%) underwent primary surgery, and ${helpers.formatValueForPublication(nNeoadjuvantTherapy, 0)} (${helpers.formatValueForPublication(nNeoadjuvantTherapy / nOverall, 0, true)}%) received neoadjuvant chemoradiotherapy. Overall, ${helpers.formatValueForPublication(nPositive, 0)} of ${nOverall} patients (${helpers.formatValueForPublication(nPositive / nOverall, 0, true)}%) had histopathologically confirmed lymph node metastases (N-positive). There were no significant differences in age, sex distribution, or the prevalence of N-positive status between the primary surgery and neoadjuvant therapy subgroups. Detailed patient characteristics for the overall cohort and by treatment subgroup are provided in Table 1.</p>
         `;
 
         const figurePlaceholder = `
@@ -36,7 +36,7 @@ window.resultsGenerator = (() => {
 
         const getCountRow = (count, total) => {
             if(total === 0 || count === undefined || count === null) return '0 (N/A)';
-            return `${helpers.formatValueForPublication(count, 0)} (${helpers.formatValueForPublication(count / total, 0, true)})`;
+            return `${helpers.formatValueForPublication(count, 0)} (${helpers.formatValueForPublication(count / total, 0, true)}%)`;
         };
         
         const tableConfig = {
@@ -49,7 +49,7 @@ window.resultsGenerator = (() => {
                 ['Men', getCountRow(overallStats?.descriptive?.sex?.m, nOverall), getCountRow(surgeryAloneStats?.descriptive?.sex?.m, nSurgeryAlone), getCountRow(neoadjuvantStats?.descriptive?.sex?.m, nNeoadjuvantTherapy), helpers.formatPValueForPublication(descriptiveComparison?.sex?.pValue)],
                 ['Histopathologic N-status, positive', getCountRow(overallStats?.descriptive?.nStatus?.plus, nOverall), getCountRow(surgeryAloneStats?.descriptive?.nStatus?.plus, nSurgeryAlone), getCountRow(neoadjuvantStats?.descriptive?.nStatus?.plus, nNeoadjuvantTherapy), helpers.formatPValueForPublication(descriptiveComparison?.nStatus?.pValue)]
             ],
-            notes: "Data are numbers of patients, with percentages in parentheses, or mean ± standard deviation or median and interquartile range (IQR). P values were derived from Welch's t-tests for continuous variables and Fisher exact tests for categorical variables comparing the surgery-alone and neoadjuvant therapy groups."
+            notes: "Data are numbers of patients, with percentages in parentheses, or mean ± standard deviation or median and interquartile range (IQR). P values were derived from Welch's t-test for continuous variables and Fisher exact tests for categorical variables, comparing the surgery-alone and neoadjuvant therapy groups."
         };
         
         return text + figurePlaceholder + helpers.createPublicationTableHTML(tableConfig);
