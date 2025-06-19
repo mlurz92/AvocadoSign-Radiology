@@ -219,11 +219,10 @@ class App {
         const activeTabId = window.state.getActiveTabId();
         const analysisContext = window.state.getAnalysisContext();
         
-        window.uiManager.updateCohortButtonsUI(currentCohort, !!analysisContext);
+        const isLocked = !!analysisContext || (activeTabId === 'statistics' && window.state.getStatsLayout() === 'vergleich');
+        window.uiManager.updateCohortButtonsUI(currentCohort, isLocked);
         
-        if (activeTabId === 'statistics') {
-            window.uiManager.updateStatisticsSelectorsUI(window.state.getStatsLayout(), window.state.getStatsCohort1(), window.state.getStatsCohort2());
-        } else if (activeTabId === 'comparison') {
+        if (activeTabId === 'comparison') {
             window.uiManager.updateComparisonViewUI(window.state.getComparisonView(), window.state.getComparisonStudyId());
         } else if (activeTabId === 'publication') {
             window.uiManager.updatePublicationUI(window.state.getPublicationSection(), window.state.getPublicationBruteForceMetric());
@@ -383,6 +382,12 @@ class App {
             exporter[exportType]();
         } else {
             window.uiManager.showToast(`Export type '${exportType}' not recognized.`, 'warning');
+        }
+    }
+
+    handlePublicationSectionChange(sectionId) {
+        if (window.state.setPublicationSection(sectionId)) {
+            this.refreshCurrentTab();
         }
     }
 

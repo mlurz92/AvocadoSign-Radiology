@@ -146,7 +146,7 @@ window.comparisonTab = (() => {
         let contextBannerHTML = '';
         const analysisContext = window.state.getAnalysisContext();
         if (analysisContext) {
-            contextBannerHTML = window.uiComponents.createAnalysisContextBannerHTML(analysisContext);
+            contextBannerHTML = window.uiComponents.createAnalysisContextBannerHTML(analysisContext, patientCountForComparison);
         } else {
             contextBannerHTML = `<p class="text-center text-muted small mb-3">Current cohort: <strong>${getCohortDisplayName(currentGlobalCohort)}</strong> (N=${patientCountForComparison || '?'})</p>`;
         }

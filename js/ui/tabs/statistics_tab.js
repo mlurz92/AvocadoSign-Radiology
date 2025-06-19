@@ -327,6 +327,10 @@ window.statisticsTab = (() => {
             outerRow.appendChild(criteriaComparisonCard);
         }
 
+        const allCohorts = Object.values(window.APP_CONFIG.COHORTS);
+        const cohortOptions1 = allCohorts.map(c => `<option value="${c.id}" ${c.id === cohort1 ? 'selected' : ''}>${c.displayName}</option>`).join('');
+        const cohortOptions2 = allCohorts.map(c => `<option value="${c.id}" ${c.id === cohort2 ? 'selected' : ''}>${c.displayName}</option>`).join('');
+
         const viewSelectorHTML = `
             <div class="d-flex justify-content-end mb-3">
                 <div class="btn-group btn-group-sm">
@@ -335,9 +339,9 @@ window.statisticsTab = (() => {
                 </div>
                 <div id="statistics-cohort-select-2-container" class="ms-3" style="display: ${layout === 'vergleich' ? 'block' : 'none'};">
                     <div class="input-group input-group-sm">
-                         <select class="form-select" id="statistics-cohort-select-1" aria-label="Select first cohort"></select>
+                         <select class="form-select" id="statistics-cohort-select-1" aria-label="Select first cohort">${cohortOptions1}</select>
                          <span class="input-group-text">vs.</span>
-                         <select class="form-select" id="statistics-cohort-select-2" aria-label="Select second cohort"></select>
+                         <select class="form-select" id="statistics-cohort-select-2" aria-label="Select second cohort">${cohortOptions2}</select>
                     </div>
                 </div>
             </div>`;

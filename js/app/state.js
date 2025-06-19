@@ -176,7 +176,7 @@ window.state = (() => {
     function setActiveTabId(newTabId) {
         if (typeof newTabId === 'string' && currentState.activeTabId !== newTabId) {
             currentState.activeTabId = newTabId;
-            if (newTabId !== 'comparison' && newTabId !== 'statistics') {
+            if (newTabId !== 'comparison') {
                 clearAnalysisContext();
             }
             return true;

@@ -436,12 +436,11 @@ window.uiComponents = (() => {
         return createStatisticsCard('bf-runner-card', 'Criteria Optimization (Brute-Force)', content, false);
     }
 
-    function createAnalysisContextBannerHTML(context) {
+    function createAnalysisContextBannerHTML(context, patientCount) {
         if (!context) return '';
-        const { cohortId, reason } = context;
+        const { cohortId } = context;
         const cohortName = getCohortDisplayName(cohortId);
-        const stats = window.state.allPublicationStats?.[cohortId];
-        const count = stats?.descriptive?.patientCount || '?';
+        const count = patientCount ?? '?';
         
         let text = window.APP_CONFIG.UI_TEXTS.analysisContextBanner.text
             .replace('[COHORT_NAME]', cohortName)

@@ -369,35 +369,6 @@ window.uiManager = (() => {
         });
     }
 
-    function updateStatisticsSelectorsUI(layout, cohort1, cohort2) {
-        if (!window.APP_CONFIG || !window.utils) return;
-        
-        const singleViewBtn = document.getElementById('statistics-toggle-single');
-        const comparisonViewBtn = document.getElementById('statistics-toggle-comparison');
-        const cohortSelect1 = document.getElementById('statistics-cohort-select-1');
-        const cohortSelect2 = document.getElementById('statistics-cohort-select-2');
-        const cohortSelectContainer2 = document.getElementById('statistics-cohort-select-2-container');
-
-        if (singleViewBtn) singleViewBtn.classList.toggle('active', layout === 'einzel');
-        if (comparisonViewBtn) comparisonViewBtn.classList.toggle('active', layout === 'vergleich');
-
-        const allCohorts = Object.values(window.APP_CONFIG.COHORTS);
-
-        const populateSelect = (selectElement, selectedValue) => {
-            if (!selectElement) return;
-            selectElement.innerHTML = allCohorts.map(c =>
-                `<option value="${c.id}" ${c.id === selectedValue ? 'selected' : ''}>${c.displayName}</option>`
-            ).join('');
-        };
-
-        if (cohortSelect1) populateSelect(cohortSelect1, cohort1);
-        if (cohortSelect2) populateSelect(cohortSelect2, cohort2);
-
-        if (cohortSelectContainer2) {
-            cohortSelectContainer2.style.display = layout === 'vergleich' ? 'block' : 'none';
-        }
-    }
-
     function updateComparisonViewUI(view, selectedStudyId) {
         if (!window.APP_CONFIG || !window.utils || !window.studyT2CriteriaManager) return;
         
@@ -473,7 +444,6 @@ window.uiManager = (() => {
         markCriteriaSavedIndicator,
         updateBruteForceUI,
         updateExportButtonStates,
-        updateStatisticsSelectorsUI,
         updateComparisonViewUI,
         updatePublicationUI,
         showQuickGuide,

@@ -71,7 +71,7 @@ window.eventManager = (() => {
 
         if (target.closest('.publication-section-link')) {
             event.preventDefault();
-            handlePublicationSectionChange(target.closest('.publication-section-link').dataset.sectionId);
+            app.handlePublicationSectionChange(target.closest('.publication-section-link').dataset.sectionId);
             return;
         }
 
@@ -227,8 +227,7 @@ window.eventManager = (() => {
 
     function handleStatsLayoutToggle(newLayout) {
         if (window.state.setStatsLayout(newLayout)) {
-            app.updateUI();
-            if (window.state.getActiveTabId() === 'statistics') app.refreshCurrentTab();
+            app.refreshCurrentTab();
         }
     }
 
@@ -240,7 +239,7 @@ window.eventManager = (() => {
         } else if (selectElement.id === 'statistics-cohort-select-2') {
             needsRender = window.state.setStatsCohort2(newValue);
         }
-        if (needsRender && window.state.getStatsLayout() === 'vergleich' && window.state.getActiveTabId() === 'statistics') {
+        if (needsRender && window.state.getStatsLayout() === 'vergleich') {
             app.refreshCurrentTab();
         }
     }
@@ -257,25 +256,9 @@ window.eventManager = (() => {
         }
     }
 
-    function handlePublicationSectionChange(sectionId) {
-        if (window.state.setPublicationSection(sectionId)) {
-            app.updateUI();
-            const contentArea = document.getElementById('publication-content-area');
-            const element = document.getElementById(sectionId);
-            if (contentArea && element) {
-                const offsetTop = element.offsetTop - contentArea.offsetTop;
-                contentArea.scrollTo({
-                    top: offsetTop,
-                    behavior: 'smooth'
-                });
-            }
-        }
-    }
-
     function handlePublicationBfMetricChange(newMetric) {
         if (window.state.setPublicationBruteForceMetric(newMetric)) {
-            app.updateUI();
-            if (window.state.getActiveTabId() === 'publication') app.refreshCurrentTab();
+            app.refreshCurrentTab();
         }
     }
 

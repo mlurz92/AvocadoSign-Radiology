@@ -153,6 +153,16 @@ window.publicationTab = (() => {
                 }
             }
             renderWordCounts();
+
+            const contentArea = document.getElementById('publication-content-area');
+            const elementToScroll = document.getElementById(currentSectionId);
+            if (contentArea && elementToScroll) {
+                const offsetTop = elementToScroll.offsetTop - contentArea.offsetTop;
+                contentArea.scrollTo({
+                    top: offsetTop,
+                    behavior: 'smooth'
+                });
+            }
         }, 50);
             
         return finalHTML;
@@ -162,4 +172,4 @@ window.publicationTab = (() => {
         render
     });
 
-})();  
+})();

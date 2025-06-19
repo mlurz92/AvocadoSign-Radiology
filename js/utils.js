@@ -303,11 +303,11 @@ function getORInterpretation(orValue) {
 function escapeHTML(text) {
     if (typeof text !== 'string') return text === null ? '' : String(text);
     const map = {
-        '&': '&',
-        '<': '<',
-        '>': '>',
-        '"': '"',
-        "'": '''
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;' // Using &#39; for better compatibility than &apos;
     };
     return text.replace(/[&<>"']/g, match => map[match]);
 }
