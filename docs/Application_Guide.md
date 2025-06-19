@@ -16,7 +16,7 @@ The application supports the entire research workflow, from data exploration and
 
 ### 1.3. System Requirements & Setup
 *   **System Requirements:** A modern desktop web browser (e.g., latest versions of Google Chrome, Mozilla Firefox, Microsoft Edge, or Safari). Support for Web Workers is required for full functionality (brute-force optimization).
-*   **Setup:** No server-side component or installation is necessary. The application is launched by opening the `index.html` file directly in the browser. An internet connection is required for the initial loading of external libraries from Content Delivery Networks (CDNs).
+*   **Setup:** No server-side component or installation is necessary. The application is launched by opening the `index.html` file directly in the browser. An internet connection is required for the initial loading of external libraries (e.g., Bootstrap, D3.js, JSZip) from Content Delivery Networks (CDNs). Some advanced features, particularly in the Export tab, may be unavailable without an active internet connection.
 
 ## 2. Global UI Concepts
 
@@ -100,7 +100,7 @@ The application is divided into six main modules, accessible via the navigation 
     *   **Export Categories:** Options are divided into "Single Exports" and "Export Packages (.zip)".
     *   **Context-Sensitivity:** All exports are based on the currently selected global cohort. Unavailable exports (e.g., a brute-force report if one has never been run) are disabled.
     *   **Available Exports:** Include filtered raw data (CSV), analysis tables (MD), statistics reports (CSV), brute-force reports (TXT), a comprehensive HTML analysis report, and ZIP archives bundling all graphics or Markdown texts.
-    *   **Radiology Submission Package:** A dedicated export option that generates a ZIP archive containing a fully formatted manuscript (`.docx`) and all figures (`.svg`, etc.) ready for submission to the *Radiology* journal.
+    *   **Radiology Submission Package:** A dedicated export option that generates a ZIP archive containing a fully formatted manuscript (`.docx`) and all figures (`.svg`, etc.) ready for submission to the *Radiology* journal. Note: This feature requires an active internet connection to load necessary libraries.
 
 ## 4. Technical Appendix
 

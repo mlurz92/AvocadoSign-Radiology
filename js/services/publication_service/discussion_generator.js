@@ -18,7 +18,7 @@ window.discussionGenerator = (() => {
             : 'comparison pending';
 
         const summaryParagraph = `
-            <p>In this retrospective analysis, we confirmed that the Avocado Sign, a simple binary imaging marker on contrast-enhanced MRI, provides high diagnostic performance for predicting mesorectal lymph node status. Our central finding is that the Avocado Sign's performance was superior to established, literature-based T2w criteria when applied to our cohort. Furthermore, its diagnostic accuracy was non-inferior to a cohort-optimized T2w criteria set (${bfComparisonText}), which was computationally derived to represent a "best-case" scenario for conventional morphology. This suggests that the additional information from contrast enhancement, encapsulated in a single feature, can match or exceed the diagnostic yield of complex, multi-parameter morphological assessments.</p>
+            <p>In this retrospective analysis, we confirmed that the Avocado Sign, a simple binary imaging marker on contrast-enhanced MRI, provides high diagnostic performance for predicting mesorectal lymph node status. Our central finding is that the Avocado Sign's performance was superior to established, literature-based T2w criteria when applied to our cohort. Furthermore, its diagnostic accuracy was comparable to a cohort-optimized T2w criteria set (${bfComparisonText}), which was computationally derived to represent a "best-case" scenario for conventional morphology. This suggests that the additional information from contrast enhancement, encapsulated in a single feature, can match or exceed the diagnostic yield of complex, multi-parameter morphological assessments.</p>
         `;
 
         const contextParagraph = `

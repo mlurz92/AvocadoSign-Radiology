@@ -27,7 +27,7 @@ window.titlePageGenerator = (() => {
             const bfResultForPub = overallStats?.performanceT2Bruteforce?.[bruteForceMetricForPublication];
             const bfComparisonForPub = overallStats?.comparisonASvsT2Bruteforce?.[bruteForceMetricForPublication];
 
-            summaryStatementHTML = `<p><strong>In a retrospective analysis of ${nOverall} patients with rectal cancer, the Avocado Sign on contrast-enhanced MRI demonstrated diagnostic performance for nodal staging that was non-inferior to a cohort-optimized T2-weighted criteria set.</strong></p>`;
+            summaryStatementHTML = `<p><strong>In a retrospective analysis of ${nOverall} patients with rectal cancer, the Avocado Sign on contrast-enhanced MRI demonstrated diagnostic performance for nodal staging that was comparable to a cohort-optimized T2-weighted criteria set.</strong></p>`;
             
             keyResultsHTML = `
                 <h4 style="font-size: 1.1rem; font-weight: bold; margin-top: 1.5rem;">Key Results</h4>

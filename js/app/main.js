@@ -6,6 +6,7 @@ class App {
         this.allPublicationStats = null;
         this.comparisonDataForExport = null;
         this.bruteForceModal = null;
+        this.libraryStatus = {};
     }
 
     init() {
@@ -18,8 +19,14 @@ class App {
                 throw new Error("UI Manager (uiManager.js) is not available. Check script loading order or module integrity.");
             }
 
-            this.checkDependencies();
+            this.libraryStatus = this.checkDependencies();
             
+            Object.entries(this.libraryStatus).forEach(([lib, status]) => {
+                if (!status && !['JSZip', 'htmlToDocx', 'html2canvas'].includes(lib)) { // Non-critical libs warning
+                     window.uiManager.showToast(`Warning: Library '${lib}' failed to load. Some features may be unavailable.`, 'warning', 5000);
+                }
+            });
+
             window.state.init();
             window.t2CriteriaManager.init();
             this.initializeBruteForceManager();
@@ -60,47 +67,37 @@ class App {
     }
 
     checkDependencies() {
-        const dependencies = { 
-            state: window.state, 
-            t2CriteriaManager: window.t2CriteriaManager, 
-            studyT2CriteriaManager: window.studyT2CriteriaManager, 
-            dataProcessor: window.dataProcessor, 
-            statisticsService: window.statisticsService, 
-            bruteForceManager: window.bruteForceManager, 
-            exportService: window.exportService, 
-            publicationHelpers: window.publicationHelpers, 
-            titlePageGenerator: window.titlePageGenerator, 
-            abstractGenerator: window.abstractGenerator, 
-            introductionGenerator: window.introductionGenerator, 
-            methodsGenerator: window.methodsGenerator, 
-            resultsGenerator: window.resultsGenerator, 
-            discussionGenerator: window.discussionGenerator, 
-            referencesGenerator: window.referencesGenerator, 
-            stardGenerator: window.stardGenerator, 
-            publicationService: window.publicationService,
-            uiManager: window.uiManager, 
-            uiComponents: window.uiComponents, 
-            tableRenderer: window.tableRenderer, 
-            chartRenderer: window.chartRenderer, 
-            flowchartRenderer: window.flowchartRenderer, 
-            dataTab: window.dataTab, 
-            analysisTab: window.analysisTab, 
-            statisticsTab: window.statisticsTab, 
-            comparisonTab: window.comparisonTab, 
-            publicationTab: window.publicationTab, 
-            exportTab: window.exportTab, 
-            eventManager: window.eventManager, 
-            APP_CONFIG: window.APP_CONFIG, 
+        const internalModules = { 
+            state: window.state, t2CriteriaManager: window.t2CriteriaManager, studyT2CriteriaManager: window.studyT2CriteriaManager, 
+            dataProcessor: window.dataProcessor, statisticsService: window.statisticsService, bruteForceManager: window.bruteForceManager, 
+            exportService: window.exportService, publicationHelpers: window.publicationHelpers, titlePageGenerator: window.titlePageGenerator, 
+            abstractGenerator: window.abstractGenerator, introductionGenerator: window.introductionGenerator, methodsGenerator: window.methodsGenerator, 
+            resultsGenerator: window.resultsGenerator, discussionGenerator: window.discussionGenerator, referencesGenerator: window.referencesGenerator, 
+            stardGenerator: window.stardGenerator, publicationService: window.publicationService, uiManager: window.uiManager, 
+            uiComponents: window.uiComponents, tableRenderer: window.tableRenderer, chartRenderer: window.chartRenderer, 
+            flowchartRenderer: window.flowchartRenderer, dataTab: window.dataTab, analysisTab: window.analysisTab, 
+            statisticsTab: window.statisticsTab, comparisonTab: window.comparisonTab, publicationTab: window.publicationTab, 
+            exportTab: window.exportTab, eventManager: window.eventManager, APP_CONFIG: window.APP_CONFIG, 
             PUBLICATION_CONFIG: window.PUBLICATION_CONFIG
         };
-        for (const dep in dependencies) {
-            if (typeof dependencies[dep] === 'undefined' || dependencies[dep] === null) {
+        for (const dep in internalModules) {
+            if (typeof internalModules[dep] === 'undefined' || internalModules[dep] === null) {
                 throw new Error(`Core module or dependency '${dep}' is not available.`);
             }
         }
         if (typeof window.patientDataRaw === 'undefined' || window.patientDataRaw === null) {
             throw new Error("Global 'patientDataRaw' is not available.");
         }
+
+        const externalLibs = {
+            d3: !!window.d3,
+            tippy: !!window.tippy,
+            Papa: !!window.Papa,
+            JSZip: !!window.JSZip,
+            htmlToDocx: !!window.htmlToDocx,
+            html2canvas: !!window.html2canvas
+        };
+        return externalLibs;
     }
 
     initializeBruteForceManager() {
@@ -229,7 +226,7 @@ class App {
         }
         
         const bfResults = window.bruteForceManager.getAllResults();
-        window.uiManager.updateExportButtonStates(activeTabId, !!bfResults && Object.keys(bfResults).length > 0, this.currentCohortData.length > 0);
+        window.uiManager.updateExportButtonStates(activeTabId, !!bfResults && Object.keys(bfResults).length > 0, this.currentCohortData.length > 0, this.libraryStatus);
     }
 
     processTabChange(tabId) {

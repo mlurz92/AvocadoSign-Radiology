@@ -8,11 +8,14 @@ window.exportTab = (() => {
         const description = config.description || tooltipConfig?.description || 'No description available.';
         const type = config.type || tooltipConfig?.type || 'UNKNOWN';
         const ext = config.ext || tooltipConfig?.ext || 'EXT';
+        
+        const isDisabled = config.disabled || false;
+        const tooltip = isDisabled ? (config.disabledTooltip || 'This feature is currently unavailable.') : description;
 
         return `
             <div class="col-md-6 mb-3">
                 <div class="d-flex align-items-center">
-                    <button id="export-${config.id}" class="btn ${config.btnClass || 'btn-primary'} btn-sm me-3" data-export-type="${config.id}" data-tippy-content="${description}">
+                    <button id="export-${config.id}" class="btn ${config.btnClass || 'btn-primary'} btn-sm me-3" data-export-type="${config.id}" data-tippy-content="${tooltip}" ${isDisabled ? 'disabled' : ''}>
                         <i class="fas ${config.icon} fa-fw me-2"></i>${config.label}
                     </button>
                     <div>
@@ -28,6 +31,8 @@ window.exportTab = (() => {
         const descriptionTextTemplate = window.APP_CONFIG.UI_TEXTS.tooltips.exportTab.description;
         const finalDescriptionText = descriptionTextTemplate.replace('[COHORT]', `<strong>${cohortDisplayName}</strong>`);
 
+        const isSubmissionPackageAvailable = !!(window.JSZip && typeof window.htmlToDocx !== 'undefined');
+
         const singleExports = [
             { id: 'stats-csv', label: 'Statistics', icon: 'fa-chart-pie', tooltipKey: 'statscsv' },
             { id: 'bruteforce-txt', label: 'Brute-Force Report', icon: 'fa-cogs', tooltipKey: 'bruteforcetxt' },
@@ -38,11 +43,11 @@ window.exportTab = (() => {
         ];
 
         const packageExports = [
-            { id: 'all-zip', label: 'All Files Package', icon: 'fa-file-archive', tooltipKey: 'allzip' },
-            { id: 'csv-zip', label: 'CSV Files Package', icon: 'fa-file-csv', tooltipKey: 'csvzip' },
-            { id: 'md-zip', label: 'Markdown Files Package', icon: 'fa-file-alt', tooltipKey: 'mdzip' },
-            { id: 'png-zip', label: 'PNG Graphics Package', icon: 'fa-images', tooltipKey: 'pngzip' },
-            { id: 'svg-zip', label: 'SVG Graphics Package', icon: 'fa-vector-square', tooltipKey: 'svgzip' },
+            { id: 'all-zip', label: 'All Files Package', icon: 'fa-file-archive', tooltipKey: 'allzip', disabled: !window.JSZip, disabledTooltip: 'Internet connection required for ZIP functionality.' },
+            { id: 'csv-zip', label: 'CSV Files Package', icon: 'fa-file-csv', tooltipKey: 'csvzip', disabled: !window.JSZip, disabledTooltip: 'Internet connection required for ZIP functionality.' },
+            { id: 'md-zip', label: 'Markdown Files Package', icon: 'fa-file-alt', tooltipKey: 'mdzip', disabled: !window.JSZip, disabledTooltip: 'Internet connection required for ZIP functionality.' },
+            { id: 'png-zip', label: 'PNG Graphics Package', icon: 'fa-images', tooltipKey: 'pngzip', disabled: !window.JSZip, disabledTooltip: 'Internet connection required for ZIP functionality.' },
+            { id: 'svg-zip', label: 'SVG Graphics Package', icon: 'fa-vector-square', tooltipKey: 'svgzip', disabled: !window.JSZip, disabledTooltip: 'Internet connection required for ZIP functionality.' },
             { 
                 id: 'radiology-submission-zip', 
                 label: 'Radiology Submission Package', 
@@ -50,7 +55,9 @@ window.exportTab = (() => {
                 btnClass: 'btn-success',
                 description: 'Generates a complete, structured ZIP archive ready for submission to the *Radiology* journal, including the manuscript as a .docx file and all figures.',
                 type: 'SUBMISSION_PACKAGE',
-                ext: 'zip'
+                ext: 'zip',
+                disabled: !isSubmissionPackageAvailable,
+                disabledTooltip: 'Internet connection required for DOCX/ZIP export functionality.'
             }
         ];
 

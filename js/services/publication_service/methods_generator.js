@@ -79,10 +79,13 @@ window.methodsGenerator = (() => {
         if (!statisticalSignificanceLevel || !nBootstrap || !appVersion) {
             return '<h3 id="methoden_statistische_analyse_methoden">Statistical Analysis</h3><p class="text-warning">Configuration for statistical analysis is missing.</p>';
         }
-
-        const methodsText = `Descriptive statistics were used to summarize patient characteristics. Diagnostic performance metrics—including sensitivity, specificity, positive and negative predictive values, and accuracy—were calculated for each diagnostic method. The Wilson score method was used for 95% confidence intervals (CIs) of proportions, and the bootstrap percentile method (${helpers.formatValueForPublication(nBootstrap, 0)} replications) was used for CIs of the area under the receiver operating characteristic curve (AUC).`;
-
-        const comparisonText = `The primary comparison between the AUC of the Avocado Sign and other criteria was performed using the method described by DeLong et al. for correlated ROC curves. McNemar’s test was used to compare accuracies. For associations between individual categorical features and N-status, Fisher's exact test was used. All statistical analyses were performed using custom scripts developed in JavaScript (ES2020) and integrated within a dedicated web-based analysis tool (AvocadoSign-Radiology, Version ${appVersion}). These computations were validated against established libraries in Python (e.g., statsmodels, scikit-learn). A two-sided ${helpers.formatPValueForPublication(statisticalSignificanceLevel)} was considered to indicate statistical significance.`;
+        
+        const methodsText = window.APP_CONFIG.UI_TEXTS.PUBLICATION_TEXTS.STATISTICAL_ANALYSIS_METHODS
+            .replace('[N_BOOTSTRAP]', helpers.formatValueForPublication(nBootstrap, 0));
+            
+        const comparisonText = window.APP_CONFIG.UI_TEXTS.PUBLICATION_TEXTS.STATISTICAL_ANALYSIS_COMPARISON
+            .replace('[APP_VERSION]', appVersion)
+            .replace('[P_LEVEL]', helpers.formatPValueForPublication(statisticalSignificanceLevel));
 
         return `
             <h3 id="methoden_statistische_analyse_methoden">Statistical Analysis</h3>

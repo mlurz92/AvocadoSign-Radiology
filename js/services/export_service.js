@@ -80,6 +80,9 @@ window.exportService = (() => {
     }
 
     async function convertSvgToPngBlob(svgElement, targetWidth = 800) {
+        if (typeof html2canvas === 'undefined') {
+            return Promise.reject(new Error("html2canvas library not loaded."));
+        }
         return new Promise((resolve, reject) => {
             if (!svgElement || typeof svgElement.cloneNode !== 'function') {
                 return reject(new Error("Invalid SVG element for PNG conversion."));
@@ -172,11 +175,11 @@ window.exportService = (() => {
      }
     
     async function convertTableToPngBlob(tableElementId, targetWidth = 800) {
+        if (typeof html2canvas === 'undefined') {
+            return Promise.reject(new Error("html2canvas library not loaded."));
+        }
         return new Promise(async (resolve, reject) => {
             try {
-                if (typeof html2canvas === 'undefined') {
-                    return reject(new Error("html2canvas library not loaded."));
-                }
                 const tableElement = document.getElementById(tableElementId);
                 if (!tableElement) return reject(new Error(`Table element with ID '${tableElementId}' not found.`));
 
@@ -446,64 +449,79 @@ window.exportService = (() => {
      }
 
     async function exportCategoryZip(category, data, bfResults, kollektiv, criteria, logic) {
-         window.uiManager.showToast(`Generating ${category.toUpperCase()} ZIP package...`, 'info', 2000);
-          if (!window.JSZip) { window.uiManager.showToast("JSZip library not loaded.", "danger"); return; }
-         const zip = new JSZip(); let filesAdded = 0; let statsDataForAllKollektive = null;
-         const lang = window.state.getCurrentPublikationLang();
+        if (!window.JSZip) {
+            window.uiManager.showToast("JSZip library not loaded. Cannot create ZIP package.", "danger");
+            return;
+        }
+        window.uiManager.showToast(`Generating ${category.toUpperCase()} ZIP package...`, 'info', 2000);
+        const zip = new JSZip();
+        let filesAdded = 0;
+        let statsDataForAllKollektive = null;
+        const lang = window.state.getCurrentPublikationLang();
 
-         const needsStats = ['all', 'csv', 'md', 'html', 'radiology-submission'].includes(category.toLowerCase().replace('-zip',''));
-         if(needsStats && data && data.length > 0 && criteria && logic) {
-             try {
+        const needsStats = ['all', 'csv', 'md', 'html', 'radiology-submission'].includes(category.toLowerCase().replace('-zip', ''));
+        if (needsStats && data && data.length > 0 && criteria && logic) {
+            try {
                 statsDataForAllKollektive = window.statisticsService.calculateAllPublicationStats(data, criteria, logic, bfResults);
-             } catch(e) { window.uiManager.showToast(`Error during statistics calculation for ${category.toUpperCase()} ZIP.`, 'danger'); return; }
-             if (!statsDataForAllKollektive || !statsDataForAllKollektive[kollektiv]) {
-                 if (category === 'csv-zip' || category.toLowerCase() === 'html-zip') {
-                     window.uiManager.showToast(`Statistics for cohort '${kollektiv}' could not be calculated for ZIP package.`, 'warning');
-                 }
-             }
-         }
-         const currentKollektivStats = statsDataForAllKollektive ? statsDataForAllKollektive[kollektiv] : null;
+            } catch (e) {
+                window.uiManager.showToast(`Error during statistics calculation for ${category.toUpperCase()} ZIP.`, 'danger');
+                return;
+            }
+            if (!statsDataForAllKollektive || !statsDataForAllKollektive[kollektiv]) {
+                if (category === 'csv-zip' || category.toLowerCase() === 'html-zip') {
+                    window.uiManager.showToast(`Statistics for cohort '${kollektiv}' could not be calculated for ZIP package.`, 'warning');
+                }
+            }
+        }
+        const currentKollektivStats = statsDataForAllKollektive ? statsDataForAllKollektive[kollektiv] : null;
 
-         const addFile = (filename, content) => { if (content !== null && content !== undefined && (typeof content === 'string' ? content.length > 0 : content.size > 0)) { zip.file(filename, content); filesAdded++; return true; } return false; };
-         try {
-             if (['all', 'csv'].includes(category)) {
-                 if (currentKollektivStats) addFile(generateFilename('STATS_CSV', kollektiv, 'csv'), generateStatistikCSVString(currentKollektivStats, kollektiv, criteria, logic));
-                 if (data && data.length > 0) addFile(generateFilename('FILTERED_DATA_CSV', kollektiv, 'csv'), generateFilteredDataCSVString(window.dataProcessor.filterDataByCohort(data, kollektiv)));
-             }
-             if (['all', 'md'].includes(category)) {
-                 if (currentKollektivStats?.descriptive) addFile(generateFilename('DESCRIPTIVE_MD', kollektiv, 'md'), generateMarkdownTableString(currentKollektivStats.descriptive, 'deskriptiv', kollektiv));
-                 if (data && data.length > 0) {
+        const addFile = (filename, content) => {
+            if (content !== null && content !== undefined && (typeof content === 'string' ? content.length > 0 : content.size > 0)) {
+                zip.file(filename, content);
+                filesAdded++;
+                return true;
+            }
+            return false;
+        };
+        try {
+            if (['all', 'csv'].includes(category)) {
+                if (currentKollektivStats) addFile(generateFilename('STATS_CSV', kollektiv, 'csv'), generateStatistikCSVString(currentKollektivStats, kollektiv, criteria, logic));
+                if (data && data.length > 0) addFile(generateFilename('FILTERED_DATA_CSV', kollektiv, 'csv'), generateFilteredDataCSVString(window.dataProcessor.filterDataByCohort(data, kollektiv)));
+            }
+            if (['all', 'md'].includes(category)) {
+                if (currentKollektivStats?.descriptive) addFile(generateFilename('DESCRIPTIVE_MD', kollektiv, 'md'), generateMarkdownTableString(currentKollektivStats.descriptive, 'deskriptiv', kollektiv));
+                if (data && data.length > 0) {
                     addFile(generateFilename('DATEN_MD', kollektiv, 'md'), generateMarkdownTableString(window.dataProcessor.filterDataByCohort(data, kollektiv), 'daten', kollektiv));
                     addFile(generateFilename('AUSWERTUNG_MD', kollektiv, 'md'), generateMarkdownTableString(window.t2CriteriaManager.evaluateDataset(window.dataProcessor.filterDataByCohort(data, kollektiv), criteria, logic), 'auswertung', kollektiv, criteria, logic));
-                 }
+                }
 
-                 if (window.PUBLICATION_CONFIG && window.state && window.publicationService && window.APP_CONFIG) {
-                     const commonDataForPub = { appName: window.APP_CONFIG.APP_NAME, appVersion: window.APP_CONFIG.APP_VERSION, nOverall: data.length, nPositive: data.filter(p => p.nStatus === '+').length, nSurgeryAlone: data.filter(p => p.therapy === 'surgeryAlone').length, nNeoadjuvantTherapy: data.filter(p => p.therapy === 'neoadjuvantTherapy').length, references: window.APP_CONFIG.REFERENCES_FOR_PUBLICATION, bruteForceMetricForPublication: window.state.getPublicationBruteForceMetric(), currentLanguage: lang, rawData: data };
-                     window.PUBLICATION_CONFIG.sections.forEach(mainSection => {
-                         const sectionContent = window.publicationService.generateSectionHTML(mainSection.id, statsDataForAllKollektive, commonDataForPub);
-                         const typeKey = `PUBLICATION_SECTION_MD`;
-                         const sectionName = mainSection.labelKey.replace(/_main$/, '').replace(/_/g, '-');
-                         addFile(generateFilename(typeKey, kollektiv, 'md', {sectionName: sectionName}), `# ${window.APP_CONFIG.UI_TEXTS.publicationTab.sectionLabels[mainSection.labelKey]}\n\n${sectionContent.replace(/<[^>]*>/g, '')}`);
-                     });
-                 }
-             }
-             if (['all'].includes(category) && bfResults && bfResults[kollektiv]) {
-                 Object.keys(bfResults[kollektiv]).forEach(metric => {
-                    addFile(generateFilename('BRUTEFORCE_TXT', kollektiv, 'txt', {studyId: metric}), generateBruteForceTXTString(bfResults[kollektiv][metric]));
-                 });
-             }
-             if (['all', 'html'].includes(category) && data && data.length > 0 ) { addFile(generateFilename('COMPREHENSIVE_REPORT_HTML', kollektiv, 'html'), generateComprehensiveReportHTML(data, bfResults, kollektiv, criteria, logic)); }
-             if (['png'].includes(category)) { await exportChartsZip('#app-container', 'PNG_ZIP', kollektiv, 'png'); return; }
-             if (['svg'].includes(category)) { await exportChartsZip('#app-container', 'SVG_ZIP', kollektiv, 'svg'); return; }
-             if (category === 'radiology-submission') { await exportRadiologySubmissionPackage(data, statsDataForAllKollektive, bfResults); return; }
+                if (window.PUBLICATION_CONFIG && window.state && window.publicationService && window.APP_CONFIG) {
+                    const commonDataForPub = { appName: window.APP_CONFIG.APP_NAME, appVersion: window.APP_CONFIG.APP_VERSION, nOverall: data.length, nPositive: data.filter(p => p.nStatus === '+').length, nSurgeryAlone: data.filter(p => p.therapy === 'surgeryAlone').length, nNeoadjuvantTherapy: data.filter(p => p.therapy === 'neoadjuvantTherapy').length, references: window.APP_CONFIG.REFERENCES_FOR_PUBLICATION, bruteForceMetricForPublication: window.state.getPublicationBruteForceMetric(), currentLanguage: lang, rawData: data };
+                    window.PUBLICATION_CONFIG.sections.forEach(mainSection => {
+                        const sectionContent = window.publicationService.generateSectionHTML(mainSection.id, statsDataForAllKollektive, commonDataForPub);
+                        const typeKey = `PUBLICATION_SECTION_MD`;
+                        const sectionName = mainSection.labelKey.replace(/_main$/, '').replace(/_/g, '-');
+                        addFile(generateFilename(typeKey, kollektiv, 'md', { sectionName: sectionName }), `# ${window.APP_CONFIG.UI_TEXTS.publicationTab.sectionLabels[mainSection.labelKey]}\n\n${sectionContent.replace(/<[^>]*>/g, '')}`);
+                    });
+                }
+            }
+            if (['all'].includes(category) && bfResults && bfResults[kollektiv]) {
+                Object.keys(bfResults[kollektiv]).forEach(metric => {
+                    addFile(generateFilename('BRUTEFORCE_TXT', kollektiv, 'txt', { studyId: metric }), generateBruteForceTXTString(bfResults[kollektiv][metric]));
+                });
+            }
+            if (['all', 'html'].includes(category) && data && data.length > 0) { addFile(generateFilename('COMPREHENSIVE_REPORT_HTML', kollektiv, 'html'), generateComprehensiveReportHTML(data, bfResults, kollektiv, criteria, logic)); }
+            if (['png'].includes(category)) { await exportChartsZip('#app-container', 'PNG_ZIP', kollektiv, 'png'); return; }
+            if (['svg'].includes(category)) { await exportChartsZip('#app-container', 'SVG_ZIP', kollektiv, 'svg'); return; }
+            if (category === 'radiology-submission') { await exportRadiologySubmissionPackage(data, statsDataForAllKollektive, bfResults); return; }
 
             if (filesAdded > 0) {
                 const zipFilename = generateFilename(`${category.toUpperCase()}_PAKET`, kollektiv, 'zip');
                 const content = await zip.generateAsync({ type: "blob", compression: "DEFLATE", compressionOptions: { level: 6 } });
                 if (downloadFile(content, zipFilename, "application/zip")) window.uiManager.showToast(`${filesAdded} file(s) successfully exported in ${category.toUpperCase()} ZIP package.`, 'success');
             } else { window.uiManager.showToast(`No files found or generated for the ${category.toUpperCase()} ZIP package.`, 'warning'); }
-         } catch (error) { window.uiManager.showToast(`Error creating ${category.toUpperCase()} ZIP package.`, 'danger'); }
-     }
+        } catch (error) { window.uiManager.showToast(`Error creating ${category.toUpperCase()} ZIP package.`, 'danger'); }
+    }
 
     function exportComparisonData(actionId, comparisonData, kollektiv) {
         let content = null, filenameKey = null, extension = null, mimeType = null, options = {}, success = false; 
@@ -590,7 +608,7 @@ window.exportService = (() => {
     }
 
     async function exportRadiologySubmissionPackage(data, allStats, bfResults) {
-        if (!window.JSZip || typeof htmlToDocx === 'undefined') {
+        if (!window.JSZip || typeof window.htmlToDocx === 'undefined') {
             window.uiManager.showToast("Required export libraries (JSZip, html-to-docx) are not available.", "danger");
             return;
         }
